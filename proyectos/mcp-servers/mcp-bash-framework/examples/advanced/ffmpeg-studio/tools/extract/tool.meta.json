@@ -1,0 +1,45 @@
+{
+  "name": "extract_frame",
+  "description": "Extracts a single video frame as an image at a specific timestamp.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "input": {
+        "type": "string",
+        "description": "Input path that must resolve inside an allowed media root (config/media_roots.json)."
+      },
+      "time": {
+        "type": "string",
+        "description": "Timestamp (e.g. \"00:00:05\" or seconds)."
+      },
+      "output": {
+        "type": "string",
+        "description": "Output path (relative or absolute) constrained to allowed writable media roots."
+      }
+    },
+    "required": ["input", "time", "output"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["success", "result"],
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the operation succeeded"
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Confirmation describing where the frame was written."
+          },
+          "error": { "type": "string" },
+          "input": { "type": "string" },
+          "hint": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+

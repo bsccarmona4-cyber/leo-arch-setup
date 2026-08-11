@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wireframes / Mockups — Baja y Media Fidelidad</title>
+<link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body>
+<div class="pantalla">
+  <div class="doc">
+
+    <!-- Portada -->
+    <div class="portada">
+      <div class="materia">Plataforma de Gestión de Citas Médicas y Expediente Electrónico</div>
+      <h1>Wireframes / Mockups — Baja y Media Fidelidad</h1>
+      <p class="subtitulo">Pantallas clave: principal, calendario de citas, confirmación y expediente</p>
+      <div class="meta">
+        <span class="chip">Pantalla principal · Calendario · Confirmación · Expediente</span>
+      </div>
+    </div>
+
+    <!-- Sección 1: Pantallas Clave -->
+    <section class="seccion">
+      <h2><span class="num">1</span>Pantallas Clave</h2>
+      <p class="desc">Los wireframes de baja y media fidelidad definen la estructura, la jerarquía y el flujo de la
+        plataforma sin distracción visual. Fueron pensados para adultos mayores —usuarios frecuentes del hospital—:
+        botones grandes, alto contraste y pocas opciones por pantalla, manteniendo al mismo tiempo la eficiencia que
+        necesitan los pacientes jóvenes y el personal médico.</p>
+
+      <div class="wf-grid">
+
+        <!-- W1: Pantalla Principal -->
+        <div class="wf">
+          <div class="wlabel">W1 · Pantalla Principal</div>
+          <div class="screen">
+            <div class="row" style="align-items:center">
+              <div class="bar h40 col" style="flex:0 0 auto"></div>
+              <div class="bar h40" style="flex:1;display:flex;align-items:center;justify-content:center">Hospital San Martín</div>
+            </div>
+            <div class="btnw prim h90" style="display:flex;align-items:center;justify-content:center;font-size:13px">Agendar cita</div>
+            <div class="row">
+              <div class="chipw" style="flex:1">Mis citas</div>
+              <div class="chipw" style="flex:1">Expediente</div>
+              <div class="chipw" style="flex:1">Perfil</div>
+            </div>
+            <div class="bar h30" style="display:flex;align-items:center;justify-content:center">🔔 Recordatorio: cita el martes 18 ago</div>
+            <div class="row">
+              <div class="btnw" style="flex:1">🏠 Inicio</div>
+              <div class="btnw" style="flex:1">📅 Citas</div>
+              <div class="btnw" style="flex:1">📋 Expediente</div>
+              <div class="btnw" style="flex:1">⚙️ Ajustes</div>
+            </div>
+            <div class="txt">1 acción principal · accesible · modo letra grande</div>
+          </div>
+        </div>
+
+        <!-- W2: Calendario de Citas -->
+        <div class="wf">
+          <div class="wlabel">W2 · Calendario de Citas</div>
+          <div class="screen">
+            <div class="bar h40" style="display:flex;align-items:center;justify-content:center">Elegir fecha</div>
+            <div class="row">
+              <div class="chipw" style="flex:1">Cardiología</div>
+            </div>
+            <div class="row">
+              <div class="chipw" style="flex:1;border-color:#86efac;color:#15803d">L</div>
+              <div class="chipw" style="flex:1;border-color:#86efac;color:#15803d">M</div>
+              <div class="btnw prim" style="flex:1">X</div>
+              <div class="chipw" style="flex:1;border-color:#86efac;color:#15803d">J</div>
+              <div class="chipw" style="flex:1;border-color:#86efac;color:#15803d">V</div>
+              <div class="chipw" style="flex:1">S</div>
+              <div class="chipw" style="flex:1">D</div>
+            </div>
+            <div class="row">
+              <div class="btnw" style="flex:1">09:00</div>
+              <div class="btnw" style="flex:1">09:30</div>
+              <div class="btnw" style="flex:1">10:00</div>
+            </div>
+            <div class="btnw prim" style="display:flex;align-items:center;justify-content:center">Continuar</div>
+            <div class="txt">Días disponibles en verde · 1 toque para elegir hora</div>
+          </div>
+        </div>
+
+        <!-- W3: Confirmación de Cita -->
+        <div class="wf">
+          <div class="wlabel">W3 · Confirmación de Cita</div>
+          <div class="screen">
+            <div class="bar h40" style="display:flex;align-items:center;justify-content:center">Confirmar cita</div>
+            <div class="bar h30" style="display:flex;align-items:center;justify-content:center">Cardiología · Dr. Carlos Mendoza</div>
+            <div class="bar" style="height:30px;display:flex;align-items:center;justify-content:center">Martes 18 ago · 10:00 AM</div>
+            <div class="bar h30" style="display:flex;align-items:center;justify-content:center">Consultorio 204</div>
+            <div class="row">
+              <div class="btnw" style="flex:1;display:flex;align-items:center;justify-content:center">Cancelar</div>
+              <div class="btnw prim" style="flex:1;display:flex;align-items:center;justify-content:center">Confirmar</div>
+            </div>
+            <div class="chipw" style="text-align:center;padding:8px 4px">🔔 Recordarme por WhatsApp</div>
+            <div class="txt">Feedback claro · datos verificables antes de confirmar</div>
+          </div>
+        </div>
+
+        <!-- W4: Expediente Electrónico -->
+        <div class="wf">
+          <div class="wlabel">W4 · Expediente Electrónico</div>
+          <div class="screen">
+            <div class="bar h40" style="display:flex;align-items:center;justify-content:center">Expediente</div>
+            <div class="bar h40" style="display:flex;align-items:center;justify-content:center">👤 María Hernández · 67 años</div>
+            <div class="row">
+              <div class="chipw" style="flex:1">Consultas</div>
+              <div class="chipw" style="flex:1">Recetas</div>
+              <div class="chipw" style="flex:1">Resultados</div>
+            </div>
+            <div class="bar" style="height:24px;display:flex;align-items:center;padding:0 6px">Última consulta</div>
+            <div class="bar h30" style="display:flex;align-items:center;justify-content:center">12 ago · Control cardiovascular</div>
+            <div class="bar" style="height:24px;display:flex;align-items:center;padding:0 6px">Diagnóstico</div>
+            <div class="bar h30" style="display:flex;align-items:center;justify-content:center">Hipertensión arterial</div>
+            <div class="bar" style="height:24px;display:flex;align-items:center;padding:0 6px">Medicamento</div>
+            <div class="bar h30" style="display:flex;align-items:center;justify-content:center">Enalapril 10 mg · 1 por día</div>
+            <div class="btnw prim" style="display:flex;align-items:center;justify-content:center">⬇️ Descargar PDF</div>
+            <div class="txt">Historial cronológico · descarga accesible</div>
+          </div>
+        </div>
+
+      </div>
+
+      <h3>Decisiones de diseño aplicadas</h3>
+      <table>
+        <thead>
+          <tr><th>Elemento</th><th>Descripción de decisión de diseño</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Botón principal «Agendar cita» arriba del pliegue</td><td>La acción más importante queda visible sin hacer scroll: el adulto mayor abre la app y sabe de inmediato qué hacer.</td></tr>
+          <tr><td>Objetivos táctiles de 44 px o más</td><td>Cumple la pauta mínima de accesibilidad táctil y reduce los errores de toque en personas con temblor o menor motricidad fina.</td></tr>
+          <tr><td>Alto contraste de colores y texto</td><td>Facilita la lectura a personas con baja visión; los colores de estado (verde/rojo) nunca son el único canal de información.</td></tr>
+          <tr><td>Máximo 3 acciones visibles por pantalla</td><td>Evita la sobrecarga cognitiva: cada pantalla ofrece un camino claro hacia adelante y pocas alternativas que evaluar.</td></tr>
+          <tr><td>Lenguaje simple y directo</td><td>Frases cortas y sin tecnicismos; el nombre de cada acción coincide con lo que el usuario espera hacer.</td></tr>
+          <tr><td>Navegación inferior con iconos + texto</td><td>Ubicación fija y predecible al alcance del pulgar; los iconos se refuerzan con etiquetas textuales para no depender de la memoria.</td></tr>
+          <tr><td>Modo letra grande</td><td>Permite ampliar la tipografía sin romper el layout, pensado para usuarios que necesitan lectura asistida o anteojos.</td></tr>
+          <tr><td>Feedback de confirmación visible</td><td>Toda acción confirma su resultado (resumen, cambio de estado, aviso) para que el usuario nunca se pregunte si funcionó.</td></tr>
+          <tr><td>Selección guiada de especialidad y fecha</td><td>El flujo se divide en pasos cortos (especialidad → día → hora) con una sola decisión por pantalla.</td></tr>
+          <tr><td>Descarga del expediente en PDF</td><td>El paciente puede descargar o imprimir su historial para llevarlo a consultas externas o compartirlo con la familia.</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Sección 2: Justificación de Decisiones -->
+    <section class="seccion">
+      <h2><span class="num">2</span>Justificación de Decisiones</h2>
+      <p class="desc">Cada decisión de diseño responde a un principio de UX y se traduce en un beneficio concreto para
+        el usuario, con especial atención al adulto mayor como perfil de uso frecuente.</p>
+      <table>
+        <thead>
+          <tr><th>Decisión de diseño</th><th>Principio de UX que cumple</th><th>Beneficio para el usuario</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Botón «Agendar cita» único y grande</td><td>Jerarquía visual</td><td>Reduce la carga cognitiva del adulto mayor</td></tr>
+          <tr><td>Máximo 3 acciones por pantalla</td><td>Simplicidad</td><td>Evita abrumar al usuario</td></tr>
+          <tr><td>Etiquetas con icono + texto</td><td>Reconocimiento sobre recuerdo</td><td>Claridad sin depender de la memoria</td></tr>
+          <tr><td>Tipografía 18px+ y alto contraste</td><td>Legibilidad</td><td>Texto legible sin lentes/lectura asistida</td></tr>
+          <tr><td>Confirmación con resumen verificable</td><td>Prevención de errores</td><td>El usuario confirma antes de cometer error</td></tr>
+          <tr><td>Feedback inmediato en cada acción</td><td>Visibilidad del estado</td><td>El usuario siempre sabe qué pasó</td></tr>
+          <tr><td>Recordatorio opcional por WhatsApp</td><td>Flexibilidad</td><td>Se adapta al canal que el usuario domina</td></tr>
+          <tr><td>Navegación inferior fija</td><td>Consistencia</td><td>El usuario siempre sabe dónde está</td></tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="footer">Hospital Regional — Sistema de Citas Médicas y Expediente Electrónico</div>
+
+  </div>
+</div>
+</body>
+</html>

@@ -1,0 +1,12 @@
+{
+    "layer": "bottom",
+    "position": "bottom",
+    "exclusive": false,
+    "passthrough": true,
+    "width": 900,
+    "modules-center": ["clock"],
+    "clock": {
+        "format": "{:%H:%M}",
+        "tooltip": false
+    }
+}

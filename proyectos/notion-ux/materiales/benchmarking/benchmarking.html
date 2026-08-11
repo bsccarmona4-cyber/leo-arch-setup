@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Análisis de Competencia — Benchmarking</title>
+  <link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body>
+<div class="pantalla">
+  <div class="doc">
+
+    <!-- ================= PORTADA ================= -->
+    <header class="portada">
+      <div class="materia">Plataforma de Gestión de Citas Médicas y Expediente Electrónico</div>
+      <h1>Análisis de Competencia — Benchmarking</h1>
+      <p class="subtitulo">Comparativa de plataformas de salud y gestión de citas</p>
+      <div class="meta">
+        <span class="chip">Doctoralia · Zocdoc · Mi Salud IMSS</span>
+      </div>
+    </header>
+
+    <p>El presente informe documenta el análisis comparativo de tres plataformas de
+    salud digital (Doctoralia, Zocdoc y Mi Salud Digital / IMSS) como insumo para el
+    diseño de una plataforma web y móvil de gestión de citas médicas y expediente
+    electrónico para un hospital local. El estudio se orienta a tres perfiles de
+    usuario: adultos mayores, pacientes jóvenes y personal médico, con especial
+    atención a la accesibilidad y a la reducción de fricción en los flujos de agendado.</p>
+
+    <!-- ================= SECCIÓN 1 ================= -->
+    <section class="seccion">
+      <h2><span class="num">1</span>Plataformas Analizadas</h2>
+      <p class="desc">Se seleccionaron tres plataformas representativas del ecosistema de salud digital:
+      un marketplace privado internacional, una plataforma de agendado instantáneo y un
+      portal gubernamental con expediente electrónico.</p>
+
+      <div class="grid-3">
+        <div class="tarjeta">
+          <div class="icono">🌐</div>
+          <h4>Doctoralia</h4>
+          <p><b>Origen:</b> España — México y LatAm</p>
+          <p><b>Modelo:</b> Marketplace de citas médicas online con directorio de especialistas, reseñas y agendado directo.</p>
+        </div>
+
+        <div class="tarjeta">
+          <div class="icono">🗓️</div>
+          <h4>Zocdoc</h4>
+          <p><b>Origen:</b> Estados Unidos</p>
+          <p><b>Modelo:</b> Plataforma de agendado instantáneo de citas médicas con verificación de seguro y recordatorios.</p>
+        </div>
+
+        <div class="tarjeta">
+          <div class="icono">🏥</div>
+          <h4>Mi Salud Digital / IMSS</h4>
+          <p><b>Origen:</b> México</p>
+          <p><b>Modelo:</b> Portal gubernamental de expediente electrónico y cita médica del IMSS.</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- ================= SECCIÓN 2 ================= -->
+    <section class="seccion">
+      <h2><span class="num">2</span>Matriz Comparativa</h2>
+      <p class="desc">La matriz evalúa cada plataforma frente a los criterios funcionales y de accesibilidad
+      relevantes para el proyecto del hospital local. Se marca ✓ (cumple), ✗ (no cumple) o
+      Parcial (cumple de forma limitada).</p>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>Criterio</th>
+            <th>Doctoralia</th>
+            <th>Zocdoc</th>
+            <th>Mi Salud IMSS</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Agendado en línea</td>
+            <td class="si">✓</td>
+            <td class="si">✓</td>
+            <td class="si">✓</td>
+          </tr>
+          <tr>
+            <td>Recordatorios automáticos</td>
+            <td class="si">✓</td>
+            <td class="si">✓</td>
+            <td class="no">✗</td>
+          </tr>
+          <tr>
+            <td>Expediente electrónico del paciente</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+            <td class="si">✓</td>
+          </tr>
+          <tr>
+            <td>Acceso para adultos mayores / modo accesible</td>
+            <td class="par">Parcial</td>
+            <td class="par">Parcial</td>
+            <td class="no">✗</td>
+          </tr>
+          <tr>
+            <td>Cancelación / reprogramación en línea</td>
+            <td class="si">✓</td>
+            <td class="si">✓</td>
+            <td class="par">Parcial</td>
+          </tr>
+          <tr>
+            <td>App móvil</td>
+            <td class="si">✓</td>
+            <td class="si">✓</td>
+            <td class="si">✓</td>
+          </tr>
+          <tr>
+            <td>Idioma español</td>
+            <td class="si">✓</td>
+            <td class="no">✗</td>
+            <td class="si">✓</td>
+          </tr>
+          <tr>
+            <td>Búsqueda por especialidad</td>
+            <td class="si">✓</td>
+            <td class="si">✓</td>
+            <td class="par">Parcial</td>
+          </tr>
+          <tr>
+            <td>Reseñas de pacientes</td>
+            <td class="si">✓</td>
+            <td class="no">✗</td>
+            <td class="no">✗</td>
+          </tr>
+          <tr>
+            <td>Costo para el paciente</td>
+            <td>Gratis / Premium</td>
+            <td>Gratis</td>
+            <td>Gratis</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================= SECCIÓN 3 ================= -->
+    <section class="seccion">
+      <h2><span class="num">3</span>Análisis por Plataforma</h2>
+      <p class="desc">Para cada plataforma se documentan sus fortalezas, debilidades, buenas prácticas de UX,
+      áreas de oportunidad y los elementos que se adoptan en la propuesta del hospital local.</p>
+
+      <h3>🌐 Doctoralia</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Aspecto</th>
+            <th>Hallazgo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Fortalezas</b></td>
+            <td>Amplio directorio de especialistas, reseñas verificadas y recordatorios por email.</td>
+          </tr>
+          <tr>
+            <td><b>Debilidades</b></td>
+            <td>Sin expediente electrónico; interfaz densa y jerarquía visual compleja para adultos mayores.</td>
+          </tr>
+          <tr>
+            <td><b>Buenas prácticas de UX</b></td>
+            <td>Buscador por especialidad con filtros y tarjeta de médico con disponibilidad visible.</td>
+          </tr>
+          <tr>
+            <td><b>Áreas de oportunidad</b></td>
+            <td>Modo de alto contraste y tipografía grande; simplificar el flujo de 5 pasos a 3.</td>
+          </tr>
+          <tr>
+            <td><b>Qué adoptamos</b></td>
+            <td>Tarjeta de especialista con disponibilidad y filtros por especialidad.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>🗓️ Zocdoc</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Aspecto</th>
+            <th>Hallazgo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Fortalezas</b></td>
+            <td>Agendado en 3 pasos, verificación de seguro y recordatorios por SMS.</td>
+          </tr>
+          <tr>
+            <td><b>Debilidades</b></td>
+            <td>Solo opera en EE. UU.; requiere tarjeta de crédito como garantía anti no-show
+            (barrera para adultos mayores) y carece de expediente electrónico.</td>
+          </tr>
+          <tr>
+            <td><b>Buenas prácticas de UX</b></td>
+            <td>Calendario con franjas horarias claras y confirmación inmediata con resumen.</td>
+          </tr>
+          <tr>
+            <td><b>Áreas de oportunidad</b></td>
+            <td>Eliminar la fricción de la tarjeta de crédito e incorporar modo voz / lectura en voz alta.</td>
+          </tr>
+          <tr>
+            <td><b>Qué adoptamos</b></td>
+            <td>Flujo de 3 pasos (especialidad → médico → hora) y confirmación con resumen visual.</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>🏥 Mi Salud Digital / IMSS</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>Aspecto</th>
+            <th>Hallazgo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><b>Fortalezas</b></td>
+            <td>Expediente electrónico real, acceso público gratuito e integración institucional.</td>
+          </tr>
+          <tr>
+            <td><b>Debilidades</b></td>
+            <td>Interfaz con curva de aprendizaje alta, saturación en horas pico, poca claridad de los
+            errores y sin enfoque en adultos mayores.</td>
+          </tr>
+          <tr>
+            <td><b>Buenas prácticas de UX</b></td>
+            <td>Consulta de recetas y resultados en un solo lugar.</td>
+          </tr>
+          <tr>
+            <td><b>Áreas de oportunidad</b></td>
+            <td>Diseño centrado en usuarios con poca alfabetización digital y avisos por WhatsApp.</td>
+          </tr>
+          <tr>
+            <td><b>Qué adoptamos</b></td>
+            <td>Expediente con recetas y resultados accesibles, con lenguaje simple.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- ================= SECCIÓN 4 ================= -->
+    <section class="seccion">
+      <h2><span class="num">4</span>Conclusión del Benchmarking</h2>
+      <p>El análisis comparativo evidencia que cada plataforma resuelve bien una parte del
+      problema, pero ninguna cubre de forma integral las necesidades del hospital local.
+      Doctoralia destaca por su directorio y sistema de reseñas; Zocdoc, por la eficiencia
+      de su flujo de agendado en tres pasos y la confirmación inmediata; y Mi Salud IMSS,
+      por contar con un expediente electrónico real y de acceso público. Sin embargo,
+      la accesibilidad para adultos mayores —un segmento prioritario en la atención
+      primaria local— permanece desatendida en las tres plataformas.</p>
+
+      <div class="nota">
+        <b>Hallazgo central:</b> ninguna plataforma analizada combina agendado simple +
+        expediente electrónico + accesibilidad para adultos mayores. Nuestra oportunidad
+        consiste en integrar un flujo de 3 pasos (estilo Zocdoc), expediente electrónico
+        (estilo IMSS) y accesibilidad de alto contraste, letra grande y WhatsApp como canal
+        adicional. El diferenciador competitivo son los recordatorios y confirmaciones por
+        WhatsApp, canal que dominan los adultos mayores en México.
+      </div>
+    </section>
+
+    <div class="footer">Hospital Regional — Sistema de Citas Médicas y Expediente Electrónico</div>
+
+  </div>
+</div>
+</body>
+</html>

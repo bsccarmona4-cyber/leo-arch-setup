@@ -1,0 +1,50 @@
+============================================================
+  RESTAURAR EN LA LAPTOP NUEVA — Arch Linux
+  (copia este backup a la nueva laptop y seguí estos pasos)
+============================================================
+
+1) INSTALAR ARCH LINUX BASE
+   - Instalá Arch normalmente (archinstall o manual).
+   - Usuario con el MISMO nombre: leo
+
+2) INSTALAR PAQUETES OFICIALES
+   sudo pacman -S --needed $(cat paquetes/oficiales.txt)
+
+3) INSTALAR HELPER AUR + PAQUETES AUR
+   git clone https://aur.archlinux.org/yay.git
+   cd yay && makepkg -si
+   yay -S --needed $(cat paquetes/aur.txt)
+
+4) RESTAURAR EL HOME
+   # Copiá TODO el contenido del home desde el archivo home.tar
+   tar -xf home.tar -C /home/leo/
+   # (restaura proyectos, documentos, configs de CodeWhale,
+   #  skills de Goose, MCP servers, Obsidian, etc.)
+
+5) DOTFILES Y CONFIGS
+   cp dotfiles/.bashrc dotfiles/.zshrc ~/
+   rsync -a configs/ ~/        # .codewhale, .agents, .deepseek, .config...
+   # NOTA: revisá rutas absolutas en configs si cambiaron
+
+6) PAQUETES NPM GLOBAL
+   npm i -g $(cat paquetes/npm-global.txt)
+
+7) PAQUETES PIP (solo si usabas pip global)
+   pip install -r paquetes/pip.txt
+
+8) SERVICIOS HABILITADOS (revisar cuáles querés)
+   cat paquetes/servicios-habilitados.txt
+   sudo systemctl enable <servicio>
+
+9) ARCHIVOS DE SISTEMA
+   sudo cp etc/pacman.conf /etc/pacman.conf
+   # fstab y hosts: revisalos antes de copiar (rutas pueden cambiar)
+
+10) VERIFICAR
+   - Abrí una terminal y corré: pacman -Q | wc -l  (≈1296)
+   - Probá tus proyectos: cd guardian && npm run dev
+   - Probá CodeWhale/Goose: cargá una sesión y verificá skills
+
+TIP: si algo falla, los paquetes "oficiales.txt" y "aur.txt"
+tienen los nombres exactos para reinstalar sin internet de más.
+============================================================

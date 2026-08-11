@@ -1,0 +1,49 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 540 200">
+  <defs>
+    <linearGradient id="brandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="50%" stop-color="#6d28d9"/>
+      <stop offset="100%" stop-color="#00d4ff"/>
+    </linearGradient>
+    <linearGradient id="lineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#7c3aed"/>
+      <stop offset="100%" stop-color="#00d4ff"/>
+    </linearGradient>
+  </defs>
+
+  <!-- ═══ DARK BACKGROUND (visible on any page) ═══ -->
+  <rect x="0" y="0" width="540" height="200" rx="16" fill="#0f0824"/>
+
+  <!-- ═══ K ISOTIPO ═══ -->
+  <g transform="translate(25, 25)">
+    <!-- Vertical stroke -->
+    <rect x="0" y="0" width="22" height="150" rx="3" fill="url(#brandGradient)"/>
+
+    <!-- Upper diagonal arm -->
+    <polygon points="28,75 28,53 112,3 112,25" fill="url(#brandGradient)"/>
+
+    <!-- Lower diagonal arm -->
+    <polygon points="28,75 112,125 112,147 28,97" fill="url(#brandGradient)"/>
+
+    <!-- Accent dot (top-right tip) -->
+    <circle cx="117" cy="8" r="6.5" fill="#00d4ff"/>
+
+    <!-- Inner accent line (center notch glow) -->
+    <line x1="28" y1="75" x2="65" y2="75" stroke="#00d4ff" stroke-width="1.5" opacity="0.5"/>
+  </g>
+
+  <!-- ═══ LOGOTYPE ═══ -->
+  <text x="170" y="115"
+        font-family="'Outfit','Helvetica Neue',Arial,sans-serif"
+        font-size="72" font-weight="800" fill="#ffffff"
+        letter-spacing="10">KREID</text>
+
+  <!-- Accent underline -->
+  <rect x="172" y="128" width="115" height="2.5" rx="1.25" fill="url(#lineGradient)"/>
+
+  <!-- Subtitle -->
+  <text x="174" y="156"
+        font-family="'Inter','Helvetica Neue',Arial,sans-serif"
+        font-size="14" font-weight="400" fill="#00d4ff"
+        letter-spacing="9">DESIGN STUDIO</text>
+</svg>

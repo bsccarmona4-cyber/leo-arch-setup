@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pruebas de Usabilidad — Plan y Registro | Experiencia de Usuario</title>
+  <link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body>
+<div class="pantalla">
+  <div class="doc">
+
+    <!-- Portada -->
+    <div class="portada">
+      <div class="materia">Plataforma de Gestión de Citas Médicas y Expediente Electrónico</div>
+      <h1>Pruebas de Usabilidad — Plan y Registro</h1>
+      <p class="subtitulo">Evaluación del prototipo funcional con usuarios reales y simulados</p>
+      <div class="meta">
+        <span class="chip">Tareas con usuarios</span>
+        <span class="chip">Tiempos · Éxito · Retroalimentación</span>
+      </div>
+    </div>
+
+    <!-- Sección 1 -->
+    <section class="seccion">
+      <h2><span class="num">1</span> Objetivos y Participantes</h2>
+      <p class="desc">Definición del propósito del estudio y del perfil de las personas participantes.</p>
+
+      <p>El objetivo de esta prueba es validar que el flujo de agendar una cita es comprensible para los participantes en ≤ 3 minutos, verificar que el adulto mayor completa las tareas sin ayuda externa, y recoger retroalimentación cualitativa para iterar sobre el prototipo funcional navegable (HTML) de la plataforma de gestión de citas médicas y expediente electrónico.</p>
+
+      <h3>Participantes</h3>
+      <table>
+        <caption>Distribución de participantes por perfil</caption>
+        <thead>
+          <tr>
+            <th>Perfil</th>
+            <th>Cantidad</th>
+            <th>Criterio de inclusión</th>
+            <th>Canal de reclutamiento</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Adultos mayores (60+)</td>
+            <td>4</td>
+            <td>Que hayan agendado cita en el hospital el último año</td>
+            <td>Invitación en sala de espera</td>
+          </tr>
+          <tr>
+            <td>Pacientes jóvenes</td>
+            <td>3</td>
+            <td>Usuarios frecuentes de apps</td>
+            <td>Convocatoria digital</td>
+          </tr>
+          <tr>
+            <td>Personal médico</td>
+            <td>2</td>
+            <td>Médicos con consulta activa</td>
+            <td>Contacto directo</td>
+          </tr>
+          <tr>
+            <td><strong>Total</strong></td>
+            <td><strong>9</strong></td>
+            <td>—</td>
+            <td>—</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Sección 2 -->
+    <section class="seccion">
+      <h2><span class="num">2</span> Tareas del Estudio</h2>
+      <p class="desc">Cinco tareas representativas del flujo principal: agendar, cancelar, reprogramar, consultar resultados y descargar recetas.</p>
+
+      <table>
+        <caption>Definición de tareas, escenarios y criterios de éxito</caption>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Tarea</th>
+            <th>Escenario</th>
+            <th>Criterio de éxito</th>
+            <th>Tiempo objetivo</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>T1</td>
+            <td>Agenda una cita con un cardiólogo para el próximo martes a las 10:00 AM</td>
+            <td>Tuviste un dolor de pecho y querés revisarte</td>
+            <td>Cita confirmada llegando a la pantalla de éxito</td>
+            <td>≤ 3 min</td>
+          </tr>
+          <tr>
+            <td>T2</td>
+            <td>Cancelá tu cita del 18 de agosto</td>
+            <td>Te surgió un compromiso y no podés ir</td>
+            <td>La cita aparece como cancelada</td>
+            <td>≤ 1.5 min</td>
+          </tr>
+          <tr>
+            <td>T3</td>
+            <td>Reprogramá tu cita al jueves siguiente</td>
+            <td>Querés mover tu cita una semana</td>
+            <td>Nueva fecha confirmada, se ve el cambio</td>
+            <td>≤ 2 min</td>
+          </tr>
+          <tr>
+            <td>T4</td>
+            <td>Consultá tu último resultado de laboratorio</td>
+            <td>Tu médico te pidió revisar tus estudios</td>
+            <td>Resultado encontrado en el expediente</td>
+            <td>≤ 1.5 min</td>
+          </tr>
+          <tr>
+            <td>T5</td>
+            <td>Descargá tu receta médica</td>
+            <td>Necesitás tu receta para comprar medicamento</td>
+            <td>PDF de receta descargado</td>
+            <td>≤ 1 min</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Sección 3 -->
+    <section class="seccion">
+      <h2><span class="num">3</span> Métricas y Registro</h2>
+      <p class="desc">Métricas cuantitativas y cualitativas para evaluar la usabilidad del prototipo, con umbrales de aceptación definidos.</p>
+
+      <p>Las métricas cuantitativas registradas por tarea son: el tiempo por tarea (en segundos), la tasa de éxito clasificada como <em>completada sin ayuda</em>, <em>completada con asistencia</em> o <em>fallida</em>, el número de errores por tarea y el número de clics. Al finalizar la sesión se aplica el cuestionario SUS (System Usability Scale, 10 ítems, escala 1-5) para obtener una puntuación global de usabilidad.</p>
+
+      <h3>Hoja de registro por tarea</h3>
+      <div class="nota">Las celdas contienen <strong>datos de ejemplo</strong> para ilustrar el formato de captura; deben reemplazarse por los valores reales registrados durante cada sesión.</div>
+      <table>
+        <caption>Registro por participante — completar durante la sesión (datos de ejemplo)</caption>
+        <thead>
+          <tr>
+            <th>Tarea</th>
+            <th>Tiempo (s)</th>
+            <th>Éxito (Sin ayuda/Asistida/Fallida)</th>
+            <th>Errores</th>
+            <th>Clics</th>
+            <th>Notas cualitativas</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>T1</td>
+            <td>145 s (ejemplo)</td>
+            <td>Sin ayuda (ejemplo)</td>
+            <td>1 (ejemplo)</td>
+            <td>8 (ejemplo)</td>
+            <td>«La letra se ve bien, pero dudó en el calendario» (ejemplo)</td>
+          </tr>
+          <tr>
+            <td>T2</td>
+            <td>82 s (ejemplo)</td>
+            <td>Con asistencia (ejemplo)</td>
+            <td>2 (ejemplo)</td>
+            <td>6 (ejemplo)</td>
+            <td>«Buscó la opción de cancelar dentro del menú principal» (ejemplo)</td>
+          </tr>
+          <tr>
+            <td>T3</td>
+            <td>110 s (ejemplo)</td>
+            <td>Sin ayuda (ejemplo)</td>
+            <td>0 (ejemplo)</td>
+            <td>7 (ejemplo)</td>
+            <td>«Esperó que la nueva fecha apareciera en el resumen» (ejemplo)</td>
+          </tr>
+          <tr>
+            <td>T4</td>
+            <td>65 s (ejemplo)</td>
+            <td>Sin ayuda (ejemplo)</td>
+            <td>1 (ejemplo)</td>
+            <td>5 (ejemplo)</td>
+            <td>«Confundió "resultados" con "recetas" dentro del expediente» (ejemplo)</td>
+          </tr>
+          <tr>
+            <td>T5</td>
+            <td>48 s (ejemplo)</td>
+            <td>Fallida (ejemplo)</td>
+            <td>3 (ejemplo)</td>
+            <td>9 (ejemplo)</td>
+            <td>«No encontró el botón de descarga; se perdió en el detalle de la receta» (ejemplo)</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3>Umbrales de aceptación</h3>
+      <table>
+        <caption>Criterios para considerar aceptable la usabilidad del prototipo</caption>
+        <thead>
+          <tr>
+            <th>Métrica</th>
+            <th>Umbral</th>
+            <th>Interpretación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Tasa de éxito T1</td>
+            <td>≥80% sin ayuda</td>
+            <td>El flujo principal es comprensible</td>
+          </tr>
+          <tr>
+            <td>Tiempo promedio T1</td>
+            <td>≤180 s</td>
+            <td>Dentro del objetivo</td>
+          </tr>
+          <tr>
+            <td>Errores por tarea</td>
+            <td>≤2</td>
+            <td>Sin fricciones críticas</td>
+          </tr>
+          <tr>
+            <td>SUS promedio</td>
+            <td>≥70</td>
+            <td>Usabilidad aceptable (escala B)</td>
+          </tr>
+          <tr>
+            <td>Abandono</td>
+            <td>≤10%</td>
+            <td>Sin bloqueos graves</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <!-- Sección 4 -->
+    <section class="seccion">
+      <h2><span class="num">4</span> Guión de Sesión</h2>
+      <p class="desc">Estructura paso a paso de cada sesión de prueba, para garantizar consistencia entre participantes.</p>
+
+      <div class="nota">Duración total: 35-40 min por participante. Sesión individual, moderador + observador.</div>
+
+      <ul class="lista">
+        <li><strong>1. Bienvenida y consentimiento (5 min)</strong> — explicar objetivo, firmar consentimiento, aclarar que se evalúa el sistema, no a la persona.</li>
+        <li><strong>2. Cuestionario previo (5 min)</strong> — datos demográficos, experiencia tecnológica, frecuencia de citas.</li>
+        <li><strong>3. Escenario y tarea T1 (5 min)</strong> — leer escenario en voz alta, observar sin intervenir, registrar tiempo.</li>
+        <li><strong>4. Tareas T2-T5 (12 min)</strong> — misma dinámica; el moderador solo interviene si el participante pide ayuda (se registra como "asistida").</li>
+        <li><strong>5. Cuestionario SUS (5 min)</strong> — 10 afirmaciones, escala 1-5.</li>
+        <li><strong>6. Entrevista breve (5 min)</strong> — ¿qué fue lo más difícil?, ¿qué le cambiarías?, ¿usarías esta plataforma?</li>
+        <li><strong>7. Agradecimiento (2 min)</strong> — vale de café, despedida.</li>
+        <li><strong>8. Sesión de análisis del equipo (30 min)</strong> — consolidar métricas, identificar patrones y priorizar hallazgos.</li>
+      </ul>
+    </section>
+
+    <!-- Sección 5 -->
+    <section class="seccion">
+      <h2><span class="num">5</span> Retroalimentación Cualitativa — Preguntas Guía</h2>
+      <p class="desc">Preguntas abiertas para la entrevista breve, organizadas por tema.</p>
+
+      <table>
+        <caption>Guía de preguntas para la entrevista posterior a las tareas</caption>
+        <thead>
+          <tr>
+            <th>Tema</th>
+            <th>Pregunta</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Dificultad</td>
+            <td>¿En qué paso te sentiste más perdido(a)?</td>
+          </tr>
+          <tr>
+            <td>Confianza</td>
+            <td>¿En qué momento dudaste en tocar un botón?</td>
+          </tr>
+          <tr>
+            <td>Accesibilidad</td>
+            <td>¿El tamaño de letra y los colores te parecieron adecuados?</td>
+          </tr>
+          <tr>
+            <td>Expectativa</td>
+            <td>¿Qué esperabas que pasara al tocar ese botón?</td>
+          </tr>
+          <tr>
+            <td>Mejora</td>
+            <td>Si pudieras cambiar una sola cosa, ¿qué sería?</td>
+          </tr>
+          <tr>
+            <td>Adopción</td>
+            <td>¿Usarías esta plataforma para tus próximas citas? ¿Por qué?</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <div class="footer">Hospital Regional — Sistema de Citas Médicas y Expediente Electrónico</div>
+
+  </div>
+</div>
+</body>
+</html>

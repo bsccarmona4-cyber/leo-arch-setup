@@ -1,0 +1,20 @@
+#!/usr/bin/env bash
+# Local Git pre-commit hook: run shell linting and readme checks before commits.
+# To enable, set in this repo:
+#   git config core.hooksPath hooks
+
+set -euo pipefail
+
+if [ ! -x "./test/lint.sh" ]; then
+	echo "pre-commit: ./test/lint.sh not found or not executable" >&2
+	exit 1
+fi
+
+./test/lint.sh
+
+# Render README and stage if changed
+if [ -x "./scripts/render-readme.sh" ]; then
+	./scripts/render-readme.sh
+	git add README.md
+fi
+

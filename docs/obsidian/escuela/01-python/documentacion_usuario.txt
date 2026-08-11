@@ -1,0 +1,137 @@
+================================================================================
+            DOCUMENTACION DE USUARIO - SISTEMA DE INSCRIPCIONES
+================================================================================
+
+1. DATOS GENERALES
+--------------------------------------------------------------------------------
+Nombre del sistema  : Sistema de Inscripciones
+Version             : 1.0
+Autor               : Leo
+Fecha               : 30 de junio de 2026
+Plataforma          : Escritorio (Windows, Linux, macOS)
+
+
+2. PROPOSITO DEL SISTEMA
+--------------------------------------------------------------------------------
+El Sistema de Inscripciones permite administrar el registro de alumnos,
+cursos e inscripciones de manera sencilla y organizada. Esta dirigido a
+personal administrativo de instituciones educativas que necesiten llevar
+un control de que alumnos estan inscritos en que cursos.
+
+
+3. FUNCIONALIDADES PRINCIPALES
+--------------------------------------------------------------------------------
+
+3.1 Gestion de Alumnos
+    - Registrar nuevos alumnos con sus datos personales
+    - Consultar la lista de alumnos registrados
+    - Modificar los datos de un alumno existente
+    - Eliminar un alumno del sistema
+
+3.2 Gestion de Cursos
+    - Registrar nuevos cursos con nombre, duracion y costo
+    - Consultar la lista de cursos disponibles
+    - Modificar los datos de un curso existente
+    - Eliminar un curso del sistema
+
+3.3 Gestion de Inscripciones
+    - Inscribir un alumno en un curso
+    - Consultar todas las inscripciones realizadas
+    - Modificar los datos de una inscripcion
+    - Eliminar una inscripcion
+    - Auto-completado de costo y duracion al seleccionar un curso
+
+
+4. DATOS QUE MANEJA EL SISTEMA
+--------------------------------------------------------------------------------
+
+4.1 Alumno
+    - ID Alumno     : Identificador unico (se genera automaticamente)
+    - Nombre        : Nombre(s) del alumno
+    - Apellido Paterno
+    - Apellido Materno
+    - CURP          : Clave Unica de Registro de Poblacion (debe ser unica)
+    - Celular       : Numero de telefono celular
+
+4.2 Curso
+    - ID Curso      : Identificador unico (se genera automaticamente)
+    - Nombre        : Nombre del curso
+    - Duracion      : Duracion del curso (ejemplo: "40 horas", "3 meses")
+    - Costo         : Precio del curso en pesos (valor numerico)
+
+4.3 Inscripcion
+    - Folio         : Numero de folio (se genera automaticamente)
+    - Alumno        : Alumno inscrito (se selecciona de una lista)
+    - Curso         : Curso al que se inscribe (se selecciona de una lista)
+    - Costo         : Costo de la inscripcion (se puede modificar)
+    - Duracion      : Duracion (se puede modificar)
+
+
+5. INTERFAZ DEL SISTEMA
+--------------------------------------------------------------------------------
+El sistema utiliza una interfaz con pestanas:
+
+    PESTANA "Alumnos"
+        Permite agregar, consultar, modificar y eliminar alumnos.
+
+    PESTANA "Cursos"
+        Permite agregar, consultar, modificar y eliminar cursos.
+
+    PESTANA "Inscripciones"
+        Permite registrar inscripciones seleccionando un alumno y un
+        curso de listas desplegables. El costo y la duracion se
+        autocompletan al elegir un curso.
+
+
+6. FLUJO DE TRABAJO RECOMENDADO
+--------------------------------------------------------------------------------
+    1. Registrar los alumnos en la pestana "Alumnos".
+    2. Registrar los cursos disponibles en la pestana "Cursos".
+    3. Crear inscripciones en la pestana "Inscripciones" seleccionando
+       el alumno y el curso correspondientes.
+
+    Es necesario seguir este orden porque las inscripciones dependen de
+    que existan alumnos y cursos previamente registrados.
+
+
+7. REGLAS DEL SISTEMA
+--------------------------------------------------------------------------------
+    - No se permiten campos vacios en ningun formulario.
+    - El CURP de un alumno debe ser unico; no se pueden duplicar.
+    - El costo debe ser un valor numerico (puede incluir decimales).
+    - Al eliminar un alumno, se eliminan automaticamente todas sus
+      inscripciones.
+    - Al eliminar un curso, se eliminan automaticamente todas las
+      inscripciones de ese curso.
+    - Los campos ID Alumno, ID Curso y Folio se generan automaticamente
+      y no se pueden modificar manualmente.
+
+
+8. ALMACENAMIENTO DE DATOS
+--------------------------------------------------------------------------------
+    - Los datos se guardan en un archivo llamado "inscripciones.db" que
+      se encuentra en la misma carpeta que el programa.
+    - Este archivo se crea automaticamente la primera vez que se ejecuta
+      el programa.
+    - Para respaldar los datos, basta con copiar el archivo
+      "inscripciones.db" a otra ubicacion.
+    - Para restaurar un respaldo, reemplazar el archivo
+      "inscripciones.db" con la copia de respaldo.
+    - No se requiere conexion a internet ni a un servidor externo.
+
+
+9. SOLUCION DE PROBLEMAS COMUNES
+--------------------------------------------------------------------------------
+
+    Problema                         | Solucion
+    ---------------------------------+------------------------------------------
+    No se abre la aplicacion         | Verificar que Python 3 esta instalado
+    "No module named tkinter"        | Instalar tkinter: sudo apt install
+                                     | python3-tk (Linux)
+    "UNIQUE constraint failed"       | El CURP ya existe, usar uno diferente
+    No aparecen alumnos en           | Registrar alumnos primero en la pestana
+    la lista de inscripciones        | "Alumnos"
+    No aparecen cursos en            | Registrar cursos primero en la pestana
+    la lista de inscripciones        | "Cursos"
+    Se borraron datos                | Verificar que no se elimino el archivo
+                                     | inscripciones.db

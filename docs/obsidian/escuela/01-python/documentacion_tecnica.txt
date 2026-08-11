@@ -1,0 +1,345 @@
+================================================================================
+            DOCUMENTACION TECNICA - SISTEMA DE INSCRIPCIONES
+================================================================================
+
+1. FICHA TECNICA
+--------------------------------------------------------------------------------
+Nombre              : Sistema de Inscripciones
+Archivo principal   : inscripciones_bd.py
+Lenguaje            : Python 3.6+
+Motor de BD         : SQLite 3 (modulo sqlite3 de la libreria estandar)
+Interfaz grafica    : tkinter / ttk (incluido en Python)
+Patron de diseno    : Arquitectura en dos capas (datos + presentacion)
+Archivo de BD       : inscripciones.db (se genera automaticamente)
+Autor               : Leo
+Fecha               : 30 de junio de 2026
+
+
+2. ARQUITECTURA DEL SISTEMA
+--------------------------------------------------------------------------------
+
+    +-----------------------------+
+    |    CAPA DE PRESENTACION     |
+    |    (Clase App - tkinter)    |
+    |                             |
+    |  - Formularios de captura   |
+    |  - Tablas de visualizacion  |
+    |  - Botones CRUD             |
+    |  - Validacion de entrada    |
+    +-------------+---------------+
+                  |
+                  | Llama a funciones CRUD
+                  |
+    +-------------v---------------+
+    |      CAPA DE DATOS          |
+    |   (Funciones SQLite)        |
+    |                             |
+    |  - conectar()               |
+    |  - crear_tablas()           |
+    |  - insertar_*()             |
+    |  - obtener_*()              |
+    |  - actualizar_*()           |
+    |  - eliminar_*()             |
+    +-------------+---------------+
+                  |
+                  | SQL
+                  |
+    +-------------v---------------+
+    |     BASE DE DATOS           |
+    |   inscripciones.db          |
+    |   (SQLite - archivo local)  |
+    +-----------------------------+
+
+
+3. MODELO ENTIDAD-RELACION
+--------------------------------------------------------------------------------
+
+3.1 Diagrama
+
+    +------------------+         +-------------------+
+    |     ALUMNO       |         |      CURSO        |
+    |  (Entidad fuerte)|         |  (Entidad fuerte) |
+    +------------------+         +-------------------+
+    | *IDAlumno (PK)   |         | *IDCurso (PK)     |
+    | Nombre           |         | Nombre            |
+    | ApellidoPaterno  |         | Duracion          |
+    | ApellidoMaterno  |         | Costo             |
+    | CURP (UNIQUE)    |         +-------------------+
+    | Celular          |                  |
+    +------------------+                  |
+             |                            |
+             | 1                        1 |
+             |                            |
+             | N                        N |
+             |     +------------------+   |
+             +---->|   INSCRIPCION    |<--+
+                   | (Entidad debil)  |
+                   +------------------+
+                   | *Folio (PK)      |
+                   | IDAlumno (FK)    |
+                   | IDCurso (FK)     |
+                   | Costo            |
+                   | Duracion         |
+                   +------------------+
+
+3.2 Cardinalidad
+    - Alumno - Inscripcion: 1 a N (un alumno puede tener muchas inscripciones)
+    - Curso - Inscripcion: 1 a N (un curso puede tener muchas inscripciones)
+    - Inscripcion es entidad debil: no puede existir sin un alumno y un curso
+
+3.3 Integridad referencial
+    - FOREIGN KEY (IDAlumno) REFERENCES Alumno(IDAlumno)
+        ON DELETE CASCADE ON UPDATE CASCADE
+    - FOREIGN KEY (IDCurso) REFERENCES Curso(IDCurso)
+        ON DELETE CASCADE ON UPDATE CASCADE
+    - PRAGMA foreign_keys = ON (se activa en cada conexion)
+
+
+4. DEFINICION DE TABLAS (DDL)
+--------------------------------------------------------------------------------
+
+4.1 Tabla ALUMNO
+
+    CREATE TABLE IF NOT EXISTS Alumno (
+        IDAlumno         INTEGER PRIMARY KEY AUTOINCREMENT,
+        Nombre           TEXT    NOT NULL,
+        ApellidoPaterno  TEXT    NOT NULL,
+        ApellidoMaterno  TEXT    NOT NULL,
+        CURP             TEXT    NOT NULL UNIQUE,
+        Celular          TEXT    NOT NULL
+    );
+
+    Campo            | Tipo    | Nulo | Restriccion
+    -----------------+---------+------+---------------------------
+    IDAlumno         | INTEGER | No   | PRIMARY KEY AUTOINCREMENT
+    Nombre           | TEXT    | No   | NOT NULL
+    ApellidoPaterno  | TEXT    | No   | NOT NULL
+    ApellidoMaterno  | TEXT    | No   | NOT NULL
+    CURP             | TEXT    | No   | NOT NULL, UNIQUE
+    Celular          | TEXT    | No   | NOT NULL
+
+4.2 Tabla CURSO
+
+    CREATE TABLE IF NOT EXISTS Curso (
+        IDCurso  INTEGER PRIMARY KEY AUTOINCREMENT,
+        Nombre   TEXT    NOT NULL,
+        Duracion TEXT    NOT NULL,
+        Costo    REAL    NOT NULL
+    );
+
+    Campo    | Tipo    | Nulo | Restriccion
+    ---------+---------+------+---------------------------
+    IDCurso  | INTEGER | No   | PRIMARY KEY AUTOINCREMENT
+    Nombre   | TEXT    | No   | NOT NULL
+    Duracion | TEXT    | No   | NOT NULL
+    Costo    | REAL    | No   | NOT NULL
+
+4.3 Tabla INSCRIPCION
+
+    CREATE TABLE IF NOT EXISTS Inscripcion (
+        Folio     INTEGER PRIMARY KEY AUTOINCREMENT,
+        IDAlumno  INTEGER NOT NULL,
+        IDCurso   INTEGER NOT NULL,
+        Costo     REAL    NOT NULL,
+        Duracion  TEXT    NOT NULL,
+        FOREIGN KEY (IDAlumno) REFERENCES Alumno(IDAlumno)
+            ON DELETE CASCADE ON UPDATE CASCADE,
+        FOREIGN KEY (IDCurso)  REFERENCES Curso(IDCurso)
+            ON DELETE CASCADE ON UPDATE CASCADE
+    );
+
+    Campo    | Tipo    | Nulo | Restriccion
+    ---------+---------+------+------------------------------------------
+    Folio    | INTEGER | No   | PRIMARY KEY AUTOINCREMENT
+    IDAlumno | INTEGER | No   | NOT NULL, FK -> Alumno(IDAlumno) CASCADE
+    IDCurso  | INTEGER | No   | NOT NULL, FK -> Curso(IDCurso) CASCADE
+    Costo    | REAL    | No   | NOT NULL
+    Duracion | TEXT    | No   | NOT NULL
+
+
+5. DEPENDENCIAS Y LIBRERIAS
+--------------------------------------------------------------------------------
+
+    Libreria    | Version  | Uso                        | Instalacion
+    ------------+----------+----------------------------+---------------------
+    tkinter     | Estandar | Interfaz grafica           | Incluido en Python
+    ttk         | Estandar | Widgets con estilos        | Incluido en tkinter
+    messagebox  | Estandar | Cuadros de dialogo         | Incluido en tkinter
+    sqlite3     | Estandar | Motor de base de datos     | Incluido en Python
+    os          | Estandar | Manejo de rutas de archivo | Incluido en Python
+
+    No se requieren librerias externas ni instalacion con pip.
+
+
+6. CATALOGO DE FUNCIONES
+--------------------------------------------------------------------------------
+
+6.1 Capa de datos
+
+    Funcion                  | Descripcion
+    -------------------------+----------------------------------------------
+    conectar()               | Abre conexion a SQLite y activa foreign keys.
+                             | Retorna un objeto Connection.
+    crear_tablas()           | Ejecuta los CREATE TABLE IF NOT EXISTS para
+                             | las tres tablas. Se llama al iniciar.
+
+6.2 CRUD Alumno
+
+    Funcion                          | Parametros
+    ---------------------------------+------------------------------------------
+    insertar_alumno(nombre,          | nombre: str - Nombre del alumno
+      ap_pat, ap_mat, curp, cel)     | ap_pat: str - Apellido paterno
+                                     | ap_mat: str - Apellido materno
+                                     | curp: str - CURP del alumno
+                                     | cel: str - Numero de celular
+    ---------------------------------+------------------------------------------
+    obtener_alumnos()                | Sin parametros. Retorna lista de tuplas
+                                     | con todos los registros de Alumno.
+    ---------------------------------+------------------------------------------
+    actualizar_alumno(id_alumno,     | id_alumno: int - ID del alumno a modificar
+      nombre, ap_pat, ap_mat,        | Resto: mismos que insertar_alumno
+      curp, cel)                     |
+    ---------------------------------+------------------------------------------
+    eliminar_alumno(id_alumno)       | id_alumno: int - ID del alumno a eliminar
+                                     | Elimina en cascada sus inscripciones.
+
+6.3 CRUD Curso
+
+    Funcion                          | Parametros
+    ---------------------------------+------------------------------------------
+    insertar_curso(nombre,           | nombre: str - Nombre del curso
+      duracion, costo)               | duracion: str - Duracion del curso
+                                     | costo: float - Costo del curso
+    ---------------------------------+------------------------------------------
+    obtener_cursos()                 | Sin parametros. Retorna lista de tuplas.
+    ---------------------------------+------------------------------------------
+    actualizar_curso(id_curso,       | id_curso: int - ID del curso a modificar
+      nombre, duracion, costo)       | Resto: mismos que insertar_curso
+    ---------------------------------+------------------------------------------
+    eliminar_curso(id_curso)         | id_curso: int - ID del curso a eliminar
+                                     | Elimina en cascada sus inscripciones.
+
+6.4 CRUD Inscripcion
+
+    Funcion                          | Parametros
+    ---------------------------------+------------------------------------------
+    insertar_inscripcion(id_alumno,  | id_alumno: int - FK a Alumno
+      id_curso, costo, duracion)     | id_curso: int - FK a Curso
+                                     | costo: float - Costo de la inscripcion
+                                     | duracion: str - Duracion
+    ---------------------------------+------------------------------------------
+    obtener_inscripciones()          | Sin parametros. Retorna lista de tuplas
+                                     | con JOIN a Alumno y Curso para mostrar
+                                     | nombres en lugar de IDs.
+    ---------------------------------+------------------------------------------
+    actualizar_inscripcion(folio,    | folio: int - Folio de la inscripcion
+      id_alumno, id_curso,           | Resto: mismos que insertar_inscripcion
+      costo, duracion)               |
+    ---------------------------------+------------------------------------------
+    eliminar_inscripcion(folio)      | folio: int - Folio a eliminar
+
+
+7. CLASE App (INTERFAZ GRAFICA)
+--------------------------------------------------------------------------------
+
+7.1 Atributos de clase (constantes de color)
+
+    Atributo | Valor     | Uso
+    ---------+-----------+---------------------------
+    BG       | #1e1e2e   | Fondo principal
+    FG       | #cdd6f4   | Color de texto
+    ACCENT   | #89b4fa   | Color de acento (azul)
+    ACCENT2  | #a6e3a1   | Color hover (verde)
+    SURFACE  | #313244   | Fondo de campos y tablas
+    RED      | #f38ba8   | Boton eliminar
+
+7.2 Metodos principales
+
+    Metodo                        | Descripcion
+    ------------------------------+---------------------------------------------
+    __init__()                    | Inicializa ventana, estilo y pestanas.
+    _configurar_estilo()          | Aplica tema oscuro a todos los widgets.
+    _crear_tab_alumno()           | Construye la pestana de alumnos.
+    _crear_tab_curso()            | Construye la pestana de cursos.
+    _crear_tab_inscripcion()      | Construye la pestana de inscripciones.
+    refrescar_alumnos()           | Recarga la tabla de alumnos desde la BD.
+    refrescar_cursos()            | Recarga la tabla de cursos desde la BD.
+    refrescar_inscripciones()     | Recarga la tabla de inscripciones y combos.
+    _seleccionar_alumno()         | Carga datos del alumno seleccionado.
+    _seleccionar_curso()          | Carga datos del curso seleccionado.
+    _seleccionar_inscripcion()    | Carga datos de la inscripcion seleccionada.
+    agregar_alumno()              | Valida y agrega un alumno.
+    actualizar_alumno_gui()       | Valida y actualiza un alumno.
+    eliminar_alumno_gui()         | Confirma y elimina un alumno.
+    limpiar_alumno()              | Vacia el formulario de alumno.
+    agregar_curso()               | Valida y agrega un curso.
+    actualizar_curso_gui()        | Valida y actualiza un curso.
+    eliminar_curso_gui()          | Confirma y elimina un curso.
+    limpiar_curso()               | Vacia el formulario de curso.
+    agregar_inscripcion()         | Valida y agrega una inscripcion.
+    actualizar_inscripcion_gui()  | Valida y actualiza una inscripcion.
+    eliminar_inscripcion_gui()    | Confirma y elimina una inscripcion.
+    limpiar_inscripcion()         | Vacia el formulario de inscripcion.
+    _cargar_combos()              | Actualiza listas desplegables.
+    _autorellenar_inscripcion()   | Autocompleta costo y duracion del curso.
+
+
+8. CONSULTAS SQL UTILIZADAS
+--------------------------------------------------------------------------------
+
+8.1 Consulta de inscripciones con JOIN
+
+    SELECT i.Folio,
+           a.IDAlumno || ' - ' || a.Nombre || ' ' || a.ApellidoPaterno
+               || ' ' || a.ApellidoMaterno AS Alumno,
+           c.IDCurso || ' - ' || c.Nombre AS Curso,
+           i.Costo,
+           i.Duracion
+    FROM Inscripcion i
+    JOIN Alumno a ON i.IDAlumno = a.IDAlumno
+    JOIN Curso  c ON i.IDCurso  = c.IDCurso
+
+    Esta consulta une las tres tablas para mostrar en la tabla de
+    inscripciones los nombres del alumno y del curso en lugar de sus IDs.
+
+8.2 Activacion de llaves foraneas
+
+    PRAGMA foreign_keys = ON
+
+    SQLite no activa las llaves foraneas por defecto. Este pragma se
+    ejecuta en cada conexion para garantizar la integridad referencial.
+
+
+9. MANEJO DE ERRORES
+--------------------------------------------------------------------------------
+
+    Excepcion               | Causa                    | Manejo
+    ------------------------+--------------------------+------------------------
+    sqlite3.IntegrityError  | CURP duplicado o FK      | messagebox.showerror()
+                            | invalida                 |
+    ValueError              | Costo no es numerico     | messagebox.showerror()
+    KeyError                | Campo no encontrado      | No deberia ocurrir en
+                            | en diccionario           | uso normal
+
+
+10. ESTRUCTURA DE ARCHIVOS
+--------------------------------------------------------------------------------
+
+    01-python/
+    |-- inscripciones_bd.py          Codigo fuente principal
+    |-- inscripciones.db             Base de datos SQLite (se genera sola)
+    |-- manual_usuario.txt           Manual de usuario
+    |-- documentacion_usuario.txt    Documentacion para el usuario
+    |-- documentacion_tecnica.txt    Este documento
+    |-- documentacion_inscripciones.txt  Documentacion externa general
+
+
+11. POSIBLES MEJORAS FUTURAS
+--------------------------------------------------------------------------------
+    - Busqueda y filtrado de registros por campo
+    - Exportacion de datos a Excel o PDF
+    - Reportes de inscripciones por curso o por alumno
+    - Campo de nombre del alumno separado en nombre y segundo nombre
+    - Validacion de formato de CURP (18 caracteres alfanumericos)
+    - Validacion de formato de celular (10 digitos)
+    - Respaldo automatico de la base de datos

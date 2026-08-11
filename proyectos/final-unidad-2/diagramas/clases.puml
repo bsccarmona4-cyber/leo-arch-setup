@@ -1,0 +1,63 @@
+@startuml
+skinparam classAttributeIconSize 0
+title Diagrama de Clases - Gestion de Biblioteca
+
+abstract class Usuario {
+  - nombre: String
+  - id: String
+  + Usuario(nombre, id)
+  + getNombre(): String
+  + getId(): String
+  + {abstract} calcularTiempoPrestamo(): int
+}
+
+class Estudiante {
+  + Estudiante(nombre, id)
+  + calcularTiempoPrestamo(): int  // 7 dias
+}
+
+class Docente {
+  + Docente(nombre, id)
+  + calcularTiempoPrestamo(): int  // 15 dias
+}
+
+class Libro {
+  - titulo: String
+  - autor: String
+  - isbn: String
+  - anio: int
+  - estado: String
+  + esDisponible(): boolean
+  + marcarPrestado(): void
+  + marcarDisponible(): void
+}
+
+class Prestamo {
+  - fechaPrestamo: LocalDate
+  - fechaDevolucion: LocalDate
+  - diasPermitidos: int
+  + devolver(): void
+  + estaActivo(): boolean
+}
+
+class Biblioteca {
+  - libros: ArrayList<Libro>
+  - usuarios: ArrayList<Usuario>
+  - prestamos: ArrayList<Prestamo>
+  + registrarLibro(libro): void
+  + registrarUsuario(usuario): void
+  + prestarLibro(isbn, idUsuario): void
+  + devolverLibro(isbn): void
+  + reporteLibrosPrestados(): void
+  + mostrarCatalogo(): void
+  + mostrarUsuarios(): void
+}
+
+Usuario <|-- Estudiante
+Usuario <|-- Docente
+Prestamo "1" --> "1" Libro
+Prestamo "1" --> "1" Usuario
+Biblioteca "1" *-- "0..*" Libro
+Biblioteca "1" *-- "0..*" Usuario
+Biblioteca "1" *-- "0..*" Prestamo
+@enduml

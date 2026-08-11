@@ -1,0 +1,62 @@
+{
+  "mcpServers": {
+    "browsermcp": {
+      "command": "node",
+      "args": ["/home/leo/.local/share/mcp-servers/browsermcp/mcp/dist/index.js"]
+    },
+    "n8n-mcp": {
+      "command": "/home/leo/.local/bin/n8n-mcp",
+      "args": []
+    },
+    "fetch": {
+      "command": "/home/leo/.local/bin/mcp-server-fetch",
+      "args": []
+    },
+    "sequential-thinking": {
+      "command": "node",
+      "args": ["/home/leo/mcp-servers/servers/src/sequentialthinking/dist/index.js"]
+    },
+    "filesystem": {
+      "command": "node",
+      "args": ["/home/leo/mcp-servers/servers/src/filesystem/dist/index.js"]
+    },
+    "memory": {
+      "command": "node",
+      "args": ["/home/leo/mcp-servers/servers/src/memory/dist/index.js"]
+    },
+    "puppeteer": {
+      "command": "node",
+      "args": ["/home/leo/mcp-servers/npm-packages/node_modules/.bin/mcp-server-puppeteer"],
+      "env": {
+        "PUPPETEER_EXECUTABLE_PATH": "/usr/bin/google-chrome"
+      }
+    },
+    "figma": {
+      "command": "npx",
+      "args": ["-y", "figma-developer-mcp", "--figma-api-key=TU_FIGMA_KEY", "--stdio", "--image-dir", "./figma-images"],
+      "env": {
+        "DO_NOT_TRACK": "1"
+      }
+    },
+    "bash": {
+      "command": "python3",
+      "args": ["/home/leo/mcp-servers/mcp-bash/server.py"]
+    },
+    "time": {
+      "command": "python3",
+      "args": ["-m", "mcp_server_time"]
+    },
+    "git": {
+      "command": "python3",
+      "args": ["-m", "mcp_server_git"]
+    },
+    "blackmount-nlp": {
+      "command": "python3",
+      "args": ["-m", "blackmount_nlp_mcp"]
+    },
+    "a2asearch": {
+      "command": "npx",
+      "args": ["-y", "a2asearch-mcp"]
+    }
+  }
+}

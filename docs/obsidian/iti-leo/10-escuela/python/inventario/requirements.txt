@@ -1,0 +1,4 @@
+# Dependencias del Sistema de Inventario POO
+# Instalar con: pip install -r requirements.txt
+
+python-dotenv   # Leer variables desde .env

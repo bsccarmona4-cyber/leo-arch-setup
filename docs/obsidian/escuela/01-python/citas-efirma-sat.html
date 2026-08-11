@@ -1,0 +1,1322 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SAT — Servicio de Administración Tributaria</title>
+  <meta name="description" content="Portal del Servicio de Administración Tributaria. Trámites, servicios y citas en línea.">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+  <style>
+    /* ══════════════════════════════════════════════
+       RESET & TOKENS
+       ══════════════════════════════════════════════ */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --guinda: #621132;
+      --guinda-dark: #4a0d26;
+      --guinda-light: #7a1840;
+      --guinda-pale: rgba(98,17,50,0.06);
+      --dorado: #B38E5D;
+      --dorado-hover: #9a7a4e;
+      --dorado-light: #c9a876;
+      --header-bg: #1b1b2f;
+      --header-bg2: #2c2c3e;
+      --body-bg: #f5f5f0;
+      --card-bg: #ffffff;
+      --footer-bg: #2c2c2c;
+      --footer-dark: #1a1a1a;
+      --text: #1a1a1a;
+      --text-light: #555;
+      --text-muted: #888;
+      --border: #e0ddd5;
+      --border-dark: #3a3a3a;
+      --success: #1a7a4a;
+      --success-bg: #e8f5ee;
+      --warning: #7a5200;
+      --warning-bg: #fff8e6;
+      --error: #c0392b;
+    }
+    html { font-size: 14px; -webkit-font-smoothing: antialiased; scroll-behavior: smooth; }
+    body {
+      font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+      font-weight: 400; line-height: 1.6; color: var(--text);
+      background: var(--body-bg); min-height: 100dvh; overflow-x: hidden;
+      display: flex; flex-direction: column;
+    }
+
+    /* ══════════════════════════════════════════════
+       HEADER
+       ══════════════════════════════════════════════ */
+    .gob-topbar { background: var(--guinda); height: 4px; }
+    .sat-header {
+      background: var(--header-bg); padding: 0 24px;
+      display: flex; align-items: center; justify-content: space-between;
+      height: 56px; border-bottom: 1px solid var(--border-dark);
+    }
+    .sat-logo-text {
+      display: flex; align-items: center; gap: 10px; color: #fff; font-size: 0.93rem;
+    }
+    .sat-logo-text .gob-name { color: #ccc; font-size: 0.78rem; }
+    .sat-logo-text .separator { width: 1px; height: 24px; background: #555; }
+    .sat-logo-text .hacienda { color: var(--dorado); font-weight: 500; }
+    .sat-logo-text .sat-badge { display: flex; align-items: center; gap: 4px; font-weight: 500; cursor: pointer; }
+    .sat-logo-text .sat-badge i { font-size: 1rem; color: var(--dorado); }
+    .sat-header-right { display: flex; align-items: center; gap: 20px; }
+    .sat-header-right a, .sat-header-right button {
+      color: #ccc; text-decoration: none; font-size: 0.86rem; background: none;
+      border: none; font-family: inherit; cursor: pointer; transition: color 0.2s;
+    }
+    .sat-header-right a:hover, .sat-header-right button:hover { color: #fff; }
+    .sat-subheader {
+      background: var(--header-bg2); padding: 6px 24px;
+      display: flex; align-items: center; justify-content: space-between; font-size: 0.78rem;
+    }
+    .sat-subheader-left { display: flex; align-items: center; gap: 6px; color: var(--dorado); }
+    .sat-subheader-left i { font-size: 0.9rem; }
+    .sat-subheader-right { display: flex; align-items: center; gap: 16px; }
+    .sat-subheader-right a, .sat-subheader-right span { color: #999; font-size: 0.78rem; text-decoration: none; }
+    .help-link { color: var(--dorado) !important; display: flex; align-items: center; gap: 3px; }
+
+    /* ══════════════════════════════════════════════
+       HOMEPAGE — SAT PORTAL CLONE
+       ══════════════════════════════════════════════ */
+    .home-hero {
+      background: linear-gradient(135deg, var(--guinda) 0%, var(--guinda-dark) 100%);
+      padding: 48px 24px 56px; text-align: center; color: #fff; position: relative; overflow: hidden;
+    }
+    .home-hero::before {
+      content: ''; position: absolute; inset: 0;
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 20px, rgba(255,255,255,0.02) 20px, rgba(255,255,255,0.02) 40px),
+        repeating-linear-gradient(-45deg, transparent, transparent 20px, rgba(255,255,255,0.02) 20px, rgba(255,255,255,0.02) 40px);
+    }
+    .home-hero-inner { position: relative; z-index: 1; max-width: 700px; margin: 0 auto; }
+    .home-hero h1 { font-size: 1.7rem; font-weight: 500; margin-bottom: 8px; }
+    .home-hero p { font-size: 1rem; opacity: 0.85; margin-bottom: 28px; }
+    .home-search {
+      display: flex; max-width: 480px; margin: 0 auto; border-radius: 8px; overflow: hidden;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+    }
+    .home-search input {
+      flex: 1; height: 46px; border: none; padding: 0 16px; font-size: 0.93rem;
+      font-family: inherit; outline: none;
+    }
+    .home-search button {
+      width: 52px; background: var(--dorado); border: none; color: #fff; font-size: 1.2rem;
+      cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s;
+    }
+    .home-search button:hover { background: var(--dorado-hover); }
+
+    .home-content { max-width: 1000px; margin: 0 auto; padding: 0 20px; }
+
+    /* Quick access cards */
+    .home-quickbar {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px; margin: -28px 0 36px; position: relative; z-index: 2;
+    }
+    .home-qcard {
+      background: var(--card-bg); border-radius: 10px; padding: 24px 16px; text-align: center;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.06); cursor: pointer; transition: all 0.25s;
+      border: 1px solid transparent;
+    }
+    .home-qcard:hover { transform: translateY(-3px); box-shadow: 0 6px 20px rgba(0,0,0,0.1); border-color: var(--dorado); }
+    .home-qcard i { font-size: 2rem; color: var(--guinda); display: block; margin-bottom: 8px; }
+    .home-qcard span { font-size: 0.86rem; font-weight: 500; color: var(--text-light); line-height: 1.3; display: block; }
+
+    /* Sections */
+    .home-section { margin-bottom: 40px; }
+    .home-section-title {
+      font-size: 1.28rem; font-weight: 500; color: var(--text); margin-bottom: 16px;
+      display: flex; align-items: center; gap: 8px; padding-bottom: 8px;
+      border-bottom: 2px solid var(--guinda);
+    }
+    .home-section-title i { color: var(--guinda); font-size: 1.4rem; }
+
+    /* e.firma highlight card */
+    .efirma-highlight {
+      background: var(--card-bg); border-radius: 10px; border: 1px solid var(--border);
+      padding: 28px; display: flex; gap: 24px; align-items: center;
+      transition: box-shadow 0.2s; cursor: pointer;
+    }
+    .efirma-highlight:hover { box-shadow: 0 4px 16px rgba(0,0,0,0.08); }
+    .efirma-icon-big {
+      width: 72px; height: 72px; border-radius: 16px; background: var(--guinda-pale);
+      display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+    }
+    .efirma-icon-big i { font-size: 2.2rem; color: var(--guinda); }
+    .efirma-highlight h3 { font-size: 1.07rem; font-weight: 500; margin-bottom: 4px; }
+    .efirma-highlight p { font-size: 0.86rem; color: var(--text-light); margin-bottom: 12px; }
+    .efirma-tags { display: flex; gap: 6px; flex-wrap: wrap; }
+    .efirma-tag {
+      font-size: 0.72rem; padding: 4px 10px; border-radius: 20px;
+      background: var(--guinda-pale); color: var(--guinda); font-weight: 500;
+    }
+    .efirma-tag.gold { background: rgba(179,142,93,0.15); color: var(--dorado-hover); }
+
+    /* Tramite cards grid */
+    .tramites-grid {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px;
+    }
+    .tramite-card {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 20px; cursor: pointer; transition: all 0.2s;
+    }
+    .tramite-card:hover { border-color: var(--guinda); transform: translateY(-2px); box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .tramite-card i { font-size: 1.6rem; color: var(--guinda); margin-bottom: 8px; display: block; }
+    .tramite-card h4 { font-size: 0.93rem; font-weight: 500; margin-bottom: 4px; }
+    .tramite-card p { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* Info bar */
+    .home-infobar {
+      background: var(--card-bg); border: 1px solid var(--border); border-radius: 8px;
+      padding: 16px 20px; display: flex; align-items: center; gap: 16px; margin-bottom: 40px;
+    }
+    .home-infobar i { font-size: 1.6rem; color: var(--dorado); flex-shrink: 0; }
+    .home-infobar .info-text h4 { font-size: 0.93rem; font-weight: 500; }
+    .home-infobar .info-text p { font-size: 0.78rem; color: var(--text-muted); }
+
+    /* ══════════════════════════════════════════════
+       CITAS APP CONTENT
+       ══════════════════════════════════════════════ */
+    .main-content {
+      flex: 1; max-width: 780px; width: 100%; margin: 0 auto; padding: 32px 20px 48px;
+    }
+    .page-title { font-size: 1.57rem; font-weight: 500; margin-bottom: 8px; }
+    .page-title-divider { height: 1px; background: var(--border); margin-bottom: 12px; }
+    .page-subtitle { font-size: 0.93rem; color: var(--text-light); margin-bottom: 28px; }
+
+    /* Landing */
+    .landing-actions { display: flex; gap: 24px; justify-content: center; margin: 48px 0; flex-wrap: wrap; }
+    .landing-btn {
+      display: flex; align-items: center; gap: 10px; padding: 16px 36px;
+      border: 1.5px solid var(--border); border-radius: 8px; background: var(--card-bg);
+      color: var(--text); font-size: 1rem; font-weight: 500; font-family: inherit;
+      cursor: pointer; transition: all 0.25s; min-width: 260px; justify-content: center;
+    }
+    .landing-btn i { font-size: 1.3rem; color: var(--text-light); }
+    .landing-btn:hover { border-color: var(--guinda); background: var(--guinda-pale); color: var(--guinda); }
+    .landing-btn:hover i { color: var(--guinda); }
+
+    /* Tramite options */
+    .tramite-section { margin-bottom: 32px; }
+    .tramite-section h3 { font-size: 1.14rem; font-weight: 500; margin-bottom: 16px; }
+    .tramite-option {
+      display: flex; align-items: center; gap: 12px; padding: 14px 18px;
+      background: var(--guinda); color: #fff; border: none; border-radius: 6px;
+      margin-bottom: 8px; cursor: pointer; width: 100%; font-size: 0.93rem;
+      font-family: inherit; text-align: left; transition: background 0.2s;
+    }
+    .tramite-option:hover { background: var(--guinda-light); }
+    .tramite-option .tramite-arrow { font-size: 1.1rem; color: var(--dorado); }
+    .tramite-option .tramite-badge {
+      margin-left: auto; font-size: 11px; padding: 2px 10px; border-radius: 20px; white-space: nowrap;
+    }
+    .tramite-option .tramite-badge.presencial { background: rgba(179,142,93,0.3); color: var(--dorado-light); }
+    .tramite-option .tramite-badge.en-linea { background: rgba(26,122,74,0.3); color: #68d391; }
+
+    /* Card panel */
+    .card-panel {
+      background: var(--card-bg); border: 0.5px solid var(--border); border-radius: 10px;
+      padding: 28px 28px 32px; margin-bottom: 20px; animation: fadeIn 0.35s ease;
+    }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+    .card-panel h3 { font-size: 1.07rem; font-weight: 500; margin-bottom: 4px; display: flex; align-items: center; gap: 8px; }
+    .card-panel h3 i { color: var(--guinda); font-size: 1.2rem; }
+    .card-panel .card-desc { font-size: 0.86rem; color: var(--text-light); margin-bottom: 20px; }
+
+    /* Stepper */
+    .stepper { display: flex; align-items: center; margin-bottom: 28px; padding: 16px 0; border-bottom: 0.5px solid var(--border); }
+    .stepper-step { display: flex; align-items: center; gap: 8px; font-size: 0.86rem; color: var(--text-muted); white-space: nowrap; }
+    .stepper-step .stepper-num {
+      width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center;
+      justify-content: center; font-size: 0.78rem; font-weight: 500;
+      border: 1.5px solid var(--border); background: var(--card-bg); color: var(--text-muted);
+      transition: all 0.3s; flex-shrink: 0;
+    }
+    .stepper-step .stepper-num i { font-size: 0.85rem; }
+    .stepper-step.active .stepper-num { background: var(--guinda); border-color: var(--guinda); color: #fff; }
+    .stepper-step.active { color: var(--guinda); font-weight: 500; }
+    .stepper-step.done .stepper-num { background: var(--success); border-color: var(--success); color: #fff; }
+    .stepper-step.done { color: var(--success); }
+    .stepper-line { flex: 1; height: 1.5px; background: var(--border); margin: 0 8px; transition: background 0.3s; min-width: 20px; }
+    .stepper-line.filled { background: var(--success); }
+
+    /* Forms */
+    .form-row { display: grid; gap: 16px; }
+    .form-row.cols-2 { grid-template-columns: 1fr 1fr; }
+    .form-group { margin-bottom: 18px; }
+    .form-label { display: block; font-size: 0.86rem; color: var(--text-light); margin-bottom: 5px; text-align: center; }
+    .form-label .required { color: var(--dorado); }
+    .form-input, .form-select {
+      width: 100%; height: 40px; border: 0.5px solid var(--border); border-radius: 6px;
+      padding: 0 12px; font-size: 0.93rem; font-family: inherit; color: var(--text);
+      background: var(--card-bg); outline: none; transition: box-shadow 0.2s;
+    }
+    .form-input:focus, .form-select:focus { box-shadow: 0 0 0 3px rgba(98,17,50,0.12); }
+    .form-input::placeholder { color: #bbb; }
+    .form-input.mono { font-family: 'SF Mono','Cascadia Code','Consolas',monospace; letter-spacing: 0.5px; }
+    .form-select {
+      -webkit-appearance: none; appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24'%3E%3Cpath fill='%236B6B6B' d='M7 10l5 5 5-5z'/%3E%3C/svg%3E");
+      background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px;
+    }
+
+    /* Buttons */
+    .btn-actions { display: flex; gap: 12px; margin-top: 24px; }
+    .btn {
+      height: 44px; border-radius: 8px; font-size: 0.93rem; font-weight: 500; font-family: inherit;
+      cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+      gap: 8px; padding: 0 28px; transition: all 0.2s; border: none;
+    }
+    .btn-primary { background: var(--guinda); color: #fff; }
+    .btn-primary:hover:not(:disabled) { background: var(--guinda-dark); }
+    .btn-primary:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-outline { background: var(--card-bg); color: var(--text); border: 1.5px solid var(--border); }
+    .btn-outline:hover { border-color: var(--guinda); color: var(--guinda); }
+    .btn-dorado { background: var(--dorado); color: #fff; }
+    .btn-dorado:hover:not(:disabled) { background: var(--dorado-hover); }
+    .btn-dorado:disabled { opacity: 0.35; cursor: not-allowed; }
+    .btn-salir { background: var(--guinda); color: #fff; padding: 0 24px; }
+    .btn-salir:hover { background: var(--guinda-dark); }
+    .btn-siguiente { flex: 1; }
+
+    /* Service cards */
+    .service-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 16px; margin: 24px 0; }
+    .service-card {
+      background: var(--card-bg); border: 1.5px solid var(--border); border-radius: 10px;
+      padding: 28px 16px; text-align: center; cursor: pointer; transition: all 0.25s;
+    }
+    .service-card:hover { border-color: var(--guinda); transform: translateY(-2px); box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .service-card.selected { border-color: var(--guinda); background: var(--guinda-pale); }
+    .service-card .svc-icon {
+      width: 56px; height: 56px; margin: 0 auto 12px; display: flex; align-items: center;
+      justify-content: center; border-radius: 50%; background: var(--body-bg); color: var(--text-light);
+      font-size: 1.6rem; transition: all 0.25s;
+    }
+    .service-card:hover .svc-icon, .service-card.selected .svc-icon { background: var(--guinda); color: #fff; }
+    .service-card .svc-label { font-size: 0.86rem; font-weight: 500; color: var(--text-light); line-height: 1.4; }
+
+    /* e.firma tabs */
+    .efirma-tabs { display: flex; gap: 4px; margin-bottom: 24px; overflow-x: auto; padding-bottom: 4px; }
+    .efirma-tab {
+      padding: 10px 16px; border: 1px solid var(--border); border-radius: 6px;
+      background: var(--card-bg); color: var(--text-light); font-size: 0.78rem;
+      font-family: inherit; cursor: pointer; transition: all 0.2s; white-space: nowrap;
+    }
+    .efirma-tab:hover { border-color: var(--guinda); color: var(--guinda); }
+    .efirma-tab.active { background: var(--guinda); color: #fff; border-color: var(--guinda); font-weight: 500; }
+
+    /* Time slots */
+    .slots-label { font-size: 0.86rem; color: var(--text-light); margin-bottom: 10px; display: block; }
+    .slots-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); gap: 8px; margin-bottom: 24px; }
+    .slot-btn {
+      height: 38px; border: 0.5px solid var(--border); border-radius: 6px; background: var(--card-bg);
+      color: var(--text); font-size: 0.86rem; font-family: inherit; cursor: pointer; transition: all 0.2s;
+    }
+    .slot-btn:hover:not(.unavailable):not(.selected) { border-color: var(--guinda); background: var(--guinda-pale); }
+    .slot-btn.selected { background: var(--guinda); color: #fff; border-color: var(--guinda); font-weight: 500; }
+    .slot-btn.unavailable { background: var(--body-bg); color: #ccc; cursor: not-allowed; text-decoration: line-through; }
+
+    /* Alerts */
+    .alert { display: flex; align-items: flex-start; gap: 10px; border-radius: 6px; padding: 12px 16px; margin-bottom: 18px; font-size: 0.86rem; line-height: 1.5; animation: fadeIn 0.3s; }
+    .alert i { font-size: 1.1rem; margin-top: 1px; flex-shrink: 0; }
+    .alert-warning { background: var(--warning-bg); color: var(--warning); }
+    .alert-info { background: #eef2ff; color: #4338ca; }
+    .alert-success { background: var(--success-bg); color: var(--success); }
+
+    /* Summary */
+    .summary-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+    .summary-table tr { border-bottom: 0.5px solid var(--border); }
+    .summary-table tr:last-child { border-bottom: none; }
+    .summary-table td { padding: 10px 4px; font-size: 0.93rem; vertical-align: top; }
+    .summary-table td:first-child { color: var(--text-light); font-size: 0.86rem; width: 140px; padding-right: 12px; }
+    .summary-table td:last-child { font-weight: 500; }
+    .summary-table .mono { font-family: 'SF Mono','Cascadia Code','Consolas',monospace; letter-spacing: 0.5px; }
+
+    .checklist { margin-bottom: 24px; }
+    .checklist-title { font-size: 0.93rem; font-weight: 500; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; color: var(--warning); }
+    .checklist-item { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: var(--body-bg); border-radius: 6px; margin-bottom: 6px; font-size: 0.93rem; }
+    .checklist-item i { color: var(--guinda); font-size: 1rem; flex-shrink: 0; }
+
+    /* Success */
+    .success-screen { text-align: center; padding: 24px 0; animation: fadeIn 0.5s; }
+    .success-icon-wrap { width: 80px; height: 80px; border-radius: 50%; background: var(--success-bg); display: inline-flex; align-items: center; justify-content: center; margin-bottom: 20px; }
+    .success-icon-wrap i { font-size: 2.6rem; color: var(--success); }
+    .success-screen h2 { font-size: 1.28rem; font-weight: 500; margin-bottom: 6px; }
+    .success-screen .success-sub { font-size: 0.93rem; color: var(--text-light); margin-bottom: 20px; }
+    .success-folio {
+      font-family: 'SF Mono','Cascadia Code','Consolas',monospace; font-size: 1.14rem; font-weight: 500;
+      color: var(--guinda); background: var(--body-bg); display: inline-block; padding: 10px 24px;
+      border-radius: 8px; letter-spacing: 1.5px; margin-bottom: 24px; border: 1px solid var(--border);
+    }
+    .success-details { background: var(--body-bg); border-radius: 8px; padding: 16px 24px; margin: 0 auto 20px; text-align: left; max-width: 400px; }
+    .success-row { display: flex; justify-content: space-between; padding: 7px 0; font-size: 0.93rem; border-bottom: 0.5px solid var(--border); }
+    .success-row:last-child { border-bottom: none; }
+    .success-row .label { color: var(--text-light); font-size: 0.86rem; }
+    .success-row .value { font-weight: 500; text-align: right; }
+    .success-msg { font-size: 0.93rem; color: var(--text-light); margin-top: 12px; display: flex; align-items: center; justify-content: center; gap: 6px; }
+    .success-msg i { color: var(--success); font-size: 1.1rem; }
+
+    /* Token inputs */
+    .token-inputs { display: flex; gap: 8px; justify-content: center; margin: 16px 0; }
+    .token-input {
+      width: 44px; height: 48px; text-align: center; font-size: 1.28rem; font-weight: 500;
+      font-family: 'SF Mono','Cascadia Code',monospace; border: 1.5px solid var(--border);
+      border-radius: 8px; outline: none; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .token-input:focus { border-color: var(--guinda); box-shadow: 0 0 0 3px rgba(98,17,50,0.12); }
+
+    /* Footer */
+    .sat-footer { background: var(--footer-bg); color: #ccc; padding: 32px 24px 20px; font-size: 0.78rem; line-height: 1.7; }
+    .sat-footer-inner { max-width: 960px; margin: 0 auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 32px; }
+    .sat-footer h4 { color: var(--dorado); font-size: 0.86rem; font-weight: 500; margin-bottom: 10px; }
+    .sat-footer a { color: #ccc; text-decoration: none; display: block; transition: color 0.2s; }
+    .sat-footer a:hover { color: var(--dorado); }
+    .sat-footer .contact-phone { font-weight: 500; color: #fff; font-size: 0.86rem; }
+    .gob-footer { background: var(--footer-dark); padding: 20px 24px; border-top: 3px solid var(--guinda); }
+    .gob-footer-inner { max-width: 960px; margin: 0 auto; display: flex; align-items: center; justify-content: space-between; }
+    .gob-footer-brand { color: #fff; font-size: 1rem; font-weight: 500; display: flex; align-items: center; gap: 8px; }
+    .gob-footer-brand .gob-icon { width: 36px; height: 36px; border-radius: 50%; background: var(--guinda); display: flex; align-items: center; justify-content: center; font-size: 1.1rem; }
+    .gob-footer-links a { color: #999; text-decoration: none; font-size: 0.78rem; margin-left: 16px; }
+    .gob-footer-links a:hover { color: var(--dorado); }
+    .pattern-bar {
+      height: 48px; background: var(--guinda);
+      background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 12px, rgba(255,255,255,0.04) 12px, rgba(255,255,255,0.04) 24px),
+        repeating-linear-gradient(-45deg, transparent, transparent 12px, rgba(255,255,255,0.04) 12px, rgba(255,255,255,0.04) 24px);
+    }
+
+    /* Back link */
+    .back-link {
+      display: inline-flex; align-items: center; gap: 4px; color: var(--text-light); font-size: 0.86rem;
+      cursor: pointer; margin-bottom: 12px; border: none; background: none; font-family: inherit; padding: 0;
+      transition: color 0.2s;
+    }
+    .back-link:hover { color: var(--guinda); }
+    .back-link i { font-size: 1rem; }
+
+    .hidden { display: none !important; }
+
+    /* ══════════════════════════════════════════════
+       RESPONSIVE
+       ══════════════════════════════════════════════ */
+    @media (max-width: 768px) {
+      .home-quickbar { grid-template-columns: repeat(3, 1fr); margin-top: -20px; }
+      .efirma-highlight { flex-direction: column; text-align: center; }
+      .tramites-grid { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 600px) {
+      .sat-header { padding: 0 12px; }
+      .sat-header-right { gap: 12px; }
+      .sat-subheader { padding: 6px 12px; }
+      .sat-logo-text .gob-name { display: none; }
+      .sat-logo-text .separator:first-of-type { display: none; }
+      .main-content { padding: 20px 14px 36px; }
+      .landing-actions { flex-direction: column; align-items: stretch; gap: 12px; margin: 32px 0; }
+      .landing-btn { min-width: auto; }
+      .card-panel { padding: 20px 16px 24px; }
+      .form-row.cols-2 { grid-template-columns: 1fr; }
+      .btn-actions { flex-direction: column; }
+      .btn-actions .btn { width: 100%; }
+      .service-grid { grid-template-columns: 1fr 1fr; }
+      .efirma-tab { padding: 8px 12px; font-size: 0.72rem; }
+      .stepper-step span { display: none; }
+      .slots-grid { grid-template-columns: repeat(3, 1fr); }
+      .sat-footer-inner { grid-template-columns: 1fr; gap: 20px; }
+      .gob-footer-inner { flex-direction: column; gap: 12px; text-align: center; }
+      .gob-footer-links a { margin-left: 0; margin: 0 8px; }
+      .home-quickbar { grid-template-columns: repeat(2, 1fr); gap: 10px; }
+      .home-hero { padding: 32px 16px 40px; }
+      .home-hero h1 { font-size: 1.3rem; }
+      .tramites-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- GOB TOPBAR -->
+  <div class="gob-topbar"></div>
+
+  <!-- SAT HEADER -->
+  <header class="sat-header">
+    <div class="sat-header-left">
+      <div class="sat-logo-text">
+        <span class="gob-name"><i class="ti ti-building-bank"></i> México</span>
+        <span class="separator"></span>
+        <span class="hacienda">Hacienda</span>
+        <span class="separator"></span>
+        <span class="sat-badge" id="logoHome"><i class="ti ti-grid-dots"></i> SAT</span>
+      </div>
+    </div>
+    <div class="sat-header-right">
+      <button id="navTramites">Trámites</button>
+      <a href="#">Gobierno</a>
+      <a href="#"><i class="ti ti-search" style="font-size:1rem"></i></a>
+    </div>
+  </header>
+
+  <!-- SAT SUBHEADER -->
+  <div class="sat-subheader">
+    <div class="sat-subheader-left">
+      <i class="ti ti-device-laptop"></i>
+      <span>Trámites Digitales</span>
+    </div>
+    <div class="sat-subheader-right">
+      <span>Consulta el aviso de privacidad</span>
+      <a href="#" class="help-link">Ayuda <i class="ti ti-help-circle"></i></a>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       SCREEN: HOME — SAT PORTAL CLONE
+       ═══════════════════════════════════════════ -->
+  <div id="screen-home">
+    <!-- Hero -->
+    <div class="home-hero">
+      <div class="home-hero-inner">
+        <h1>Servicio de Administración Tributaria</h1>
+        <p>Realiza tus trámites fiscales de manera fácil y segura</p>
+        <div class="home-search">
+          <input type="text" placeholder="Buscar trámites, servicios, información...">
+          <button><i class="ti ti-search"></i></button>
+        </div>
+      </div>
+    </div>
+
+    <div class="home-content">
+      <!-- Quick access -->
+      <div class="home-quickbar">
+        <div class="home-qcard" id="qcCitas">
+          <i class="ti ti-calendar-event"></i>
+          <span>Citas</span>
+        </div>
+        <div class="home-qcard" id="qcEfirma">
+          <i class="ti ti-certificate"></i>
+          <span>e.firma</span>
+        </div>
+        <div class="home-qcard" data-fake>
+          <i class="ti ti-file-invoice"></i>
+          <span>Factura electrónica</span>
+        </div>
+        <div class="home-qcard" data-fake>
+          <i class="ti ti-receipt-tax"></i>
+          <span>Declaraciones</span>
+        </div>
+        <div class="home-qcard" data-fake>
+          <i class="ti ti-id"></i>
+          <span>RFC</span>
+        </div>
+        <div class="home-qcard" data-fake>
+          <i class="ti ti-help-circle"></i>
+          <span>Ayuda</span>
+        </div>
+      </div>
+
+      <!-- e.firma highlight -->
+      <div class="home-section">
+        <div class="home-section-title"><i class="ti ti-certificate"></i> Firma Electrónica Avanzada (e.firma)</div>
+        <div class="efirma-highlight" id="efirmaHighlight">
+          <div class="efirma-icon-big"><i class="ti ti-certificate"></i></div>
+          <div>
+            <h3>Trámites de e.firma</h3>
+            <p>La e.firma es el conjunto de datos y caracteres que permite la identificación del firmante. Te permite realizar trámites y utilizar servicios en el Portal del SAT de forma segura.</p>
+            <div class="efirma-tags">
+              <span class="efirma-tag">Primera vez</span>
+              <span class="efirma-tag">Renovación en línea</span>
+              <span class="efirma-tag">Renovación con SAT ID</span>
+              <span class="efirma-tag gold">Renovación presencial</span>
+              <span class="efirma-tag">Revocación</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Trámites populares -->
+      <div class="home-section">
+        <div class="home-section-title"><i class="ti ti-clipboard-list"></i> Trámites y servicios</div>
+        <div class="tramites-grid">
+          <div class="tramite-card" id="tcCitas">
+            <i class="ti ti-calendar-plus"></i>
+            <h4>Agendar cita</h4>
+            <p>Registra una cita para atención presencial en módulos SAT</p>
+          </div>
+          <div class="tramite-card" data-fake>
+            <i class="ti ti-user-plus"></i>
+            <h4>Inscripción al RFC</h4>
+            <p>Obtén tu Registro Federal de Contribuyentes</p>
+          </div>
+          <div class="tramite-card" data-fake>
+            <i class="ti ti-file-text"></i>
+            <h4>Constancia de situación fiscal</h4>
+            <p>Genera tu constancia actualizada</p>
+          </div>
+          <div class="tramite-card" data-fake>
+            <i class="ti ti-building"></i>
+            <h4>Buzón tributario</h4>
+            <p>Consulta notificaciones y mensajes del SAT</p>
+          </div>
+          <div class="tramite-card" data-fake>
+            <i class="ti ti-receipt"></i>
+            <h4>Declaración anual</h4>
+            <p>Presenta tu declaración anual de impuestos</p>
+          </div>
+          <div class="tramite-card" data-fake>
+            <i class="ti ti-lock"></i>
+            <h4>Contraseña SAT</h4>
+            <p>Genera o renueva tu contraseña de acceso</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Info bar -->
+      <div class="home-infobar">
+        <i class="ti ti-phone"></i>
+        <div class="info-text">
+          <h4>MarcaSAT: 55 627 22 728</h4>
+          <p>Lunes a viernes de 9:00 a 18:00 horas. Atención telefónica y chat en línea.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CITAS APP SCREENS (hidden initially)
+       ═══════════════════════════════════════════ -->
+  <main class="main-content hidden" id="mainContent">
+
+    <!-- SCREEN: CITAS LANDING -->
+    <div id="screen-landing" class="hidden">
+      <div class="page-title-area">
+        <h1 class="page-title">Solicitud de citas del Servicio de Administración Tributaria</h1>
+        <div class="page-title-divider"></div>
+        <p class="page-subtitle">Si requieres de una cita, regístrala o si tienes una puedes consultarla o cancelarla.</p>
+      </div>
+      <div class="landing-actions">
+        <button class="landing-btn" id="btnRegistrarCita">Registrar cita <i class="ti ti-calendar-plus"></i></button>
+        <button class="landing-btn" id="btnConsultarCita">Consultar/Gestionar cita <i class="ti ti-search"></i></button>
+      </div>
+    </div>
+
+    <!-- SCREEN: OPCIONES DE TRAMITE -->
+    <div id="screen-tramite" class="hidden">
+      <div class="page-title-area">
+        <h1 class="page-title">Registro de cita</h1>
+        <div class="page-title-divider"></div>
+        <p class="page-subtitle">Recuerda que las citas son intransferibles.</p>
+      </div>
+      <div class="tramite-section">
+        <h3>Opciones de trámite</h3>
+        <button class="tramite-option" id="btnTramite1">
+          <span class="tramite-arrow">»</span>
+          Inscripción al RFC + e.firma (primera vez)
+          <span class="tramite-badge presencial">Presencial</span>
+        </button>
+        <button class="tramite-option" id="btnTramite2">
+          <span class="tramite-arrow">»</span>
+          Obtener e.firma — Contribuyente con RFC
+          <span class="tramite-badge presencial">Presencial</span>
+        </button>
+        <button class="tramite-option" id="btnTramite3">
+          <span class="tramite-arrow">»</span>
+          Renovar e.firma
+          <span class="tramite-badge en-linea">Presencial / En línea</span>
+        </button>
+      </div>
+      <div class="btn-actions" style="justify-content:center">
+        <button class="btn btn-salir" id="btnSalirTramite">Salir</button>
+      </div>
+    </div>
+
+    <!-- SCREEN: DATOS + WIZARD -->
+    <div id="screen-datos" class="hidden">
+      <button class="back-link" id="backToDatos"><i class="ti ti-chevron-left"></i> Regresar a opciones de trámite</button>
+      <div class="page-title-area">
+        <h1 class="page-title">Registro de cita</h1>
+        <div class="page-title-divider"></div>
+      </div>
+
+      <!-- Stepper -->
+      <div class="stepper" id="mainStepper">
+        <div class="stepper-step active" id="ss1"><span class="stepper-num" id="sn1">1</span><span>Datos</span></div>
+        <div class="stepper-line" id="sl1"></div>
+        <div class="stepper-step" id="ss2"><span class="stepper-num" id="sn2">2</span><span>Servicio</span></div>
+        <div class="stepper-line" id="sl2"></div>
+        <div class="stepper-step" id="ss3"><span class="stepper-num" id="sn3">3</span><span>Módulo</span></div>
+        <div class="stepper-line" id="sl3"></div>
+        <div class="stepper-step" id="ss4"><span class="stepper-num" id="sn4">4</span><span>Confirmar</span></div>
+      </div>
+
+      <!-- Panel: Datos personales -->
+      <div class="card-panel" id="panelDatos">
+        <h3><i class="ti ti-user"></i> Datos del contribuyente</h3>
+        <p class="card-desc">Ingresa tu información personal para continuar con el registro.</p>
+        <div id="alertTramiteInfo"></div>
+        <div id="fieldCURP" class="form-group">
+          <label class="form-label">CURP<span class="required">*</span>:</label>
+          <input type="text" class="form-input mono" id="inputCURP" maxlength="18" placeholder="Ej: GARC850101HDFRRL09" autocomplete="off" spellcheck="false">
+        </div>
+        <div id="fieldRFC" class="form-group hidden">
+          <label class="form-label">RFC<span class="required">*</span>:</label>
+          <input type="text" class="form-input mono" id="inputRFC" maxlength="13" placeholder="Ej: GARC850101XXX" autocomplete="off" spellcheck="false">
+        </div>
+        <div class="form-group">
+          <label class="form-label">Nombre Completo<span class="required">*</span>:</label>
+          <input type="text" class="form-input" id="inputNombre" placeholder="Como aparece en tu identificación" autocomplete="off">
+        </div>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label">Correo electrónico<span class="required">*</span>:</label>
+            <input type="email" class="form-input" id="inputEmail" placeholder="correo@ejemplo.com">
+          </div>
+          <div class="form-group">
+            <label class="form-label">Confirmar correo<span class="required">*</span>:</label>
+            <input type="email" class="form-input" id="inputEmailConfirm" placeholder="correo@ejemplo.com">
+          </div>
+        </div>
+        <div class="btn-actions">
+          <button class="btn btn-salir" id="btnSalirDatos">Salir</button>
+          <button class="btn btn-dorado btn-siguiente" id="btnSiguienteDatos">Siguiente</button>
+        </div>
+      </div>
+
+      <!-- Panel: Token verification -->
+      <div class="card-panel hidden" id="panelToken">
+        <h3><i class="ti ti-mail-check"></i> Verificación de correo</h3>
+        <p class="card-desc">Hemos enviado un código de verificación a tu correo electrónico.</p>
+        <div class="alert alert-info">
+          <i class="ti ti-info-circle"></i>
+          <span><strong>Prototipo:</strong> El código es <strong id="tokenDisplay">000000</strong> — o presiona "Verificar" directamente para continuar.</span>
+        </div>
+        <div class="token-inputs" id="tokenInputs">
+          <input type="text" class="token-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="token-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="token-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="token-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="token-input" maxlength="1" inputmode="numeric">
+          <input type="text" class="token-input" maxlength="1" inputmode="numeric">
+        </div>
+        <div class="btn-actions" style="justify-content:center">
+          <button class="btn btn-dorado" id="btnVerifyToken">Verificar</button>
+        </div>
+      </div>
+
+      <!-- Panel: Service selection -->
+      <div class="card-panel hidden" id="panelServicio">
+        <h3><i class="ti ti-category"></i> Selecciona tu cita</h3>
+        <p class="card-desc">Recuerda que las citas son intransferibles.</p>
+        <div class="service-grid" id="serviceGrid">
+          <div class="service-card" data-service="generales">
+            <div class="svc-icon"><i class="ti ti-calendar-event"></i></div>
+            <div class="svc-label">Servicios Generales</div>
+          </div>
+          <div class="service-card" data-service="marbetes">
+            <div class="svc-icon"><i class="ti ti-file-barcode"></i></div>
+            <div class="svc-label">Marbetes y Precintos</div>
+          </div>
+          <div class="service-card" data-service="recaudacion">
+            <div class="svc-icon"><i class="ti ti-building-bank"></i></div>
+            <div class="svc-label">Recaudación y Auditoría</div>
+          </div>
+        </div>
+        <div class="hidden" id="efirmaSection">
+          <h3 style="margin-bottom:8px"><i class="ti ti-certificate"></i> Firma Electrónica Avanzada (e.firma)</h3>
+          <p class="card-desc">Selecciona el tipo de trámite de e.firma.</p>
+          <div class="efirma-tabs" id="efirmaTabs"></div>
+          <div id="efirmaTabContent"></div>
+        </div>
+        <div class="btn-actions">
+          <button class="btn btn-outline" id="btnBackServicio"><i class="ti ti-chevron-left"></i> Regresar</button>
+          <button class="btn btn-dorado btn-siguiente" id="btnSiguienteServicio" disabled>Siguiente</button>
+        </div>
+      </div>
+
+      <!-- Panel: Module + Date + Time -->
+      <div class="card-panel hidden" id="panelModulo">
+        <h3><i class="ti ti-map-pin"></i> Selecciona módulo y horario</h3>
+        <p class="card-desc">Elige el módulo SAT más cercano, una fecha y un horario disponible.</p>
+        <div class="form-row cols-2">
+          <div class="form-group">
+            <label class="form-label">Estado<span class="required">*</span></label>
+            <select class="form-select" id="selectEstado"><option value="">Seleccionar estado...</option></select>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Módulo SAT<span class="required">*</span></label>
+            <select class="form-select" id="selectModulo" disabled><option value="">Primero elige estado</option></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">Fecha de la cita<span class="required">*</span></label>
+          <input type="date" class="form-input" id="inputFecha" disabled>
+        </div>
+        <div id="slotsContainer" class="hidden">
+          <span class="slots-label">Horarios disponibles — selecciona uno:</span>
+          <div class="slots-grid" id="slotsGrid"></div>
+        </div>
+        <div class="btn-actions">
+          <button class="btn btn-outline" id="btnBackModulo"><i class="ti ti-chevron-left"></i> Regresar</button>
+          <button class="btn btn-dorado btn-siguiente" id="btnSiguienteModulo" disabled>Siguiente</button>
+        </div>
+      </div>
+
+      <!-- Panel: Confirmation -->
+      <div class="card-panel hidden" id="panelConfirm">
+        <h3><i class="ti ti-clipboard-check"></i> Confirma tu cita</h3>
+        <p class="card-desc">Revisa los datos antes de agendar. Asegúrate de llevar la documentación requerida.</p>
+        <table class="summary-table" id="summaryTable"></table>
+        <div class="checklist">
+          <div class="checklist-title"><i class="ti ti-alert-triangle"></i> Documentos que debes llevar</div>
+          <div id="checklistItems"></div>
+        </div>
+        <div class="btn-actions">
+          <button class="btn btn-outline" id="btnBackConfirm"><i class="ti ti-chevron-left"></i> Regresar</button>
+          <button class="btn btn-primary btn-siguiente" id="btnAgendar"><i class="ti ti-calendar-check"></i> Agendar cita</button>
+        </div>
+      </div>
+
+      <!-- Panel: Success -->
+      <div class="hidden" id="panelSuccess">
+        <div class="success-screen">
+          <div class="success-icon-wrap"><i class="ti ti-circle-check"></i></div>
+          <h2>¡Cita agendada con éxito!</h2>
+          <p class="success-sub">Tu cita ha sido registrada correctamente en el sistema.</p>
+          <div class="success-folio" id="folioNumber"></div>
+          <div class="success-details" id="successDetails"></div>
+          <div class="success-msg"><i class="ti ti-mail-check"></i> Recibirás confirmación en tu correo electrónico</div>
+          <div class="btn-actions" style="justify-content:center;margin-top:24px;">
+            <button class="btn btn-outline" id="btnNuevaCita"><i class="ti ti-plus"></i> Agendar otra cita</button>
+            <button class="btn btn-salir" id="btnSalirFinal">Ir al inicio</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SCREEN: CONSULTAR CITA -->
+    <div id="screen-consultar" class="hidden">
+      <button class="back-link" id="backFromConsultar"><i class="ti ti-chevron-left"></i> Regresar</button>
+      <div class="page-title-area">
+        <h1 class="page-title">Consultar / Gestionar cita</h1>
+        <div class="page-title-divider"></div>
+        <p class="page-subtitle">Ingresa tu folio de cita para consultar, modificar o cancelar.</p>
+      </div>
+      <div class="card-panel">
+        <div class="form-group">
+          <label class="form-label">Número de folio<span class="required">*</span></label>
+          <input type="text" class="form-input mono" id="inputFolioConsulta" placeholder="SAT-2026-XXXX" maxlength="13" autocomplete="off">
+        </div>
+        <div id="consultaResult" class="hidden"></div>
+        <div class="btn-actions">
+          <button class="btn btn-salir" id="btnSalirConsulta">Salir</button>
+          <button class="btn btn-dorado btn-siguiente" id="btnBuscarCita">Buscar cita</button>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <!-- FOOTER -->
+  <div class="pattern-bar"></div>
+  <footer class="sat-footer">
+    <div class="sat-footer-inner">
+      <div>
+        <h4>Portal de trámites y servicios</h4>
+        <a href="#">Prensa</a><a href="#">Derechos del Contribuyente</a>
+        <a href="#">Datos abiertos</a><a href="#">Aviso de privacidad</a>
+        <a href="#">Guía de usuario nuevo Portal</a>
+      </div>
+      <div>
+        <h4>Servicio de Administración Tributaria</h4>
+        <p>Av. Hidalgo núm. 77, Col. Guerrero, 06300, Alc. Cuauhtémoc, Ciudad de México.</p>
+        <br><h4>Oficinas Desconcentradas</h4>
+        <p><strong>Directorio nacional</strong></p>
+        <p>Horario de atención<br>Lunes a jueves: de 9:00 a 16:00 hrs.<br>Viernes: de 8:30 a 15:00 hrs.</p>
+      </div>
+      <div>
+        <h4>Contacto</h4>
+        <p class="contact-phone">MarcaSAT 55 627 22 728</p>
+        <p>desde cualquier parte del país y para el exterior (+52) 55 627 22 728, de lunes a viernes de 9:00 a 18:00 hrs.</p>
+        <br><h4>Chat uno a uno</h4><h4>Redes sociales</h4>
+      </div>
+    </div>
+  </footer>
+  <footer class="gob-footer">
+    <div class="gob-footer-inner">
+      <div class="gob-footer-brand">
+        <div class="gob-icon"><i class="ti ti-building-bank"></i></div>
+        <span>Gobierno de México</span>
+      </div>
+      <div class="gob-footer-links">
+        <a href="#">gob.mx/sat</a><a href="#">Datos</a><a href="#">Transparencia</a>
+        <a href="#">Declaración de Accesibilidad</a><a href="#">Aviso de privacidad</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ═══════════════════════════════════════════
+       JAVASCRIPT
+       ═══════════════════════════════════════════ -->
+  <script>
+  /* ═══ DATA ═══ */
+  const MODULOS = {
+    "Aguascalientes":["Aguascalientes Centro"],
+    "Baja California":["Mexicali","Tijuana","Ensenada","Tecate"],
+    "Baja California Sur":["La Paz","Cabo San Lucas"],
+    "Campeche":["Campeche","Ciudad del Carmen"],
+    "Chiapas":["Tuxtla Gutiérrez","Tapachula","San Cristóbal de las Casas","Comitán"],
+    "Chihuahua":["Chihuahua","Ciudad Juárez","Cuauhtémoc","Delicias","Nuevo Casas Grandes","Hidalgo del Parral"],
+    "Ciudad de México":["Torre Caballito (Reforma)","Iztacalco","Coyoacán","Azcapotzalco","Xochimilco","Tlalpan","Gustavo A. Madero"],
+    "Coahuila":["Saltillo","Torreón","Monclova","Piedras Negras","Ciudad Acuña"],
+    "Colima":["Colima","Manzanillo"],
+    "Durango":["Durango","Gómez Palacio"],
+    "Estado de México":["Tlalnepantla","Naucalpan","Toluca","Ecatepec","Nezahualcóyotl","Texcoco","Atizapán","Metepec"],
+    "Guanajuato":["León","Celaya","Irapuato","Guanajuato","Salamanca","San Miguel de Allende"],
+    "Guerrero":["Acapulco","Chilpancingo","Iguala","Zihuatanejo"],
+    "Hidalgo":["Pachuca","Tulancingo","Tula de Allende"],
+    "Jalisco":["Guadalajara Centro","Guadalajara Sur","Zapopan","Puerto Vallarta","Tlaquepaque","Ciudad Guzmán"],
+    "Michoacán":["Morelia","Uruapan","Zamora","Lázaro Cárdenas"],
+    "Morelos":["Cuernavaca","Cuautla"],
+    "Nayarit":["Tepic"],
+    "Nuevo León":["Monterrey Centro","Guadalupe","San Pedro Garza García","San Nicolás de los Garza","Apodaca"],
+    "Oaxaca":["Oaxaca de Juárez","Salina Cruz","Huatulco","Juchitán"],
+    "Puebla":["Puebla Centro","Puebla Sur","Tehuacán","San Martín Texmelucan","Atlixco"],
+    "Querétaro":["Querétaro Centro","Querétaro Jurica","San Juan del Río"],
+    "Quintana Roo":["Cancún","Chetumal","Playa del Carmen"],
+    "San Luis Potosí":["San Luis Potosí","Ciudad Valles","Matehuala"],
+    "Sinaloa":["Culiacán","Mazatlán","Los Mochis","Guasave"],
+    "Sonora":["Hermosillo","Ciudad Obregón","Nogales","Guaymas","Navojoa","San Luis Río Colorado"],
+    "Tabasco":["Villahermosa","Cárdenas"],
+    "Tamaulipas":["Reynosa","Matamoros","Nuevo Laredo","Tampico","Ciudad Victoria"],
+    "Tlaxcala":["Tlaxcala","Apizaco"],
+    "Veracruz":["Veracruz Puerto","Xalapa","Coatzacoalcos","Córdoba","Poza Rica","Orizaba","Boca del Río"],
+    "Yucatán":["Mérida Centro","Mérida Norte"],
+    "Zacatecas":["Zacatecas","Fresnillo"]
+  };
+
+  const DOCS = {
+    inscripcion: [
+      {icon:'ti-id',text:'Identificación oficial vigente (INE o pasaporte)'},
+      {icon:'ti-file-text',text:'CURP certificada (impresa desde gob.mx)'},
+      {icon:'ti-home',text:'Comprobante de domicilio reciente (máx. 3 meses)'},
+      {icon:'ti-usb',text:'Memoria USB nueva o vacía (mín. 2 GB)'},
+      {icon:'ti-mail',text:'Acceso a correo electrónico activo'},
+      {icon:'ti-fingerprint',text:'Se tomarán datos biométricos (huellas, iris, firma)'},
+    ],
+    obtener: [
+      {icon:'ti-id',text:'Identificación oficial vigente (INE o pasaporte)'},
+      {icon:'ti-usb',text:'Memoria USB nueva o vacía (mín. 2 GB)'},
+      {icon:'ti-mail',text:'Acceso a correo electrónico registrado en el SAT'},
+      {icon:'ti-fingerprint',text:'Se tomarán datos biométricos (huellas, iris, firma)'},
+    ],
+    renovar: [
+      {icon:'ti-id',text:'Identificación oficial vigente (INE o pasaporte)'},
+      {icon:'ti-usb',text:'Memoria USB con archivos .key y .cer anteriores'},
+      {icon:'ti-mail',text:'Acceso a correo electrónico registrado en el SAT'},
+      {icon:'ti-certificate',text:'e.firma anterior vigente (o vencida máx. 1 año) para renovación en línea'},
+    ]
+  };
+
+  /* ═══ STATE ═══ */
+  const state = {
+    tramiteType: null, innerStep: 0,
+    curp:'', rfc:'', nombre:'', email:'', emailConfirm:'',
+    serviceCategory:'', efirmaTab:'',
+    estado:'', modulo:'', fecha:'', slot:'', folio:'',
+    savedCitas: []
+  };
+
+  const $ = id => document.getElementById(id);
+
+  /* ═══ HELPERS ═══ */
+  function formatDateES(ds) {
+    if (!ds) return '—';
+    const [y,m,d] = ds.split('-');
+    return new Date(+y,+m-1,+d).toLocaleDateString('es-MX',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+  function getTomorrow() { const d=new Date(); d.setDate(d.getDate()+1); return d.toISOString().split('T')[0]; }
+  function getMaxDate() { const d=new Date(); d.setDate(d.getDate()+30); return d.toISOString().split('T')[0]; }
+  function generateFolio() { return `SAT-${new Date().getFullYear()}-${String(Math.floor(1000+Math.random()*9000))}`; }
+  function generateToken() { return String(Math.floor(100000+Math.random()*900000)); }
+  function generateTimeSlots() {
+    const s=[];
+    for(let h=9;h<=14;h++) for(let m=0;m<60;m+=30){if(h===14&&m>30)break; s.push(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`);}
+    return s;
+  }
+  function getUnavailable(key) {
+    let hash=0;
+    for(let i=0;i<key.length;i++){hash=((hash<<5)-hash)+key.charCodeAt(i);hash|=0;}
+    const all=generateTimeSlots(),out=[];
+    for(let i=0;i<all.length;i++){if(Math.abs((hash*(i+1)*2654435761)|0)%100<28)out.push(all[i]);}
+    return out;
+  }
+
+  /* ═══ SCREEN MANAGEMENT ═══ */
+  function hideAllScreens() {
+    $('screen-home').classList.add('hidden');
+    $('mainContent').classList.add('hidden');
+    ['screen-landing','screen-tramite','screen-datos','screen-consultar'].forEach(id => $(id).classList.add('hidden'));
+  }
+
+  function goHome() {
+    hideAllScreens();
+    $('screen-home').classList.remove('hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  function showCitasScreen(id) {
+    hideAllScreens();
+    $('mainContent').classList.remove('hidden');
+    $(id).classList.remove('hidden');
+    window.scrollTo({top:0,behavior:'smooth'});
+  }
+
+  /* ═══ HOME NAVIGATION ═══ */
+  $('logoHome').addEventListener('click', goHome);
+  $('navTramites').addEventListener('click', () => showCitasScreen('screen-landing'));
+  $('qcCitas').addEventListener('click', () => showCitasScreen('screen-landing'));
+  $('qcEfirma').addEventListener('click', () => showCitasScreen('screen-landing'));
+  $('efirmaHighlight').addEventListener('click', () => showCitasScreen('screen-landing'));
+  $('tcCitas').addEventListener('click', () => showCitasScreen('screen-landing'));
+
+  // Fake cards just show an alert
+  document.querySelectorAll('[data-fake]').forEach(el => {
+    el.addEventListener('click', () => {
+      alert('Este módulo es solo de demostración. En el portal real, este enlace te llevaría a la sección correspondiente del SAT.');
+    });
+  });
+
+  /* ═══ CITAS LANDING ═══ */
+  $('btnRegistrarCita').addEventListener('click', () => showCitasScreen('screen-tramite'));
+  $('btnConsultarCita').addEventListener('click', () => showCitasScreen('screen-consultar'));
+
+  /* ═══ CONSULTAR CITA ═══ */
+  $('backFromConsultar').addEventListener('click', () => showCitasScreen('screen-landing'));
+  $('btnSalirConsulta').addEventListener('click', () => showCitasScreen('screen-landing'));
+  $('btnBuscarCita').addEventListener('click', () => {
+    const folio = $('inputFolioConsulta').value.trim().toUpperCase();
+    const result = $('consultaResult');
+    const match = state.savedCitas.find(c => c.folio === folio);
+    result.classList.remove('hidden');
+    if (match) {
+      result.innerHTML = `<div class="alert alert-success"><i class="ti ti-circle-check"></i><div>
+        <strong>Cita encontrada</strong><br>
+        <strong>Folio:</strong> ${match.folio}<br>
+        <strong>Trámite:</strong> ${match.tramiteLabel}<br>
+        <strong>Módulo:</strong> ${match.modulo}, ${match.estado}<br>
+        <strong>Fecha:</strong> ${match.fechaStr}<br>
+        <strong>Hora:</strong> ${match.slot} hrs
+      </div></div>`;
+    } else {
+      result.innerHTML = `<div class="alert alert-warning"><i class="ti ti-alert-circle"></i><span>No se encontró ninguna cita con el folio <strong>${folio||'—'}</strong>.</span></div>`;
+    }
+  });
+
+  /* ═══ TRAMITE SELECTION ═══ */
+  $('btnSalirTramite').addEventListener('click', () => showCitasScreen('screen-landing'));
+
+  function selectTramite(type) {
+    state.tramiteType = type;
+    state.innerStep = 0;
+    // Reset form values
+    state.curp=''; state.rfc=''; state.nombre=''; state.email=''; state.emailConfirm='';
+    state.serviceCategory=''; state.efirmaTab='';
+    state.estado=''; state.modulo=''; state.fecha=''; state.slot=''; state.folio='';
+    $('inputCURP').value=''; $('inputRFC').value=''; $('inputNombre').value='';
+    $('inputEmail').value=''; $('inputEmailConfirm').value='';
+    // Configure form
+    $('fieldRFC').classList.toggle('hidden', type === 'inscripcion');
+    const alerts = {
+      inscripcion: {t:'warning', m:'Este trámite es <strong>exclusivamente presencial</strong>. Se tomarán datos biométricos (huellas, iris y firma).'},
+      obtener: {t:'warning', m:'Este trámite requiere <strong>presencia física</strong> para la captura de datos biométricos.'},
+      renovar: {t:'info', m:'Si tu e.firma venció hace <strong>menos de 1 año</strong>, puedes renovarla en línea sin acudir a un módulo.'}
+    };
+    const a = alerts[type];
+    $('alertTramiteInfo').innerHTML = `<div class="alert alert-${a.t}"><i class="ti ti-${a.t==='warning'?'alert-triangle':'info-circle'}"></i><span>${a.m}</span></div>`;
+    showCitasScreen('screen-datos');
+    showInnerStep(0);
+  }
+
+  $('btnTramite1').addEventListener('click', () => selectTramite('inscripcion'));
+  $('btnTramite2').addEventListener('click', () => selectTramite('obtener'));
+  $('btnTramite3').addEventListener('click', () => selectTramite('renovar'));
+
+  /* ═══ INNER STEP MANAGEMENT ═══ */
+  function showInnerStep(step) {
+    state.innerStep = step;
+    ['panelDatos','panelToken','panelServicio','panelModulo','panelConfirm','panelSuccess'].forEach(id => $(id).classList.add('hidden'));
+    const panels = ['panelDatos','panelToken','panelServicio','panelModulo','panelConfirm','panelSuccess'];
+    if (panels[step]) $(panels[step]).classList.remove('hidden');
+    updateStepper();
+  }
+
+  function updateStepper() {
+    const stepperMap = [1,1,2,3,4,4];
+    const current = stepperMap[state.innerStep]||1;
+    for(let i=1;i<=4;i++){
+      const ss=$(`ss${i}`),sn=$(`sn${i}`);
+      ss.className='stepper-step';
+      if(i<current){ss.classList.add('done');sn.innerHTML='<i class="ti ti-check"></i>';}
+      else if(i===current){ss.classList.add('active');sn.textContent=i;}
+      else{sn.textContent=i;}
+    }
+    for(let i=1;i<=3;i++){$(`sl${i}`).classList.toggle('filled',i<current);}
+  }
+
+  /* ═══ STEP 0: DATOS — NO VALIDATION, any input works ═══ */
+  $('inputCURP').addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase();
+    state.curp = e.target.value;
+  });
+  $('inputRFC').addEventListener('input', e => {
+    e.target.value = e.target.value.toUpperCase();
+    state.rfc = e.target.value;
+  });
+  $('inputNombre').addEventListener('input', e => { state.nombre = e.target.value; });
+  $('inputEmail').addEventListener('input', e => { state.email = e.target.value; });
+  $('inputEmailConfirm').addEventListener('input', e => { state.emailConfirm = e.target.value; });
+
+  // Siguiente button — ALWAYS enabled, no validation
+  $('btnSiguienteDatos').addEventListener('click', () => {
+    // Fill defaults if empty for summary
+    if(!state.curp) state.curp = 'GARC850101HDFRRL09';
+    if(!state.rfc) state.rfc = 'GARC850101XXX';
+    if(!state.nombre) state.nombre = 'Juan García Rodríguez';
+    if(!state.email) state.email = 'juan.garcia@ejemplo.com';
+    $('tokenDisplay').textContent = generateToken();
+    document.querySelectorAll('.token-input').forEach(inp => inp.value='');
+    showInnerStep(1);
+  });
+
+  $('btnSalirDatos').addEventListener('click', () => showCitasScreen('screen-tramite'));
+  $('backToDatos').addEventListener('click', () => showCitasScreen('screen-tramite'));
+
+  /* ═══ STEP 1: TOKEN — always passes ═══ */
+  const tokenInputs = document.querySelectorAll('.token-input');
+  tokenInputs.forEach((inp,i) => {
+    inp.addEventListener('input', e => {
+      e.target.value = e.target.value.replace(/[^0-9]/g,'');
+      if(e.target.value && i<tokenInputs.length-1) tokenInputs[i+1].focus();
+    });
+    inp.addEventListener('keydown', e => {
+      if(e.key==='Backspace' && !e.target.value && i>0) tokenInputs[i-1].focus();
+    });
+    inp.addEventListener('paste', e => {
+      e.preventDefault();
+      const paste = (e.clipboardData||window.clipboardData).getData('text').replace(/\D/g,'').slice(0,6);
+      paste.split('').forEach((ch,j) => {if(tokenInputs[j]) tokenInputs[j].value=ch;});
+      if(paste.length>=6) tokenInputs[5].focus();
+    });
+  });
+
+  // Verify button — ALWAYS passes (prototype mode)
+  $('btnVerifyToken').addEventListener('click', () => {
+    setupServicePanel();
+    showInnerStep(2);
+  });
+
+  /* ═══ STEP 2: SERVICE SELECTION ═══ */
+  function setupServicePanel() {
+    state.serviceCategory=''; state.efirmaTab='';
+    $('btnSiguienteServicio').disabled = true;
+    $('efirmaSection').classList.add('hidden');
+    document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+  }
+
+  document.querySelectorAll('.service-card').forEach(card => {
+    card.addEventListener('click', () => {
+      document.querySelectorAll('.service-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      state.serviceCategory = card.dataset.service;
+      if(state.serviceCategory === 'generales') {
+        showEfirmaSection();
+      } else {
+        $('efirmaSection').classList.add('hidden');
+        $('btnSiguienteServicio').disabled = false;
+        state.efirmaTab = state.serviceCategory;
+      }
+    });
+  });
+
+  function showEfirmaSection() {
+    $('efirmaSection').classList.remove('hidden');
+    const tabs = $('efirmaTabs');
+    tabs.innerHTML = '';
+    let tabsData = [];
+    if(state.tramiteType==='inscripcion') {
+      tabsData = [{id:'primera-vez',label:'Primera vez (Inscripción + e.firma)',active:true}];
+    } else if(state.tramiteType==='obtener') {
+      tabsData = [{id:'primera-vez',label:'Primera vez',active:true},{id:'renovacion-presencial',label:'Renovación presencial'}];
+    } else {
+      tabsData = [
+        {id:'renovacion-linea',label:'Renovación en línea',active:true},
+        {id:'renovacion-sat-id',label:'Renovación con SAT ID'},
+        {id:'renovacion-presencial',label:'Renovación presencial'},
+        {id:'revocacion',label:'Revoca tu e.firma'},
+        {id:'aclaracion',label:'Aclaración de solicitudes'},
+      ];
+    }
+    tabsData.forEach(t => {
+      const btn = document.createElement('button');
+      btn.className = 'efirma-tab'+(t.active?' active':'');
+      btn.textContent = t.label;
+      btn.addEventListener('click', () => {
+        tabs.querySelectorAll('.efirma-tab').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        state.efirmaTab = t.id;
+        renderEfirmaContent(t.id);
+        $('btnSiguienteServicio').disabled = false;
+      });
+      tabs.appendChild(btn);
+    });
+    state.efirmaTab = tabsData[0].id;
+    renderEfirmaContent(tabsData[0].id);
+    $('btnSiguienteServicio').disabled = false;
+  }
+
+  function renderEfirmaContent(tabId) {
+    const c = {
+      'primera-vez':'<div class="alert alert-warning"><i class="ti ti-alert-triangle"></i><span>Trámite <strong>presencial obligatorio</strong>. Captura de datos biométricos.</span></div>',
+      'renovacion-linea':'<div class="alert alert-success"><i class="ti ti-circle-check"></i><span>Si tu e.firma venció hace <strong>menos de 1 año</strong>, renuévala en línea. Necesitas archivos .key, .cer y contraseña.</span></div>',
+      'renovacion-sat-id':'<div class="alert alert-info"><i class="ti ti-info-circle"></i><span>Renueva con <strong>SAT ID</strong> activo. La renovación se procesa en línea.</span></div>',
+      'renovacion-presencial':'<div class="alert alert-warning"><i class="ti ti-alert-triangle"></i><span>Renovación presencial. Necesaria si tu e.firma venció hace <strong>más de 1 año</strong>.</span></div>',
+      'revocacion':'<div class="alert alert-info"><i class="ti ti-info-circle"></i><span>Cancela permanentemente tu certificado actual si sospechas uso no autorizado.</span></div>',
+      'aclaracion':'<div class="alert alert-info"><i class="ti ti-info-circle"></i><span>Aclara el estado de trámites previos de e.firma.</span></div>',
+    };
+    $('efirmaTabContent').innerHTML = c[tabId]||'';
+  }
+
+  $('btnBackServicio').addEventListener('click', () => showInnerStep(0));
+  $('btnSiguienteServicio').addEventListener('click', () => { setupModuloPanel(); showInnerStep(3); });
+
+  /* ═══ STEP 3: MODULE + DATE + TIME ═══ */
+  const selectEstado = $('selectEstado');
+  Object.keys(MODULOS).sort().forEach(e => {
+    const opt = document.createElement('option');
+    opt.value=e; opt.textContent=e;
+    selectEstado.appendChild(opt);
+  });
+
+  function setupModuloPanel() {
+    state.estado=''; state.modulo=''; state.fecha=''; state.slot='';
+    selectEstado.value='';
+    $('selectModulo').innerHTML='<option value="">Primero elige estado</option>';
+    $('selectModulo').disabled=true;
+    $('inputFecha').value=''; $('inputFecha').disabled=true;
+    $('slotsContainer').classList.add('hidden');
+    $('btnSiguienteModulo').disabled=true;
+  }
+
+  selectEstado.addEventListener('change', () => {
+    state.estado=selectEstado.value;
+    state.modulo=''; state.fecha=''; state.slot='';
+    const sel=$('selectModulo');
+    sel.innerHTML='<option value="">Seleccionar módulo...</option>';
+    sel.disabled=!state.estado;
+    $('inputFecha').value=''; $('inputFecha').disabled=true;
+    $('slotsContainer').classList.add('hidden');
+    if(state.estado && MODULOS[state.estado]) {
+      MODULOS[state.estado].forEach(m => {
+        const opt=document.createElement('option');
+        opt.value=m; opt.textContent=m; sel.appendChild(opt);
+      });
+    }
+    validateModulo();
+  });
+
+  $('selectModulo').addEventListener('change', () => {
+    state.modulo=$('selectModulo').value;
+    state.fecha=''; state.slot='';
+    $('inputFecha').value='';
+    $('inputFecha').disabled=!state.modulo;
+    $('slotsContainer').classList.add('hidden');
+    if(state.modulo){ $('inputFecha').min=getTomorrow(); $('inputFecha').max=getMaxDate(); }
+    validateModulo();
+  });
+
+  $('inputFecha').addEventListener('change', () => {
+    state.fecha=$('inputFecha').value;
+    state.slot='';
+    renderSlots();
+    validateModulo();
+  });
+
+  function renderSlots() {
+    if(!state.fecha){$('slotsContainer').classList.add('hidden'); return;}
+    $('slotsContainer').classList.remove('hidden');
+    const grid=$('slotsGrid'); grid.innerHTML='';
+    const all=generateTimeSlots(), unavail=getUnavailable(state.fecha+state.modulo);
+    all.forEach(time => {
+      const btn=document.createElement('button');
+      btn.type='button'; btn.className='slot-btn'; btn.textContent=time;
+      if(unavail.includes(time)){btn.classList.add('unavailable');btn.disabled=true;}
+      else{btn.addEventListener('click',()=>{
+        state.slot=time;
+        grid.querySelectorAll('.slot-btn').forEach(b=>b.classList.remove('selected'));
+        btn.classList.add('selected');
+        validateModulo();
+      });}
+      grid.appendChild(btn);
+    });
+  }
+
+  function validateModulo() {
+    $('btnSiguienteModulo').disabled = !(state.estado && state.modulo && state.fecha && state.slot);
+  }
+
+  $('btnBackModulo').addEventListener('click', () => showInnerStep(2));
+  $('btnSiguienteModulo').addEventListener('click', () => { renderConfirmation(); showInnerStep(4); });
+
+  /* ═══ STEP 4: CONFIRMATION ═══ */
+  function getTramiteLabel() {
+    return {inscripcion:'Inscripción al RFC + e.firma (primera vez)', obtener:'Obtener e.firma', renovar:'Renovar e.firma'}[state.tramiteType];
+  }
+  function getEfirmaLabel() {
+    const l = {
+      'primera-vez':'e.firma — Primera vez','renovacion-linea':'Renovación e.firma en línea',
+      'renovacion-sat-id':'Renovación e.firma con SAT ID','renovacion-presencial':'Renovación e.firma presencial',
+      'revocacion':'Revocación de e.firma','aclaracion':'Aclaración de solicitudes',
+      'marbetes':'Marbetes y Precintos','recaudacion':'Recaudación y Auditoría Fiscal',
+    };
+    return l[state.efirmaTab]||state.efirmaTab;
+  }
+
+  function renderConfirmation() {
+    const rows = [
+      ['Tipo de trámite', getTramiteLabel()],
+      ['Servicio', getEfirmaLabel()],
+      ['CURP', `<span class="mono">${state.curp}</span>`],
+    ];
+    if(state.tramiteType!=='inscripcion') rows.push(['RFC',`<span class="mono">${state.rfc}</span>`]);
+    rows.push(['Nombre',state.nombre],['Correo',state.email],
+      ['Estado',state.estado],['Módulo SAT',state.modulo],
+      ['Fecha',formatDateES(state.fecha)],['Hora',state.slot+' hrs']);
+    $('summaryTable').innerHTML = rows.map(([l,v])=>`<tr><td>${l}</td><td>${v}</td></tr>`).join('');
+    const items = DOCS[state.tramiteType]||DOCS.obtener;
+    $('checklistItems').innerHTML = items.map(d=>`<div class="checklist-item"><i class="ti ${d.icon}"></i> ${d.text}</div>`).join('');
+  }
+
+  $('btnBackConfirm').addEventListener('click', () => showInnerStep(3));
+
+  $('btnAgendar').addEventListener('click', () => {
+    state.folio = generateFolio();
+    $('folioNumber').textContent = state.folio;
+    $('successDetails').innerHTML = `
+      <div class="success-row"><span class="label">Trámite</span><span class="value">${getTramiteLabel()}</span></div>
+      <div class="success-row"><span class="label">Módulo</span><span class="value">${state.modulo}, ${state.estado}</span></div>
+      <div class="success-row"><span class="label">Fecha</span><span class="value">${formatDateES(state.fecha)}</span></div>
+      <div class="success-row"><span class="label">Hora</span><span class="value">${state.slot} hrs</span></div>
+    `;
+    state.savedCitas.push({
+      folio:state.folio, tramiteLabel:getTramiteLabel(),
+      modulo:state.modulo, estado:state.estado,
+      fechaStr:formatDateES(state.fecha), slot:state.slot
+    });
+    showInnerStep(5);
+  });
+
+  /* ═══ NUEVA CITA / SALIR ═══ */
+  $('btnNuevaCita').addEventListener('click', () => showCitasScreen('screen-tramite'));
+  $('btnSalirFinal').addEventListener('click', goHome);
+
+  /* ═══ INIT ═══ */
+  goHome();
+  </script>
+</body>
+</html>

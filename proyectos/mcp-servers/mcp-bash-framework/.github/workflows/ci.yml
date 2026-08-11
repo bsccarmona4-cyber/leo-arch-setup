@@ -1,0 +1,488 @@
+name: CI
+permissions:
+  contents: read
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+    inputs:
+      windows_verbose:
+        description: 'Enable VERBOSE=1 on Windows for debugging'
+        required: false
+        default: false
+        type: boolean
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Go paths
+        run: |
+          set -euo pipefail
+          echo "GOPATH=${HOME}/go" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=${HOME}/go/pkg/mod" >> "$GITHUB_ENV"
+          echo "GOCACHE=${HOME}/.cache/go-build" >> "$GITHUB_ENV"
+          echo "${HOME}/go/bin" >> "$GITHUB_PATH"
+          mkdir -p "${HOME}/go/bin" "${HOME}/go/pkg/mod" "${HOME}/.cache/go-build"
+      - name: Setup Go
+        id: go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: tools/go.sum
+      - name: Cache Go build cache
+        id: gocache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-gocache-${{ hashFiles('tools/go.sum') }}-${{ steps.go.outputs.go-version }}
+      - name: Install gojq
+        run: |
+          set -euo pipefail
+          pushd tools >/dev/null
+          go install github.com/itchyny/gojq/cmd/gojq@v0.12.16
+          popd >/dev/null
+      - name: Install lint dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y shellcheck shfmt
+      - name: Lint
+        run: test/lint.sh
+      - name: Verify rendered README is up to date
+        run: bash scripts/render-readme.sh --check
+
+  unit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      checks: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Go paths
+        run: |
+          set -euo pipefail
+          echo "GOPATH=${HOME}/go" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=${HOME}/go/pkg/mod" >> "$GITHUB_ENV"
+          echo "GOCACHE=${HOME}/.cache/go-build" >> "$GITHUB_ENV"
+          echo "${HOME}/go/bin" >> "$GITHUB_PATH"
+          mkdir -p "${HOME}/go/bin" "${HOME}/go/pkg/mod" "${HOME}/.cache/go-build"
+      - name: Setup Go
+        id: go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: tools/go.sum
+      - name: Cache Go build cache
+        id: gocache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-gocache-${{ hashFiles('tools/go.sum') }}-${{ steps.go.outputs.go-version }}
+      - name: Install gojq
+        run: |
+          set -euo pipefail
+          pushd tools >/dev/null
+          go install github.com/itchyny/gojq/cmd/gojq@v0.12.16
+          popd >/dev/null
+      - name: Install bats and helpers
+        run: |
+          set -euo pipefail
+          npm ci
+          # Add npm-installed bats to PATH
+          echo "${PWD}/node_modules/.bin" >> "$GITHUB_PATH"
+      - name: Unit tests
+        run: test/unit/run.sh
+      - name: Upload unit test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-results
+          path: test-results/
+          retention-days: 7
+      - name: Publish unit test results
+        if: always()
+        uses: dorny/test-reporter@v1
+        with:
+          name: Unit Test Results
+          path: test-results/*.xml
+          reporter: java-junit
+          fail-on-error: false
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+  # Core integration tests (Ubuntu + macOS) - required for release
+  integration:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Go paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "GOPATH=${HOME}/go" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=${HOME}/go/pkg/mod" >> "$GITHUB_ENV"
+          echo "GOCACHE=${HOME}/.cache/go-build" >> "$GITHUB_ENV"
+          echo "MCPBASH_TAR_DIR=${RUNNER_TEMP}/mcpbash.staging" >> "$GITHUB_ENV"
+          echo "${HOME}/go/bin" >> "$GITHUB_PATH"
+          mkdir -p "${HOME}/go/bin" "${HOME}/go/pkg/mod" "${HOME}/.cache/go-build" "${RUNNER_TEMP}/mcpbash.staging"
+      - name: Setup Go
+        id: go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: tools/go.sum
+      - name: Cache Go build cache
+        id: gocache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-gocache-${{ hashFiles('tools/go.sum') }}-${{ steps.go.outputs.go-version }}
+      - name: Install gojq
+        run: |
+          set -euo pipefail
+          pushd tools >/dev/null
+          go install github.com/itchyny/gojq/cmd/gojq@v0.12.16
+          popd >/dev/null
+      - name: Integration suite
+        id: integration
+        env:
+          MCPBASH_CI_MODE: "true"
+          MCPBASH_LOG_DIR: ${{ runner.temp }}/mcpbash-logs
+          MCPBASH_LOG_TIMESTAMP: "true"
+          MCPBASH_KEEP_LOGS: "true"
+          MCPBASH_INTEGRATION_TMP: ${{ runner.temp }}/mcpbash-integration
+        run: |
+          set -euo pipefail
+          start="$(date +%s)"
+          test/integration/run.sh
+          end="$(date +%s)"
+          echo "duration=$((end - start))" >> "$GITHUB_OUTPUT"
+      - name: Upload integration logs on failure
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-logs-${{ matrix.os }}
+          path: |
+            ${{ runner.temp }}/mcpbash-integration/logs/
+            ${{ runner.temp }}/mcpbash-logs
+            ${{ runner.temp }}/mcpbash.state.*
+            ${{ runner.temp }}/mcpbash.bootstrap.*
+          retention-days: 7
+      - name: Examples suite
+        id: examples
+        run: |
+          set -euo pipefail
+          start="$(date +%s)"
+          test/examples/run.sh
+          end="$(date +%s)"
+          echo "duration=$((end - start))" >> "$GITHUB_OUTPUT"
+
+      - name: Strict conformance (jq + gojq)
+        if: matrix.os == 'ubuntu-latest'
+        run: test/conformance/run.sh
+
+  # Windows integration tests - runs in parallel but does not block release
+  integration-windows:
+    runs-on: windows-latest
+    # Run even if other jobs fail; continue-on-error allows workflow to succeed
+    continue-on-error: true
+    defaults:
+      run:
+        shell: bash
+    steps:
+      - uses: actions/checkout@v4
+      - name: Cache staging tar
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/mcpbash.staging
+          key: ${{ runner.os }}-staging-${{ hashFiles('bin/**','lib/**','handlers/**','providers/**','sdk/**','bootstrap/**','scaffold/**') }}
+      - name: Set Go paths
+        shell: bash
+        run: |
+          set -euo pipefail
+          win_home="$(cygpath -w "${HOME}")"
+          win_gopath="${win_home}\\go"
+          win_gomodcache="${win_gopath}\\pkg\\mod"
+          win_gocache="${LOCALAPPDATA:-${win_home}\\AppData\\Local}\\go-build"
+          echo "GOPATH=${win_gopath}" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=${win_gomodcache}" >> "$GITHUB_ENV"
+          echo "GOCACHE=${win_gocache}" >> "$GITHUB_ENV"
+          echo "MCPBASH_TAR_DIR=$(cygpath -u "${RUNNER_TEMP}")/mcpbash.staging" >> "$GITHUB_ENV"
+          echo "$(cygpath -u "${win_gopath}")/bin" >> "$GITHUB_PATH"
+          mkdir -p "$(cygpath -u "${win_gopath}")/bin" "$(cygpath -u "${win_gomodcache}")" "$(cygpath -u "${win_gocache}")" "$(cygpath -u "${RUNNER_TEMP}")/mcpbash.staging"
+      - name: Setup Go
+        id: go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: tools/go.sum
+      - name: Cache Go build cache
+        id: gocache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-gocache-${{ hashFiles('tools/go.sum') }}-${{ steps.go.outputs.go-version }}
+      - name: Install gojq
+        run: |
+          set -euo pipefail
+          pushd tools >/dev/null
+          go install github.com/itchyny/gojq/cmd/gojq@v0.12.16
+          popd >/dev/null
+      - name: Integration suite
+        id: integration
+        env:
+          MCPBASH_CI_MODE: "true"
+          MCPBASH_LOG_DIR: ${{ runner.temp }}/mcpbash-logs
+          MCPBASH_LOG_TIMESTAMP: "true"
+          MCPBASH_KEEP_LOGS: "true"
+          MCPBASH_CI_VERBOSE: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_verbose == true && 'true' || 'false' }}
+          MCPBASH_TRACE_TOOLS: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_verbose == true && 'true' || 'false' }}
+          MCPBASH_INTEGRATION_TMP: ${{ runner.temp }}/mcpbash-integration
+          # Default to non-verbose on Windows to reduce hang risk; enable via workflow_dispatch input when debugging.
+          VERBOSE: ${{ github.event_name == 'workflow_dispatch' && inputs.windows_verbose == true && '1' || '0' }}
+        run: |
+          set -euo pipefail
+          if [ "${GITHUB_EVENT_NAME}" = "schedule" ] || [ "${GITHUB_EVENT_NAME}" = "workflow_dispatch" ]; then
+            export MCPBASH_INTEGRATION_TEST_TIMEOUT_SECONDS=300
+          else
+            export MCPBASH_INTEGRATION_ONLY="test_bootstrap.sh test_cli_scaffold_test.sh test_cli_validate.sh test_lifecycle_gating.sh test_windows_env_size_tools_call.sh test_windows_env_size_providers.sh test_resources.sh test_prompts.sh"
+            export MCPBASH_INTEGRATION_TEST_TIMEOUT_SECONDS=240
+          fi
+          start="$(date +%s)"
+          test/integration/run.sh
+          end="$(date +%s)"
+          echo "duration=$((end - start))" >> "$GITHUB_OUTPUT"
+      - name: Upload integration logs on failure
+        if: failure() || cancelled()
+        uses: actions/upload-artifact@v4
+        with:
+          name: integration-logs-windows
+          path: |
+            ${{ runner.temp }}/mcpbash-integration/logs/
+            ${{ runner.temp }}/mcpbash-logs
+            ${{ runner.temp }}/mcpbash.state.*
+            ${{ runner.temp }}/mcpbash.bootstrap.*
+          retention-days: 7
+      - name: Enforce Windows integration budget
+        run: |
+          set -euo pipefail
+          warm="${{ steps.go.outputs.cache-hit == 'true' && steps.gocache.outputs.cache-hit == 'true' }}"
+          duration="${{ steps.integration.outputs.duration }}"
+          warn_budget=240
+          fail_budget=2000
+          if [ -n "${duration}" ] && [ "${duration}" -gt "${warn_budget}" ]; then
+            echo "::warning ::Integration duration ${duration}s exceeded warning budget ${warn_budget}s (warm caches=${warm})"
+          fi
+          if [ "${warm}" = "true" ] && [ -n "${duration}" ] && [ "${duration}" -gt "${fail_budget}" ]; then
+            echo "Integration exceeded fail budget (${duration}s) with warm caches" >&2
+            exit 1
+          fi
+      - name: Examples suite
+        id: examples
+        env:
+          MCPBASH_STAGING_TAR: "1"
+          MCPBASH_EXAMPLES_WORKDIR: ${{ runner.temp }}/mcpbash-examples
+        run: |
+          set -euo pipefail
+          start="$(date +%s)"
+          test/examples/run.sh
+          end="$(date +%s)"
+          echo "duration=$((end - start))" >> "$GITHUB_OUTPUT"
+      - name: Upload examples artifacts on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: examples-debug-windows
+          path: |
+            ${{ runner.temp }}/mcpbash-examples/
+            ${{ runner.temp }}/mcpbash-logs/
+            ${{ runner.temp }}/mcpbash.state.*
+          retention-days: 7
+      - name: Report Windows status
+        if: always()
+        run: |
+          if [ "${{ job.status }}" = "failure" ]; then
+            echo "::warning ::Windows integration tests failed - see artifacts for details"
+          fi
+
+  stress:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Go paths
+        run: |
+          set -euo pipefail
+          echo "GOPATH=${HOME}/go" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=${HOME}/go/pkg/mod" >> "$GITHUB_ENV"
+          echo "GOCACHE=${HOME}/.cache/go-build" >> "$GITHUB_ENV"
+          echo "${HOME}/go/bin" >> "$GITHUB_PATH"
+          mkdir -p "${HOME}/go/bin" "${HOME}/go/pkg/mod" "${HOME}/.cache/go-build"
+      - name: Setup Go
+        id: go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: tools/go.sum
+      - name: Cache Go build cache
+        id: gocache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-gocache-${{ hashFiles('tools/go.sum') }}-${{ steps.go.outputs.go-version }}
+      - name: Install gojq
+        run: |
+          set -euo pipefail
+          pushd tools >/dev/null
+          go install github.com/itchyny/gojq/cmd/gojq@v0.12.16
+          popd >/dev/null
+      - name: Stress suite
+        run: test/stress/run.sh
+
+  compatibility:
+    runs-on: ubuntu-latest
+    needs: integration
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set Go paths
+        run: |
+          set -euo pipefail
+          echo "GOPATH=$HOME/go" >> "$GITHUB_ENV"
+          echo "GOMODCACHE=$HOME/go/pkg/mod" >> "$GITHUB_ENV"
+          echo "GOCACHE=$HOME/.cache/go-build" >> "$GITHUB_ENV"
+          mkdir -p "$HOME/go/bin" "$HOME/go/pkg/mod" "$HOME/.cache/go-build"
+      - name: Setup Go
+        id: go
+        uses: actions/setup-go@v5
+        with:
+          go-version: '1.21'
+          cache: true
+          cache-dependency-path: tools/go.sum
+      - name: Cache Go build cache
+        id: gocache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.GOCACHE }}
+          key: ${{ runner.os }}-gocache-${{ hashFiles('tools/go.sum') }}-${{ steps.go.outputs.go-version }}
+      - name: Install gojq
+        run: |
+          set -euo pipefail
+          pushd tools >/dev/null
+          go install github.com/itchyny/gojq/cmd/gojq@v0.12.16
+          popd >/dev/null
+          echo "$HOME/go/bin" >> "$GITHUB_PATH"
+      - name: Compatibility suite
+        run: test/compatibility/run.sh
+
+  # Fast bundle validation - ensures bundle command works on every push
+  bundle-sanity:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install jq
+        run: sudo apt-get update && sudo apt-get install -y jq
+      - name: Validate bundle command
+        run: |
+          set -euo pipefail
+          export MCPBASH_HOME="${GITHUB_WORKSPACE}"
+          export PATH="${GITHUB_WORKSPACE}/bin:${PATH}"
+          mcp-bash bundle --help
+          cd examples/00-hello-tool
+          mcp-bash bundle --validate
+
+  release:
+    # Only run on version tags, after all tests pass
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: [lint, unit, integration, bundle-sanity, compatibility]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Verify tag is on main branch
+        run: |
+          set -euo pipefail
+          # Fetch main branch ref
+          git fetch origin main:refs/remotes/origin/main
+          # Check if the tagged commit is an ancestor of (or equal to) main
+          if ! git merge-base --is-ancestor HEAD origin/main; then
+            echo "::error::Release tags must be on the main branch. This tag points to a commit not on main."
+            echo "To fix: merge dev into main, then re-tag on main."
+            exit 1
+          fi
+          echo "Tag is on main branch"
+
+      - name: Validate tag matches VERSION and rendered README
+        run: |
+          set -euo pipefail
+          tag="${GITHUB_REF_NAME}"
+          if [[ "${tag}" != v*.*.* ]]; then
+            echo "Unexpected tag format: ${tag}" >&2
+            exit 1
+          fi
+          file_version="$(tr -d '[:space:]' <VERSION)"
+          tag_version="${tag#v}"
+          if [ "${file_version}" != "${tag_version}" ]; then
+            echo "VERSION (${file_version}) does not match tag (${tag_version})" >&2
+            exit 1
+          fi
+          bash scripts/render-readme.sh --check --version "${tag_version}"
+
+      - name: Create tarball
+        run: |
+          set -euo pipefail
+          version="${GITHUB_REF_NAME}"
+          tarball="mcp-bash-${version}.tar.gz"
+          # Create a clean archive from the git tree (avoids "file changed as we read it").
+          git archive --format=tar --prefix=mcp-bash/ "${GITHUB_SHA}" | gzip -n >"${tarball}"
+          sha256sum "${tarball}" >SHA256SUMS
+          echo "TARBALL=${tarball}" >>"$GITHUB_ENV"
+
+      - name: Create GitHub release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref_name }}
+          release_name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+
+      - name: Upload tarball
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.TARBALL }}
+          asset_name: ${{ env.TARBALL }}
+          asset_content_type: application/gzip
+
+      - name: Upload checksums
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: SHA256SUMS
+          asset_name: SHA256SUMS
+          asset_content_type: text/plain

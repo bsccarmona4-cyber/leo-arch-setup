@@ -1,0 +1,78 @@
+/* ═══════════════════════════════════════════
+   BenefitsSection — Why shop at KREID
+   No LED-specific content. Store-level value props.
+   ═══════════════════════════════════════════ */
+
+.benefits-section {
+  background: var(--cream);
+  padding: 64px 0;
+}
+
+.benefits-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 24px;
+}
+
+.benefit-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 36px 24px;
+  border: 1px solid var(--gray-200);
+  text-align: center;
+  transition: transform 0.25s cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow 0.25s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.benefit-card:hover {
+  transform: translateY(-4px);
+  box-shadow: var(--shadow-lg);
+}
+
+.benefit-icon-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+}
+
+.benefit-title {
+  font-size: 1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--dark);
+  line-height: calc(1 + 0.3 / 1.2);
+}
+
+.benefit-text {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--gray-500);
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .benefit-card:hover {
+    transform: none;
+  }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .benefits-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .benefit-card {
+    padding: 28px 20px;
+  }
+}
+
+@media (max-width: 480px) {
+  .benefits-section {
+    padding: 48px 0;
+  }
+}

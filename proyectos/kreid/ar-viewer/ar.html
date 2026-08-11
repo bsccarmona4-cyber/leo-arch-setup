@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <meta name="description" content="KREID — Experiencia de Realidad Aumentada basada en marcador. Apunta al marcador y explora.">
+  <title>KREID — AR Experience</title>
+
+  <script src="./libs/aframe.min.js"></script>
+  <script src="./libs/aframe-ar.js"></script>
+  <link rel="stylesheet" href="style.css">
+
+  <style>
+    body { margin: 0; overflow: hidden; background: #000; }
+    .a-loader-title, .a-enter-vr-button, .a-orientation-modal { display: none !important; }
+
+    /* AR top bar */
+    .ar-topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 500;
+      padding: 8px 16px;
+      padding-top: max(8px, env(safe-area-inset-top));
+      background: linear-gradient(to bottom, rgba(10,0,20,0.7), transparent);
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    .ar-brand {
+      display: flex; align-items: center; gap: 8px;
+      color: white; font-family: var(--font-heading); font-weight: 800;
+      font-size: 0.85rem; letter-spacing: 2px;
+    }
+    .ar-brand svg { width: 26px; height: 26px; }
+    .ar-exit {
+      padding: 6px 14px; font-size: 0.75rem; border-radius: var(--radius-sm);
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.15);
+      color: white; cursor: pointer; font-family: var(--font-body); font-weight: 600;
+      text-decoration: none;
+    }
+
+    /* Bottom controls */
+    .ar-controls {
+      position: fixed; bottom: 0; left: 0; right: 0; z-index: 500;
+      padding: 12px 16px;
+      padding-bottom: max(12px, env(safe-area-inset-bottom));
+      display: flex; gap: 10px; justify-content: center;
+    }
+    .ar-panel {
+      background: rgba(10,0,20,0.78); backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-xl); padding: 12px 18px;
+      display: flex; align-items: center; gap: 12px;
+    }
+    .ar-btn {
+      width: 48px; height: 48px; border-radius: var(--radius-md);
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(255,255,255,0.06); color: white;
+      font-size: 1.2rem; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all 0.2s ease; -webkit-tap-highlight-color: transparent;
+    }
+    .ar-btn:active { background: rgba(0,212,255,0.2); border-color: var(--color-accent); transform: scale(0.92); }
+    .ar-status {
+      font-size: 0.78rem; color: var(--color-gray-300);
+      padding: 0 8px; white-space: nowrap;
+    }
+    .ar-status.found { color: #22c55e; }
+
+    /* Hint overlay */
+    .ar-hint {
+      position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 400;
+      pointer-events: none; transition: opacity 0.5s ease;
+    }
+    .ar-hint.hidden { opacity: 0; }
+    .ar-hint-inner {
+      background: rgba(10,0,20,0.85); border: 1px solid rgba(0,212,255,0.3);
+      border-radius: var(--radius-lg); padding: 16px 24px;
+      text-align: center; backdrop-filter: blur(12px);
+    }
+    .ar-hint-inner p {
+      font-size: 0.9rem; color: var(--color-gray-300); margin: 0;
+    }
+    @keyframes scanPulse {
+      0%, 100% { opacity: 0.4; }
+      50% { opacity: 1; }
+    }
+    .ar-hint-inner .pulse-dot {
+      display: inline-block; width: 10px; height: 10px;
+      background: var(--color-accent); border-radius: 50%;
+      animation: scanPulse 1.5s ease-in-out infinite;
+      margin-right: 8px;
+    }
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./libs/three.module.js",
+      "three/addons/": "./libs/"
+    }
+  }
+  </script>
+</head>
+<body>
+
+  <!-- ── Top Bar ── -->
+  <div class="ar-topbar">
+    <div class="ar-brand">
+      <svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="ag2" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>
+        <rect x="0" y="0" width="22" height="150" rx="3" fill="url(#ag2)"/>
+        <polygon points="28,75 28,53 112,3 112,25" fill="url(#ag2)"/>
+        <polygon points="28,75 112,125 112,147 28,97" fill="url(#ag2)"/>
+        <circle cx="117" cy="8" r="6.5" fill="#00d4ff"/>
+      </svg>
+      KREID AR
+    </div>
+    <a href="qr-ar.html" class="ar-exit">✕ Salir</a>
+  </div>
+
+  <!-- ── Scanning Hint ── -->
+  <div class="ar-hint" id="arHint">
+    <div class="ar-hint-inner">
+      <p><span class="pulse-dot"></span> Apunta tu cámara al marcador KREID</p>
+    </div>
+  </div>
+
+  <!-- ── Bottom Controls ── -->
+  <div class="ar-controls">
+    <div class="ar-panel">
+      <button class="ar-btn" onclick="rotateModel(-30)" title="Rotar ←">↺</button>
+      <button class="ar-btn" onclick="zoomModel(-0.15)" title="Alejar">−</button>
+      <span class="ar-status" id="arStatus">🔍 Buscando marcador...</span>
+      <button class="ar-btn" onclick="zoomModel(+0.15)" title="Acercar">+</button>
+      <button class="ar-btn" onclick="rotateModel(+30)" title="Rotar →">↻</button>
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       A-FRAME AR SCENE (marker-based, no GPS)
+       ═══════════════════════════════════════════ -->
+  <a-scene
+    vr-mode-ui="enabled: false"
+    arjs="sourceType: webcam; videoTexture: true; debugUIEnabled: false;"
+    renderer="antialias: true; alpha: true; logarithmicDepthBuffer: true;"
+    embedded>
+
+    <!-- Hiro Marker Camera (tracks the classic Hiro pattern) -->
+    <a-marker-camera preset="hiro" id="arCamera"></a-marker-camera>
+
+    <!-- ═════ All 3D content appears when marker is detected ═════ -->
+    <a-marker preset="hiro" id="mainMarker" emitevents="true">
+      
+      <!-- Content group (scaled and rotated by user) -->
+      <a-entity id="arContentRoot" position="0 0.5 0">
+
+        <!-- ═══ Central KREID 3D Logo ═══ -->
+        <a-entity
+          id="logoWrapper"
+          position="0 1.8 0"
+          scale="1.3 1.3 1.3">
+          <a-entity id="arLogoEntity" position="0 0 0"></a-entity>
+        </a-entity>
+
+        <!-- ═══ 6 Service Cards in Hexagon ═══ -->
+        <!-- Card 1: Diseño Gráfico -->
+        <a-entity id="card1" position="-2.6 1.3 -1.5"></a-entity>
+        <!-- Card 2: Branding & Identidad -->
+        <a-entity id="card2" position="0 1.3 -3.0"></a-entity>
+        <!-- Card 3: Diseño Editorial -->
+        <a-entity id="card3" position="2.6 1.3 -1.5"></a-entity>
+        <!-- Card 4: Diseño Web & UI/UX -->
+        <a-entity id="card4" position="2.6 1.3 1.5"></a-entity>
+        <!-- Card 5: Packaging -->
+        <a-entity id="card5" position="0 1.3 3.0"></a-entity>
+        <!-- Card 6: Producción Audiovisual -->
+        <a-entity id="card6" position="-2.6 1.3 1.5"></a-entity>
+
+        <!-- Ground ring -->
+        <a-ring position="0 0 0" rotation="-90 0 0"
+          radius-inner="3.2" radius-outer="3.4"
+          color="#00d4ff" opacity="0.25" side="double"></a-ring>
+        <a-ring position="0 0 0" rotation="-90 0 0"
+          radius-inner="0.7" radius-outer="0.9"
+          color="#7c3aed" opacity="0.35" side="double"></a-ring>
+
+      </a-entity>
+    </a-marker>
+
+  </a-scene>
+
+  <!-- ═══════════════════════════════════════════
+       SCRIPT: 3D objects injected via Three.js
+       (full Spanish text support via canvas)
+       ═══════════════════════════════════════════ -->
+  <script type="module">
+    import { FontLoader } from './libs/FontLoader.js';
+    import { TextGeometry } from './libs/TextGeometry.js';
+
+    /* ── Canvas texture helper (supports ñ, tildes, accents) ── */
+    function createCanvasTexture(config) {
+      const {
+        title, titleColor = '#00d4ff',
+        body, bodyColor = '#e2e8f0',
+        width = 1024, height = 512,
+        borderColor = 'rgba(0, 212, 255, 0.35)',
+        titleFontSize = 62, bodyFontSize = 34,
+        padding = 56
+      } = config;
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width; canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      const rr = 28;
+
+      // Glassmorphic card background
+      ctx.beginPath();
+      ctx.moveTo(padding + rr, padding);
+      ctx.lineTo(width - padding - rr, padding);
+      ctx.arcTo(width - padding, padding, width - padding, padding + rr, rr);
+      ctx.lineTo(width - padding, height - padding - rr);
+      ctx.arcTo(width - padding, height - padding, width - padding - rr, height - padding, rr);
+      ctx.lineTo(padding + rr, height - padding);
+      ctx.arcTo(padding, height - padding, padding, height - padding - rr, rr);
+      ctx.lineTo(padding, padding + rr);
+      ctx.arcTo(padding, padding, padding + rr, padding, rr);
+      ctx.closePath();
+      ctx.fillStyle = 'rgba(12, 2, 28, 0.88)';
+      ctx.fill();
+      ctx.strokeStyle = borderColor;
+      ctx.lineWidth = 2.5;
+      ctx.stroke();
+
+      // Accent line top
+      ctx.beginPath();
+      ctx.moveTo(padding + 40, padding + 6);
+      ctx.lineTo(width - padding - 40, padding + 6);
+      ctx.strokeStyle = titleColor;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      // Title
+      ctx.fillStyle = titleColor;
+      ctx.font = `bold ${titleFontSize}px 'Outfit', 'Inter', 'Helvetica Neue', Arial, sans-serif`;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(title, width / 2, height * 0.3);
+
+      // Body (multiline)
+      if (body) {
+        ctx.fillStyle = bodyColor;
+        ctx.font = `${bodyFontSize}px 'Inter', 'Helvetica Neue', Arial, sans-serif`;
+        ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        const lines = body.split('\n');
+        const startY = height * 0.46;
+        const lineH = bodyFontSize * 1.42;
+        lines.forEach((l, i) => ctx.fillText(l, width / 2, startY + i * lineH));
+      }
+
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.minFilter = THREE.LinearFilter;
+      tex.magFilter = THREE.LinearFilter;
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    /* ── Create card plane + look-at behavior ── */
+    function createCardPlane(config) {
+      const { title, titleColor, body, bodyColor, width = 2.6, height = 1.3, borderColor } = config;
+      const tex = createCanvasTexture({ ...config, width: 1024, height: 512 });
+      const geom = new THREE.PlaneGeometry(width, height);
+      const mat = new THREE.MeshBasicMaterial({ map: tex, transparent: true, side: THREE.DoubleSide });
+      return new THREE.Mesh(geom, mat);
+    }
+
+    /* ── Card definitions ── */
+    const cardDefs = [
+      { title: 'DISEÑO GRÁFICO', titleColor: '#00d4ff', body: 'Comunicación visual\nimpactante y profesional\npara tu marca.', borderColor: '#00d4ff' },
+      { title: 'BRANDING & IDENTIDAD', titleColor: '#7c3aed', body: 'Construimos marcas\nmemorables con identidad\nvisual estratégica.', borderColor: '#7c3aed' },
+      { title: 'DISEÑO EDITORIAL', titleColor: '#00d4ff', body: 'Revistas, catálogos y\npublicaciones con\nmaquetación profesional.', borderColor: '#00d4ff' },
+      { title: 'DISEÑO WEB & UI/UX', titleColor: '#7c3aed', body: 'Interfaces interactivas\ncon experiencia de\nusuario intuitiva.', borderColor: '#7c3aed' },
+      { title: 'PACKAGING CREATIVO', titleColor: '#00d4ff', body: 'Empaques que destacan\nen anaquel y refuerzan\ntu identidad.', borderColor: '#00d4ff' },
+      { title: 'PRODUCCIÓN AUDIOVISUAL', titleColor: '#7c3aed', body: 'Video, motion graphics\ny contenido multimedia\nque captura atención.', borderColor: '#7c3aed' }
+    ];
+
+    // ── Wait for scene to be ready ──
+    const scene = document.querySelector('a-scene');
+    scene.addEventListener('loaded', () => {
+      // 1. CREATE 3D LOGO via Three.js
+      const fontLoader = new FontLoader();
+      fontLoader.load('./libs/helvetiker_bold.typeface.json', (font) => {
+        const group = new THREE.Group();
+
+        const mainGeom = new TextGeometry('KREID', {
+          font, size: 1.4, height: 0.002, depth: 0.002,
+          curveSegments: 12, bevelEnabled: true,
+          bevelThickness: 0.003, bevelSize: 0.002, bevelSegments: 3
+        });
+        mainGeom.center();
+        const mainMat = new THREE.MeshPhysicalMaterial({
+          color: 0xb794f6, metalness: 0.7, roughness: 0.18,
+          clearcoat: 0.5, emissive: 0x2a1055, emissiveIntensity: 0.2
+        });
+        group.add(new THREE.Mesh(mainGeom, mainMat));
+
+        const subGeom = new TextGeometry('DESIGN STUDIO', {
+          font, size: 0.26, height: 0.002, depth: 0.002,
+          curveSegments: 6, bevelEnabled: false
+        });
+        subGeom.center();
+        const subMat = new THREE.MeshPhysicalMaterial({
+          color: 0x00d4ff, metalness: 0.5, roughness: 0.2,
+          emissive: 0x005566, emissiveIntensity: 0.3
+        });
+        const subMesh = new THREE.Mesh(subGeom, subMat);
+        subMesh.position.y = -0.95;
+        group.add(subMesh);
+
+        const lineGeom = new THREE.BoxGeometry(2.8, 0.025, 0.01);
+        const lineMesh = new THREE.Mesh(lineGeom, new THREE.MeshBasicMaterial({ color: 0x00d4ff }));
+        lineMesh.position.y = -0.48;
+        group.add(lineMesh);
+
+        document.getElementById('arLogoEntity').setObject3D('mesh', group);
+      });
+
+      // 2. CREATE SERVICE CARDS
+      for (let i = 0; i < 6; i++) {
+        const cardId = `card${i + 1}`;
+        const el = document.getElementById(cardId);
+        if (el) {
+          el.setObject3D('mesh', createCardPlane(cardDefs[i]));
+        }
+      }
+
+      // 3. LOOK-AT CAMERA tick
+      const cardEntities = [];
+      for (let i = 1; i <= 6; i++) {
+        const el = document.getElementById(`card${i}`);
+        if (el) cardEntities.push({ el, pos: el.object3D.position.clone() });
+      }
+
+      // Custom tick: make cards and logo face the camera
+      const originalTick = AFRAME.scenes[0].tick;
+      AFRAME.scenes[0].tick = function (t, dt) {
+        if (originalTick) originalTick.call(this, t, dt);
+        const camera = document.querySelector('#arCamera');
+        if (!camera || !camera.object3D) return;
+        const camWorldPos = new THREE.Vector3();
+        camera.object3D.getWorldPosition(camWorldPos);
+
+        // Cards face camera (lock Y-axis)
+        cardEntities.forEach(({ el }) => {
+          if (el && el.object3D) {
+            const p = el.object3D.position;
+            const lookTarget = new THREE.Vector3(camWorldPos.x, p.y, camWorldPos.z);
+            el.object3D.lookAt(lookTarget);
+          }
+        });
+
+        // Logo faces camera too
+        const logoEntity = document.getElementById('arLogoEntity');
+        if (logoEntity && logoEntity.object3D) {
+          const p = logoEntity.getAttribute('position');
+          const lookTarget = new THREE.Vector3(camWorldPos.x, 1.8, camWorldPos.z);
+          logoEntity.object3D.lookAt(lookTarget);
+        }
+      };
+    });
+
+    // ── Marker found/lost events ──
+    document.addEventListener('DOMContentLoaded', () => {
+      const statusEl = document.getElementById('arStatus');
+      const hintEl = document.getElementById('arHint');
+      const mainMarker = document.getElementById('mainMarker');
+      
+      if (mainMarker) {
+        mainMarker.addEventListener('markerFound', () => {
+          statusEl.textContent = '✅ Marcador detectado';
+          statusEl.className = 'ar-status found';
+          hintEl.classList.add('hidden');
+        });
+        mainMarker.addEventListener('markerLost', () => {
+          statusEl.textContent = '🔍 Buscando marcador...';
+          statusEl.className = 'ar-status';
+          hintEl.classList.remove('hidden');
+        });
+      }
+    });
+
+    /* ── Global: rotate & zoom controls ── */
+    let currentScale = 1.0;
+    let currentRotation = 0;
+    window.zoomModel = function (delta) {
+      currentScale = Math.max(0.3, Math.min(3.0, currentScale + delta));
+      const root = document.getElementById('arContentRoot');
+      if (root) root.setAttribute('scale', `${currentScale} ${currentScale} ${currentScale}`);
+    };
+    window.rotateModel = function (delta) {
+      currentRotation += delta;
+      const root = document.getElementById('arContentRoot');
+      if (root) root.setAttribute('rotation', `0 ${currentRotation} 0`);
+    };
+  </script>
+</body>
+</html>

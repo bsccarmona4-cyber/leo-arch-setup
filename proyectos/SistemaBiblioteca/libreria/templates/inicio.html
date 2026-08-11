@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Sistema de Biblioteca</title>
+</head>
+<body>
+    <h1>📚 Sistema de Biblioteca</h1>
+    <table border="1">
+        <tr>
+            <th>Titulo</th>
+            <th>Autor</th>
+            <th>Año</th>
+        </tr>
+        {% for libro in libros %}
+        <tr>
+            <td>{{ libro.titulo }}</td>
+            <td>{{ libro.autor }}</td>
+            <td>{{ libro.anio }}</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>
+

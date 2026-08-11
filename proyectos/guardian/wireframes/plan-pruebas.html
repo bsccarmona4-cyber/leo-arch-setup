@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plan de Pruebas — Guardián</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #FAFAF9; color: #292524; line-height: 1.5;
+      padding: 48px 24px;
+    }
+    .container { max-width: 1000px; margin: 0 auto; }
+    h1 { font-size: 32px; font-weight: 700; color: #292524; margin-bottom: 8px; }
+    .subtitle { font-size: 16px; color: #78716C; margin-bottom: 40px; }
+
+    h2 {
+      font-size: 20px; font-weight: 700; color: #292524; margin-bottom: 20px;
+      padding-bottom: 8px; border-bottom: 1px solid #E7E5E4;
+    }
+    h3 { font-size: 16px; font-weight: 600; color: #292524; margin-bottom: 12px; }
+
+    .section { margin-bottom: 48px; }
+
+    .card {
+      background: #FFFFFF; border: 1px solid #E7E5E4;
+      border-radius: 12px; padding: 24px; margin-bottom: 16px;
+    }
+
+    .tag-list { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .tag {
+      padding: 4px 12px; border-radius: 100px; font-size: 12px; font-weight: 500;
+    }
+    .tag.unit { background: #EEF2FF; color: #4338CA; border: 1px solid #C7D2FE; }
+    .tag.integration { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+    .tag.usability { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+    .tag.accessibility { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+    .tag.load { background: #F5F3FF; color: #5B21B6; border: 1px solid #DDD6FE; }
+    .tag.security { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+
+    table { width: 100%; border-collapse: collapse; margin-bottom: 24px; }
+    th {
+      text-align: left; padding: 10px 12px; font-size: 11px; font-weight: 600;
+      color: #A8A29E; text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 2px solid #E7E5E4; background: #FAFAF9;
+    }
+    td {
+      padding: 10px 12px; font-size: 13px; border-bottom: 1px solid #E7E5E4;
+    }
+    tr:last-child td { border-bottom: none; }
+    td code {
+      font-family: 'JetBrains Mono', monospace; font-size: 12px;
+      background: #F5F5F4; padding: 2px 6px; border-radius: 4px;
+    }
+    .badge {
+      display: inline-flex; padding: 2px 8px; border-radius: 100px;
+      font-size: 11px; font-weight: 500;
+    }
+    .badge.safe { background: #F0FDF4; color: #166534; border: 1px solid #BBF7D0; }
+    .badge.suspicious { background: #FFFBEB; color: #92400E; border: 1px solid #FDE68A; }
+    .badge.fraud { background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA; }
+    .badge.pass { background: #F0FDF4; color: #166534; }
+    .badge.fail { background: #FEF2F2; color: #991B1B; }
+
+    .test-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px; }
+    .test-card {
+      background: #FFFFFF; border: 1px solid #E7E5E4; border-radius: 8px; padding: 16px;
+    }
+    .test-card .id { font-size: 11px; font-weight: 600; color: #6366F1; margin-bottom: 4px; }
+    .test-card .name { font-size: 14px; font-weight: 600; color: #292524; margin-bottom: 8px; }
+    .test-card .detail { font-size: 13px; color: #78716C; margin-bottom: 4px; }
+    .test-card .expected { font-size: 12px; color: #A8A29E; }
+
+    .coverage-bar { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
+    .coverage-track { flex: 1; height: 8px; background: #F5F5F4; border-radius: 100px; overflow: hidden; }
+    .coverage-fill { height: 100%; border-radius: 100px; }
+    .coverage-fill.high { background: #16A34A; }
+    .coverage-fill.medium { background: #D97706; }
+    .coverage-label { font-size: 13px; font-weight: 500; color: #292524; width: 180px; }
+    .coverage-pct { font-size: 13px; color: #78716C; width: 48px; text-align: right; }
+
+    .flow-diagram {
+      font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      background: #FFFFFF; border: 1px solid #E7E5E4; border-radius: 8px;
+      padding: 24px; line-height: 2; color: #292524;
+    }
+
+    @media (max-width: 768px) {
+      .test-grid { grid-template-columns: 1fr; }
+      body { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Plan de Pruebas</h1>
+    <div class="subtitle">Estrategia de validación para Guardián</div>
+
+    <!-- Tipos de prueba -->
+    <div class="section">
+      <h2>Tipos de Prueba</h2>
+      <div class="card">
+        <table>
+          <thead>
+            <tr>
+              <th>Tipo</th>
+              <th>Alcance</th>
+              <th>Herramienta</th>
+              <th>Prioridad</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="tag unit">Unitarias</span></td>
+              <td>Pipeline de análisis, scorers, validaciones Zod</td>
+              <td>Vitest</td>
+              <td>Alta</td>
+            </tr>
+            <tr>
+              <td><span class="tag integration">Integración</span></td>
+              <td>API /analyze, webhooks, Supabase</td>
+              <td>Supertest</td>
+              <td>Alta</td>
+            </tr>
+            <tr>
+              <td><span class="tag usability">Usabilidad</span></td>
+              <td>Flujo WhatsApp y web con adultos mayores</td>
+              <td>Sesiones presenciales</td>
+              <td>Alta</td>
+            </tr>
+            <tr>
+              <td><span class="tag accessibility">Accesibilidad</span></td>
+              <td>WCAG 2.2 AA</td>
+              <td>axe-core, Lighthouse</td>
+              <td>Media</td>
+            </tr>
+            <tr>
+              <td><span class="tag load">Carga</span></td>
+              <td>API bajo 100 requests/minuto</td>
+              <td>k6</td>
+              <td>Baja</td>
+            </tr>
+            <tr>
+              <td><span class="tag security">Seguridad</span></td>
+              <td>SQL injection, XSS, rate limiting, SSRF</td>
+              <td>OWASP ZAP</td>
+              <td>Alta</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pruebas unitarias -->
+    <div class="section">
+      <h2>Pruebas Unitarias — Pipeline de Análisis</h2>
+
+      <div class="test-grid">
+        <div class="test-card">
+          <div class="id">P-01</div>
+          <div class="name">URL legítima BBVA</div>
+          <div class="detail">Entrada: <code style="font-size:11px;">https://www.bbva.mx</code></div>
+          <div class="expected">Esperado: Seguro, score &lt; 25</div>
+        </div>
+        <div class="test-card">
+          <div class="id">P-02</div>
+          <div class="name">URL suplantando SAT</div>
+          <div class="detail">Entrada: <code style="font-size:11px;">https://sats-gob-mx.com</code></div>
+          <div class="expected">Esperado: Fraude, score &gt; 65</div>
+        </div>
+        <div class="test-card">
+          <div class="id">P-03</div>
+          <div class="name">URL acortada maliciosa</div>
+          <div class="detail">Entrada: <code style="font-size:11px;">https://bit.ly/falso-sat</code></div>
+          <div class="expected">Esperado: Fraude después de resolver</div>
+        </div>
+        <div class="test-card">
+          <div class="id">P-04</div>
+          <div class="name">URL con redirecciones múltiples</div>
+          <div class="detail">Entrada: URL que redirige 5+ veces</div>
+          <div class="expected">Esperado: Detecta cadena completa</div>
+        </div>
+        <div class="test-card">
+          <div class="id">P-05</div>
+          <div class="name">Dominio recién creado</div>
+          <div class="detail">Entrada: Dominio con &lt; 7 días de creado</div>
+          <div class="expected">Esperado: Sospechoso / Fraude</div>
+        </div>
+        <div class="test-card">
+          <div class="id">P-06</div>
+          <div class="name">Marca similar (Levenshtein)</div>
+          <div class="detail">Entrada: <code style="font-size:11px;">bbva-seguridad.mx</code></div>
+          <div class="expected">Esperado: Sospechoso</div>
+        </div>
+        <div class="test-card">
+          <div class="id">P-07</div>
+          <div class="name">Marca exacta sin suplantación</div>
+          <div class="detail">Entrada: <code style="font-size:11px;">https://www.banamex.com</code></div>
+          <div class="expected">Esperado: Seguro</div>
+        </div>
+        <div class="test-card">
+          <div class="id">P-08</div>
+          <div class="name">URL sin HTTPS</div>
+          <div class="detail">Entrada: <code style="font-size:11px;">http://sats-gob-mx.com</code></div>
+          <div class="expected">Esperado: Sospechoso o Fraude</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pruebas de Integración -->
+    <div class="section">
+      <h2>Pruebas de Integración — API /analyze</h2>
+
+      <div class="test-grid">
+        <div class="test-card">
+          <div class="id">I-01</div>
+          <div class="name">POST /api/analyze — URL válida</div>
+          <div class="detail">Body: <code>{"content":"https://...","channel":"web","userHash":"test"}</code></div>
+          <div class="expected">Esperado: 200 + veredicto + score</div>
+        </div>
+        <div class="test-card">
+          <div class="id">I-02</div>
+          <div class="name">POST /api/analyze — body inválido</div>
+          <div class="detail">Body: <code>{"foo":"bar"}</code></div>
+          <div class="expected">Esperado: 400 + error message</div>
+        </div>
+        <div class="test-card">
+          <div class="id">I-03</div>
+          <div class="name">POST /api/analyze — rate limit excedido</div>
+          <div class="detail">10 requests desde misma IP en 1 minuto</div>
+          <div class="expected">Esperado: 429 + rate limit message</div>
+        </div>
+        <div class="test-card">
+          <div class="id">I-04</div>
+          <div class="name">POST /api/analyze — SQL injection</div>
+          <div class="detail">Body con <code>"content": "'; DROP TABLE analyses;--"</code></div>
+          <div class="expected">Esperado: 400 o 200, nunca error SQL</div>
+        </div>
+        <div class="test-card">
+          <div class="id">I-05</div>
+          <div class="name">POST /api/analyze — content demasiado grande</div>
+          <div class="detail">Body con 200KB de datos</div>
+          <div class="expected">Esperado: 413</div>
+        </div>
+        <div class="test-card">
+          <div class="id">I-06</div>
+          <div class="name">POST /api/analyze — método incorrecto</div>
+          <div class="detail">GET, PUT, DELETE a /api/analyze</div>
+          <div class="expected">Esperado: 405</div>
+        </div>
+        <div class="test-card">
+          <div class="id">I-07</div>
+          <div class="name">POST /api/analyze — Content-Type incorrecto</div>
+          <div class="detail">Header: <code>Content-Type: text/plain</code></div>
+          <div class="expected">Esperado: 415</div>
+        </div>
+        <div class="test-card">
+          <div class="id">I-08</div>
+          <div class="name">GET /api/stats</div>
+          <div class="detail">Sin parámetros</div>
+          <div class="expected">Esperado: 200 + totalAnalyses</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pruebas de Usabilidad -->
+    <div class="section">
+      <h2>Pruebas de Usabilidad</h2>
+      <div class="card">
+        <h3>Escenarios</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Escenario</th>
+              <th>Acción del Usuario</th>
+              <th>Criterio de Éxito</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>U-01</td>
+              <td>Analizar link vía WhatsApp</td>
+              <td>Usuario recibe link, lo reenvía al bot</td>
+              <td>Recibe respuesta en &lt; 15 segundos</td>
+            </tr>
+            <tr>
+              <td>U-02</td>
+              <td>Entender veredicto</td>
+              <td>Usuario ve resultado del análisis</td>
+              <td>Identifica si es seguro o peligroso en &lt; 10 segundos</td>
+            </tr>
+            <tr>
+              <td>U-03</td>
+              <td>Analizar link vía web</td>
+              <td>Usuario abre landing, pega URL, hace clic</td>
+              <td>Completa el flujo sin ayuda externa</td>
+            </tr>
+            <tr>
+              <td>U-04</td>
+              <td>Nuevo análisis después de resultado</td>
+              <td>Usuario hace clic en "Analizar otro link"</td>
+              <td>El campo se limpia y puede pegar nueva URL</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="card">
+        <h3>Segmento de Usuarios</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Segmento</th>
+              <th>Descripción</th>
+              <th>Reclutamiento</th>
+              <th>Participantes</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Adulto mayor, bajo tech</td>
+              <td>Similar a Doña María (72, solo WhatsApp)</td>
+              <td>Centros comunitarios, iglesias</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Adulto mayor, tech media</td>
+              <td>Similar a Don Roberto (68, apps bancarias)</td>
+              <td>Grupos de jubilados, clubes</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Familiar cuidador</td>
+              <td>Similar a Ana (45, trabaja, monitorea)</td>
+              <td>Grupos de WhatsApp familiares</td>
+              <td>5</td>
+            </tr>
+            <tr>
+              <td>Usuario joven (control)</td>
+              <td>25-40 años, tech savvy</td>
+              <td>Online</td>
+              <td>5</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Pruebas de Accesibilidad -->
+    <div class="section">
+      <h2>Pruebas de Accesibilidad — WCAG 2.2 AA</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Criterio</th>
+            <th>Elemento</th>
+            <th>Verificación</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>A-01</td>
+            <td>Contraste 4.5:1</td>
+            <td>Texto body sobre fondo</td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>A-02</td>
+            <td>Contraste 3:1</td>
+            <td>Texto grande (18px+) sobre fondo</td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>A-03</td>
+            <td>Tamaño de target</td>
+            <td>Botones con 44x44px mínimo</td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>A-04</td>
+            <td>Focus visible</td>
+            <td>Todos los elementos interactivos</td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>A-05</td>
+            <td>Navegación por teclado</td>
+            <td>Tab order lógico, skip links</td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>A-06</td>
+            <td>Textos alternativos</td>
+            <td>Imágenes e íconos funcionales</td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>A-07</td>
+            <td>Idioma definido</td>
+            <td><code>lang="es-MX"</code></td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>A-08</td>
+            <td>Rutas de navegación</td>
+            <td>Breadcrumbs o indicador de página</td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>A-09</td>
+            <td>Labels asociados</td>
+            <td>Inputs con <code>aria-label</code> o <code>label</code></td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+          <tr>
+            <td>A-10</td>
+            <td>Redimensionamiento texto</td>
+            <td>Hasta 200% sin pérdida de contenido</td>
+            <td><span class="badge pass">Pass</span></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Cobertura -->
+    <div class="section">
+      <h2>Cobertura Esperada</h2>
+      <div class="card">
+        <div class="coverage-bar">
+          <span class="coverage-label">Funciones de scoring (scorer.ts)</span>
+          <div class="coverage-track"><div class="coverage-fill high" style="width:100%"></div></div>
+          <span class="coverage-pct">100%</span>
+        </div>
+        <div class="coverage-bar">
+          <span class="coverage-label">Validaciones Zod (security.ts)</span>
+          <div class="coverage-track"><div class="coverage-fill high" style="width:100%"></div></div>
+          <span class="coverage-pct">100%</span>
+        </div>
+        <div class="coverage-bar">
+          <span class="coverage-label">API routes (analyze, stats)</span>
+          <div class="coverage-track"><div class="coverage-fill high" style="width:95%"></div></div>
+          <span class="coverage-pct">95%</span>
+        </div>
+        <div class="coverage-bar">
+          <span class="coverage-label">Componentes UI (dashboard, landing)</span>
+          <div class="coverage-track"><div class="coverage-fill medium" style="width:80%"></div></div>
+          <span class="coverage-pct">80%</span>
+        </div>
+        <div class="coverage-bar">
+          <span class="coverage-label">Flujos críticos (análisis de URL)</span>
+          <div class="coverage-track"><div class="coverage-fill high" style="width:100%"></div></div>
+          <span class="coverage-pct">100%</span>
+        </div>
+        <div class="coverage-bar">
+          <span class="coverage-label">Integración Supabase + Webhooks</span>
+          <div class="coverage-track"><div class="coverage-fill high" style="width:90%"></div></div>
+          <span class="coverage-pct">90%</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Flujo de pruebas -->
+    <div class="section">
+      <h2>Flujo de Prueba — Análisis de URL</h2>
+      <div class="flow-diagram">
+POST /api/analyze<br>
+│<br>
+├─ checkMethod           (405 si no es POST)<br>
+├─ checkContentType      (415 si no es JSON)<br>
+├─ checkRateLimitByIp    (429 si excede 10/min)<br>
+├─ readBody              (413 si > 100KB)<br>
+├─ JSON.parse<br>
+├─ sanitizeBody          (limpia caracteres de control)<br>
+├─ analyzeSchema.parse   (Zod validation — 400 si inválido)<br>
+├─ detectInjection       (400 si detecta prompt injection)<br>
+├─ checkRateLimit        (429 si excede por usuario)<br>
+│<br>
+├─ analyzeUrl()<br>
+│  ├─ isPrivateHost      (SSRF protection)<br>
+│  ├─ checkCache         (24h TTL)<br>
+│  ├─ resolveUrl         (máx 10 redirecciones)<br>
+│  ├─ fetch page content (timeout 5s, máx 500KB)<br>
+│  ├─ scoreUrlSignals    (WHOIS, PhishTank, Brand MX)<br>
+│  ├─ callLLM            (DeepSeek → Groq fallback)<br>
+│  └─ fusionScore        (30% técnico + 70% LLM)<br>
+│<br>
+├─ db.insert('analyses')<br>
+├─ upsert url_cache<br>
+├─ increment_analysis_count<br>
+│<br>
+└─ 200 { verdict, score, response }
+      </div>
+    </div>
+  </div>
+</body>
+</html>

@@ -1,0 +1,19 @@
+FROM node:20-alpine
+
+WORKDIR /app
+
+# Baileys needs these for crypto operations
+RUN apk add --no-cache \
+    ca-certificates \
+    bash \
+    git
+
+COPY package*.json ./
+RUN npm install --production
+
+COPY . .
+
+# Create session directory
+RUN mkdir -p /app/session
+
+CMD ["node", "bot.js"]

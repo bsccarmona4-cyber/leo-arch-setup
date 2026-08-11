@@ -1,0 +1,88 @@
+@startuml
+!pragma layout smetana
+left to right direction
+skinparam backgroundColor #FFFFFF
+skinparam shadowing false
+skinparam defaultFontName "Helvetica, Arial, sans-serif"
+skinparam actorStyle awesome
+skinparam usecase {
+  BackgroundColor #E0F2FE
+  BorderColor #0369A1
+  FontColor #0C4A6E
+}
+skinparam actor {
+  BackgroundColor #0E7490
+  BorderColor #0F172A
+  FontColor #0F172A
+}
+skinparam package {
+  BackgroundColor #F8FAFC
+  BorderColor #94A3B8
+  FontColor #0F172A
+}
+skinparam ArrowColor #334155
+
+title <size:20><b>Diagrama de Casos de Uso</size>\n<size:14>Plataforma de Gestión de Citas Médicas y Expediente Electrónico</size>
+
+' ===== ACTORES =====
+actor "Paciente\n(principal)" as Paciente
+actor "Paciente Adulto Mayor" as Mayor
+actor "Paciente Joven" as Joven
+actor "Médico" as Medico
+actor "Recepcionista" as Recepcion
+actor "Sistema de\nRecordatorios" as Sistema
+Paciente <|-- Mayor
+Paciente <|-- Joven
+
+' ===== PAQUETE: GESTIÓN DE CITAS =====
+package "Gestión de Citas" {
+  usecase "Agendar cita" as UC_Agendar
+  usecase "Cancelar cita" as UC_Cancelar
+  usecase "Reprogramar cita" as UC_Reprogramar
+  usecase "Verificar disponibilidad" as UC_Disponibilidad
+  usecase "Recibir recordatorio" as UC_Recordatorio
+  usecase "Confirmar cita" as UC_Confirmar
+  usecase "Registrar paciente" as UC_Registrar
+}
+
+' ===== PAQUETE: EXPEDIENTE =====
+package "Expediente Electrónico" {
+  usecase "Autenticarse" as UC_Auth
+  usecase "Consultar historial médico" as UC_Historial
+  usecase "Consultar expediente electrónico" as UC_Expediente
+  usecase "Descargar receta" as UC_Receta
+}
+
+' ===== PAQUETE: ADMIN =====
+package "Administración Médica" {
+  usecase "Gestionar disponibilidad" as UC_Dispo
+}
+
+' ===== RELACIONES DE INCLUSIÓN / EXTENSIÓN =====
+UC_Agendar ..> UC_Disponibilidad : <<include>>
+UC_Agendar ..> UC_Auth : <<include>>
+UC_Reprogramar ..> UC_Cancelar : <<extend>>
+UC_Historial ..> UC_Auth : <<include>>
+UC_Expediente ..> UC_Auth : <<include>>
+
+' ===== CONEXIONES ACTOR -> CASO =====
+Paciente --> UC_Agendar
+Paciente --> UC_Cancelar
+Paciente --> UC_Reprogramar
+Paciente --> UC_Historial
+Paciente --> UC_Expediente
+Paciente --> UC_Receta
+Paciente --> UC_Recordatorio
+
+Medico --> UC_Dispo
+Medico --> UC_Expediente
+Medico --> UC_Historial
+Medico --> UC_Agendar
+
+Recepcion --> UC_Registrar
+Recepcion --> UC_Confirmar
+Recepcion --> UC_Agendar
+
+Sistema --> UC_Recordatorio
+
+@enduml

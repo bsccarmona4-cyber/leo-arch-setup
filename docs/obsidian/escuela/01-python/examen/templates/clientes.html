@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block titulo %}Clientes{% endblock %}
+{% block contenido %}
+<h1>👥 Clientes</h1>
+
+<div style="display:flex; gap:10px; margin-bottom:15px;">
+    <form style="flex:1;">
+        <input type="text" name="q" placeholder="🔍 Buscar cliente..." class="search-input"
+               value="{{ query }}" style="width:100%;">
+    </form>
+    <button class="btn" onclick="toggleForm('add-form')">+ Registrar</button>
+</div>
+
+<div id="add-form" class="card" style="display:none;">
+    <h3>Registrar Cliente</h3>
+    <form method="POST" action="/clientes/registrar" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <input type="text" name="nombre" placeholder="Nombre completo" required>
+        <input type="text" name="telefono" placeholder="Teléfono">
+        <input type="email" name="email" placeholder="Email">
+        <input type="date" name="fecha_nacimiento">
+        <button type="submit" class="btn btn-success">Guardar</button>
+    </form>
+</div>
+
+<table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Teléfono</th><th>Email</th><th>Puntos</th><th></th></tr></thead>
+    <tbody>
+    {% for c in clientes %}
+    <tr>
+        <td>{{ c.id }}</td>
+        <td><a href="/clientes/{{ c.id }}">{{ c.nombre }}</a></td>
+        <td>{{ c.telefono or '-' }}</td>
+        <td>{{ c.email or '-' }}</td>
+        <td><span style="color:var(--accent);">{{ c.puntos_disponibles or 0 }}</span></td>
+        <td><a href="/clientes/{{ c.id }}" class="btn-sm">📋</a></td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleForm(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+</script>
+{% endblock %}

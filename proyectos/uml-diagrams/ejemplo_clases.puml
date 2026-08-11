@@ -1,0 +1,32 @@
+@startuml
+!pragma layout smetana
+title Diagrama de Clases — Ejemplo Escolar
+
+class Estudiante {
+  - id: int
+  - nombre: String
+  - matricula: String
+  + inscribirse(curso: Curso): void
+  + calcularPromedio(): float
+}
+
+class Curso {
+  - codigo: String
+  - nombre: String
+  - creditos: int
+  + agregarEstudiante(e: Estudiante): void
+  + listarInscritos(): List<Estudiante>
+}
+
+class Profesor {
+  - id: int
+  - nombre: String
+  - departamento: String
+  + impartir(curso: Curso): void
+  + calificar(e: Estudiante, nota: float): void
+}
+
+Estudiante "n" -- "m" Curso : se inscribe en
+Curso "1" -- "1..*" Profesor : impartido por
+
+@enduml

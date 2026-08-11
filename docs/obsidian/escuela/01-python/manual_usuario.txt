@@ -1,0 +1,161 @@
+================================================================================
+                MANUAL DE USUARIO - SISTEMA DE INSCRIPCIONES
+================================================================================
+
+1. INTRODUCCION
+--------------------------------------------------------------------------------
+Este manual describe paso a paso como utilizar el Sistema de Inscripciones,
+una aplicacion de escritorio para registrar alumnos, cursos e inscripciones.
+
+
+2. REQUISITOS PARA EJECUTAR
+--------------------------------------------------------------------------------
+    - Sistema operativo: Windows, Linux o macOS
+    - Python 3.6 o superior instalado
+    - No requiere instalar paquetes adicionales
+
+
+3. COMO ABRIR LA APLICACION
+--------------------------------------------------------------------------------
+    1. Abrir una terminal o linea de comandos.
+    2. Navegar al directorio donde se encuentra el archivo:
+           cd /ruta/al/directorio
+    3. Ejecutar el comando:
+           python3 inscripciones_bd.py
+    4. Se abrira la ventana principal del sistema.
+    5. La base de datos se crea automaticamente la primera vez.
+
+
+4. DESCRIPCION DE LA VENTANA PRINCIPAL
+--------------------------------------------------------------------------------
+La ventana contiene tres pestanas en la parte superior:
+
+    +------------------------------------------------------------------+
+    | [ Alumnos ]  [ Cursos ]  [ Inscripciones ]                      |
+    +------------------------------------------------------------------+
+    |                                                                  |
+    |   Formulario de captura (campos de texto)                        |
+    |                                                                  |
+    |   [ Agregar ]  [ Actualizar ]  [ Eliminar ]  [ Limpiar ]        |
+    |                                                                  |
+    |   Tabla de registros                                             |
+    |                                                                  |
+    +------------------------------------------------------------------+
+    | BD: /ruta/inscripciones.db                                       |
+    +------------------------------------------------------------------+
+
+Cada pestana tiene la misma estructura:
+    - Formulario de captura en la parte superior
+    - Botones de operaciones debajo del formulario
+    - Tabla de registros en la parte inferior
+    - Barra de estado con la ruta de la base de datos
+
+
+5. PESTANA ALUMNOS - OPERACIONES PASO A PASO
+--------------------------------------------------------------------------------
+
+5.1 Agregar un alumno
+    1. Hacer clic en la pestana "Alumnos".
+    2. Llenar los campos:
+        - Nombre (ejemplo: Juan)
+        - Apellido Paterno (ejemplo: Perez)
+        - Apellido Materno (ejemplo: Lopez)
+        - CURP (ejemplo: PELJ900101HDFRPN09)
+        - Celular (ejemplo: 5512345678)
+    3. Presionar el boton "Agregar".
+    4. Si los datos son correctos, aparece el mensaje "Alumno agregado".
+    5. El nuevo alumno aparece en la tabla inferior.
+    6. El campo "ID Alumno" se asigna automaticamente.
+
+5.2 Actualizar un alumno
+    1. Hacer clic sobre el alumno que se desea modificar en la tabla.
+    2. Los datos se cargan automaticamente en el formulario.
+    3. Modificar los campos que se deseen cambiar.
+    4. Presionar el boton "Actualizar".
+    5. Aparece el mensaje "Alumno actualizado".
+
+5.3 Eliminar un alumno
+    1. Hacer clic sobre el alumno que se desea eliminar en la tabla.
+    2. Presionar el boton "Eliminar".
+    3. Aparece un cuadro de confirmacion.
+    4. Presionar "Si" para confirmar o "No" para cancelar.
+    5. Al eliminar un alumno, se eliminan tambien todas sus inscripciones.
+
+5.4 Limpiar formulario
+    1. Presionar el boton "Limpiar".
+    2. Todos los campos del formulario se vacian.
+
+
+6. PESTANA CURSOS - OPERACIONES PASO A PASO
+--------------------------------------------------------------------------------
+
+6.1 Agregar un curso
+    1. Hacer clic en la pestana "Cursos".
+    2. Llenar los campos:
+        - Nombre (ejemplo: Programacion en Python)
+        - Duracion (ejemplo: 40 horas)
+        - Costo (ejemplo: 2500.00) -- debe ser un numero
+    3. Presionar el boton "Agregar".
+    4. El IDCurso se asigna automaticamente.
+
+6.2 Actualizar un curso
+    1. Seleccionar un curso de la tabla.
+    2. Modificar los campos deseados.
+    3. Presionar "Actualizar".
+
+6.3 Eliminar un curso
+    1. Seleccionar un curso de la tabla.
+    2. Presionar "Eliminar" y confirmar.
+    3. Se eliminan tambien las inscripciones asociadas a ese curso.
+
+
+7. PESTANA INSCRIPCIONES - OPERACIONES PASO A PASO
+--------------------------------------------------------------------------------
+
+7.1 Agregar una inscripcion
+    1. Hacer clic en la pestana "Inscripciones".
+    2. En el campo "Alumno", desplegar la lista y seleccionar un alumno.
+       (Solo aparecen alumnos previamente registrados)
+    3. En el campo "Curso", desplegar la lista y seleccionar un curso.
+       (Solo aparecen cursos previamente registrados)
+    4. Al seleccionar un curso, los campos "Costo" y "Duracion" se
+       autocompletan con los datos del curso. Se pueden modificar si
+       es necesario (por ejemplo, para aplicar un descuento).
+    5. Presionar el boton "Agregar".
+    6. El Folio se asigna automaticamente.
+
+7.2 Actualizar una inscripcion
+    1. Seleccionar una inscripcion de la tabla.
+    2. Cambiar el alumno, curso, costo o duracion segun se necesite.
+    3. Presionar "Actualizar".
+
+7.3 Eliminar una inscripcion
+    1. Seleccionar una inscripcion de la tabla.
+    2. Presionar "Eliminar" y confirmar.
+
+
+8. MENSAJES DEL SISTEMA
+--------------------------------------------------------------------------------
+
+    Mensaje                          | Significado
+    ---------------------------------+------------------------------------------
+    "Alumno agregado"                | El alumno se registro correctamente
+    "Alumno actualizado"             | Los datos del alumno se actualizaron
+    "Campos vacios"                  | Faltan campos por llenar
+    "UNIQUE constraint failed"       | El CURP ya esta registrado
+    "Seleccione un alumno/curso"     | No se ha seleccionado un registro
+    "could not convert string..."    | El campo Costo no es un numero valido
+
+
+9. CONSIDERACIONES IMPORTANTES
+--------------------------------------------------------------------------------
+    - El CURP debe ser unico para cada alumno. No se pueden registrar dos
+      alumnos con el mismo CURP.
+    - Para crear una inscripcion, primero deben existir al menos un alumno
+      y un curso registrados.
+    - Al eliminar un alumno o curso, todas las inscripciones que lo
+      referencian se eliminan automaticamente (eliminacion en cascada).
+    - La base de datos se guarda en el archivo "inscripciones.db" en el
+      mismo directorio que el programa. No borrar este archivo o se
+      perderan todos los datos.
+    - El programa no requiere conexion a internet.

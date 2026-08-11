@@ -1,0 +1,26 @@
+@startuml
+title Channeling a student with their tutor
+actor Student
+actor Administrator
+participant "System" as S
+participant "Tutor" as T
+
+S -> S : detectRisk(grades)
+activate S
+S -> S : create(RiskAlert)
+S --> Administrator : notifyRisk(alert)
+Administrator -> S : assignTutor(student, tutor)
+S --> T : notifyAssignment(tutor, student)
+T -> S : confirmAvailability()
+S -> S : schedule(Appointment)
+S --> Student : notifyAppointment(appointment)
+Student -> S : confirmAppointment()
+S --> T : notifyConfirmation()
+deactivate S
+T -> Student : holdTutoringSession()
+T -> S : recordCommitments(commitments)
+activate S
+S --> Student : notifyCommitments()
+S -> S : trackProgress()
+deactivate S
+@enduml

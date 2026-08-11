@@ -1,0 +1,304 @@
+/* ==========================================
+   🌸 KREID — Layout System (Beauty & Health)
+   ========================================== */
+
+/* ─── Announcement Bar ─── */
+.announcement-bar {
+  background: linear-gradient(135deg, var(--rose), var(--berry));
+  color: var(--white);
+  font-size: 0.78rem;
+  font-weight: 500;
+  overflow: hidden;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  letter-spacing: 0.5px;
+}
+
+.announcement-scroll {
+  display: flex;
+  gap: 16px;
+  white-space: nowrap;
+  animation: scrollBanner 30s linear infinite;
+  padding-left: 100%;
+}
+
+@keyframes scrollBanner {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-100%); }
+}
+
+.announcement-scroll .sep {
+  opacity: 0.5;
+}
+
+/* ─── Navbar ─── */
+.navbar {
+  position: sticky;
+  top: 0;
+  z-index: 1000;
+  background: color-mix(in srgb, var(--cream) 95%, transparent);
+  backdrop-filter: blur(12px);
+  border-bottom: 1px solid transparent;
+  transition: var(--transition);
+}
+
+.navbar.scrolled {
+  border-bottom: 1px solid var(--rose-light);
+  box-shadow: 0 2px 20px rgba(196, 139, 168, 0.1);
+}
+
+.nav-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 64px;
+}
+
+/* ─── Logo ─── */
+.nav-logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--dark);
+  z-index: 2;
+}
+
+.logo-icon {
+  color: var(--rose);
+}
+
+.logo-text {
+  letter-spacing: 2px;
+}
+
+/* ─── Desktop Nav ─── */
+.nav-links-desktop {
+  display: flex;
+  gap: 32px;
+  align-items: center;
+}
+
+.nav-links-desktop a {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--gray-600);
+  transition: var(--transition);
+  position: relative;
+  padding: 4px 0;
+}
+
+.nav-links-desktop a:hover {
+  color: var(--rose);
+}
+
+.nav-links-desktop a.active {
+  color: var(--rose);
+}
+
+.nav-links-desktop a.active::after {
+  content: '';
+  position: absolute;
+  bottom: -2px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--rose);
+  border-radius: 2px;
+}
+
+/* ─── Nav Actions ─── */
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.nav-account-icon {
+  color: var(--gray-500);
+  transition: var(--transition);
+  display: flex;
+  align-items: center;
+}
+
+.nav-account-icon:hover {
+  color: var(--rose);
+}
+
+/* ─── Cart ─── */
+.cart-link {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--gray-500);
+  transition: var(--transition);
+  position: relative;
+}
+
+.cart-link:hover {
+  color: var(--rose);
+}
+
+.cart-icon {
+  position: relative;
+  display: flex;
+  align-items: center;
+  transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cart-icon.bounce {
+  transform: scale(1.2);
+}
+
+.cart-count-badge {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--rose);
+  color: white;
+  font-size: 0.65rem;
+  font-weight: 700;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(196, 139, 168, 0.4);
+}
+
+.cart-total {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dark);
+}
+
+/* ─── Mobile Menu ─── */
+.menu-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--dark);
+  padding: 4px;
+  z-index: 2;
+}
+
+.mobile-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: var(--cream);
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: fadeIn 0.2s ease;
+}
+
+.mobile-menu .container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  text-align: center;
+}
+
+.mobile-menu a {
+  font-size: 1.3rem;
+  font-weight: 500;
+  color: var(--dark);
+  padding: 12px;
+  transition: var(--transition);
+  border-radius: var(--radius-md);
+}
+
+.mobile-menu a:hover {
+  background: var(--rose-light);
+  color: var(--rose);
+}
+
+/* ─── Main Content ─── */
+.main-content {
+  min-height: calc(100vh - 64px - 36px - 180px);
+}
+
+/* ─── Footer ─── */
+.footer {
+  background: var(--dark);
+  color: var(--gray-400);
+  padding: 40px 0;
+  margin-top: 60px;
+}
+
+.footer-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  text-align: center;
+}
+
+.footer-brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--white);
+}
+
+.footer-brand .logo-icon {
+  color: var(--rose);
+}
+
+.footer-links {
+  display: flex;
+  gap: 24px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.footer-links a {
+  color: var(--gray-400);
+  font-size: 0.85rem;
+  transition: var(--transition);
+}
+
+.footer-links a:hover {
+  color: var(--rose);
+}
+
+.footer-text {
+  font-size: 0.8rem;
+  max-width: 400px;
+}
+
+.footer-copy {
+  font-size: 0.75rem;
+  opacity: 0.6;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .nav-links-desktop {
+    display: none;
+  }
+
+  .menu-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .footer-links {
+    gap: 16px;
+  }
+
+  .announcement-bar {
+    font-size: 0.7rem;
+    height: 32px;
+  }
+}

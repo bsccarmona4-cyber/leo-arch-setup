@@ -1,0 +1,3 @@
+scan_timeout = 500
+command_timeout = 5000
+

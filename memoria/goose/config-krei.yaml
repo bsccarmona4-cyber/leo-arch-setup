@@ -1,0 +1,136 @@
+# === PERFIL KREI ===
+# Todo el poder + extensiones dropshipping y agentes KREI
+# Para sesiones de trabajo en dropshipping
+
+GOOSE_TELEMETRY_ENABLED: false
+GOOSE_THINKING_EFFORT: off
+
+active_provider: custom_deepseek
+providers:
+  custom_deepseek:
+    enabled: true
+    model: deepseek-chat
+    configured: true
+
+extensions:
+  # --- Built-in platform ---
+  developer:
+    enabled: true
+    type: platform
+    name: developer
+    display_name: Developer
+    bundled: true
+  extensionmanager:
+    enabled: true
+    type: platform
+    name: Extension Manager
+    display_name: Extension Manager
+    bundled: true
+  summon:
+    enabled: true
+    type: platform
+    name: summon
+    display_name: Summon
+    bundled: true
+  skills:
+    enabled: true
+    type: platform
+    name: skills
+    display_name: Skills
+    bundled: true
+  todo:
+    enabled: true
+    type: platform
+    name: todo
+    display_name: Todo
+    bundled: true
+  apps:
+    enabled: true
+    type: platform
+    name: apps
+    display_name: Apps
+    bundled: true
+  analyze:
+    enabled: true
+    type: platform
+    name: analyze
+    display_name: Analyze
+    bundled: true
+  tom:
+    enabled: true
+    type: platform
+    name: tom
+    display_name: Top Of Mind
+    bundled: true
+
+  # --- MCP servers externos generales ---
+  fetch:
+    name: Fetch
+    type: stdio
+    cmd: mcp-server-fetch
+    enabled: true
+    timeout: 300
+  filesystem:
+    name: Filesystem
+    type: stdio
+    cmd: /home/leo/mcp-servers/servers/src/filesystem/dist/index.js
+    enabled: true
+    timeout: 300
+  sequential-thinking:
+    name: Sequential Thinking
+    type: stdio
+    cmd: /home/leo/mcp-servers/servers/src/sequentialthinking/dist/index.js
+    enabled: true
+    timeout: 300
+  memory:
+    name: Memory
+    type: stdio
+    cmd: /home/leo/mcp-servers/servers/src/memory/dist/index.js
+    enabled: true
+    timeout: 300
+  bash:
+    name: Bash
+    type: stdio
+    cmd: python3
+    args:
+    - /home/leo/mcp-servers/mcp-bash/server.py
+    enabled: true
+    timeout: 300
+
+  # --- KREI-specific: dropshipping & research ---
+  nano-banana:
+    name: NanoBanana
+    type: stdio
+    cmd: /home/leo/goose-dropshipping/node_modules/.bin/mcp-server-nano-banana
+    enabled: true
+    envs:
+      GEMINI_API_KEY: AQ.Ab8RN6LHW22d8uLv-K8ob_T-ujUoZsdmd7FxSMZCAfh0BHW5pg
+    timeout: 300
+  google-stitch:
+    name: Google Stitch
+    type: stdio
+    cmd: /home/leo/goose-dropshipping/node_modules/.bin/stitch-mcp
+    enabled: true
+    envs:
+      GOOGLE_CLOUD_PROJECT: daring-charmer-493018-n4
+    timeout: 300
+  browsermcp:
+    name: BrowserMCP
+    type: stdio
+    cmd: /home/leo/.local/share/mcp-servers/browsermcp/mcp/dist/index.js
+    enabled: true
+    timeout: 300
+  n8n-mcp:
+    name: n8n MCP
+    type: stdio
+    cmd: /home/leo/.local/bin/n8n-mcp
+    enabled: true
+    timeout: 300
+  puppeteer:
+    name: Puppeteer
+    type: stdio
+    cmd: /home/leo/mcp-servers/npm-packages/node_modules/.bin/mcp-server-puppeteer
+    enabled: true
+    envs:
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/google-chrome
+    timeout: 300

@@ -1,0 +1,56 @@
+{
+  "name": "transcode",
+  "description": "Transcodes media files using ffmpeg with selectable presets and real-time progress reporting.",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "input": {
+        "type": "string",
+        "description": "Input path (absolute or relative) that must stay within a configured media root."
+      },
+      "output": {
+        "type": "string",
+        "description": "Output path constrained to writable media roots."
+      },
+      "preset": {
+        "type": "string",
+        "enum": ["1080p", "720p", "audio-only", "gif"],
+        "description": "Transcoding preset configuration."
+      },
+      "start_time": {
+        "type": "string",
+        "description": "Start timestamp (e.g. \"00:00:10\")."
+      },
+      "duration": {
+        "type": "string",
+        "description": "Duration to process (e.g. \"5\")."
+      }
+    },
+    "required": ["input", "output", "preset"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["success", "result"],
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the operation succeeded"
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Summary of the completed transcode and output location."
+          },
+          "error": { "type": "string" },
+          "input": { "type": "string" },
+          "output": { "type": "string" },
+          "preset": { "type": "string" },
+          "hint": { "type": "string" }
+        }
+      }
+    }
+  }
+}
+

@@ -1,0 +1,896 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KREID Interactive 3D Showroom — Explora nuestro estudio de diseño en un entorno tridimensional inmersivo tipo Blender/Metaverso.">
+  <title>KREID — 3D Interactive Showroom</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body { margin: 0; overflow: hidden; background: #0e0525; font-family: var(--font-body); }
+
+    /* Scene Container */
+    #scene-container {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+    }
+
+    /* Loading Overlay */
+    #loader {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--color-bg-dark);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      transition: opacity 0.6s ease;
+    }
+    #loader.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    .loader-spinner {
+      width: 50px; height: 50px;
+      border: 3px solid rgba(255,255,255,0.08);
+      border-top-color: var(--color-accent);
+      border-radius: 50%;
+      animation: rotate-slow 0.8s linear infinite;
+    }
+    .loader-text {
+      font-family: var(--font-heading);
+      font-size: 0.9rem;
+      color: var(--color-gray-300);
+      letter-spacing: 2px;
+    }
+
+    /* Top Bar Navigation */
+    .showroom-topbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 50;
+      padding: 20px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: linear-gradient(to bottom, rgba(10,0,20,0.8), transparent);
+    }
+    .showroom-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      text-decoration: none;
+      color: white;
+    }
+    .showroom-brand svg { width: 34px; height: 34px; }
+    .showroom-brand span {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.1rem;
+      letter-spacing: 3px;
+    }
+
+    /* Interactive Side Navigation */
+    .showroom-nav {
+      position: fixed;
+      left: 24px;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      background: rgba(14, 5, 37, 0.6);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      padding: 16px 12px;
+      border-radius: var(--radius-xl);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+    .nav-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      border: none;
+      background: none;
+      color: var(--color-gray-400);
+      font-family: var(--font-body);
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border-radius: var(--radius-md);
+      transition: all var(--transition-fast);
+      text-align: left;
+      width: 190px;
+    }
+    .nav-item .bullet {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.2);
+      transition: all var(--transition-fast);
+    }
+    .nav-item:hover, .nav-item.active {
+      color: white;
+      background: rgba(255,255,255,0.06);
+    }
+    .nav-item:hover .bullet, .nav-item.active .bullet {
+      background: var(--color-accent);
+      box-shadow: 0 0 8px var(--color-accent);
+      transform: scale(1.3);
+    }
+
+    /* Detail Information Panel */
+    .detail-panel {
+      position: fixed;
+      right: 24px;
+      bottom: 24px;
+      width: 380px;
+      z-index: 50;
+      background: rgba(12, 2, 28, 0.85);
+      backdrop-filter: blur(24px);
+      -webkit-backdrop-filter: blur(24px);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius-xl);
+      padding: 24px;
+      transform: translateY(120%);
+      opacity: 0;
+      transition: all 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+      box-shadow: var(--shadow-glow-accent);
+    }
+    .detail-panel.visible {
+      transform: translateY(0);
+      opacity: 1;
+    }
+    .detail-panel h3 {
+      font-family: var(--font-heading);
+      font-size: 1.3rem;
+      margin-bottom: 8px;
+      color: white;
+      letter-spacing: 1px;
+    }
+    .detail-panel .service-tag {
+      display: inline-block;
+      font-size: 0.72rem;
+      font-weight: 700;
+      color: var(--color-accent);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+    .detail-panel p {
+      font-size: 0.88rem;
+      color: var(--color-gray-300);
+      line-height: 1.6;
+      margin-bottom: 20px;
+    }
+    .detail-panel .btn-close {
+      position: absolute;
+      top: 16px; right: 16px;
+      background: none; border: none;
+      color: var(--color-gray-500);
+      font-size: 1.2rem;
+      cursor: pointer;
+      transition: color 0.2s;
+    }
+    .detail-panel .btn-close:hover { color: white; }
+
+    /* Interactive Viewport Controls (Blender Mode) */
+    .viewport-controls {
+      position: fixed;
+      right: 24px;
+      top: 90px;
+      z-index: 50;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .ctrl-btn {
+      width: 46px; height: 46px;
+      border-radius: var(--radius-md);
+      border: 1px solid rgba(255,255,255,0.1);
+      background: rgba(14,5,37,0.7);
+      backdrop-filter: blur(12px);
+      color: white;
+      font-size: 1.1rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+    .ctrl-btn:hover, .ctrl-btn.active {
+      background: rgba(0,212,255,0.15);
+      border-color: var(--color-accent);
+      box-shadow: var(--shadow-glow-accent);
+      color: var(--color-accent);
+    }
+
+    /* Bottom Reset / Tips */
+    .showroom-footer {
+      position: fixed;
+      bottom: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 50;
+      background: rgba(14, 5, 37, 0.7);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-pill);
+      padding: 10px 24px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      font-size: 0.8rem;
+      color: var(--color-gray-400);
+    }
+    .showroom-footer button {
+      background: none; border: none;
+      color: var(--color-accent);
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: underline;
+    }
+
+    /* Responsive adjustments */
+    @media (max-width: 900px) {
+      .showroom-nav {
+        left: 50%;
+        bottom: 24px;
+        top: auto;
+        transform: translateX(-50%);
+        flex-direction: row;
+        width: auto;
+        max-width: 90%;
+        overflow-x: auto;
+        padding: 10px;
+      }
+      .nav-item { width: auto; padding: 6px 12px; }
+      .nav-item span:not(.bullet) { display: none; }
+      .detail-panel {
+        left: 24px; right: 24px;
+        bottom: 90px;
+        width: auto;
+      }
+      .showroom-footer { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Loading overlay -->
+  <div id="loader">
+    <div class="loader-spinner"></div>
+    <div class="loader-text">Construyendo Metaverso KREID...</div>
+  </div>
+
+  <!-- 3D Scene Container -->
+  <div id="scene-container"></div>
+
+  <!-- Top bar -->
+  <div class="showroom-topbar">
+    <a href="index.html" class="showroom-brand">
+      <svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+        <defs><linearGradient id="sg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>
+        <rect x="0" y="0" width="22" height="150" rx="3" fill="url(#sg1)"/>
+        <polygon points="28,75 28,53 112,3 112,25" fill="url(#sg1)"/>
+        <polygon points="28,75 112,125 112,147 28,97" fill="url(#sg1)"/>
+        <circle cx="117" cy="8" r="6.5" fill="#00d4ff"/>
+      </svg>
+      <span>KREID SHOWROOM</span>
+    </a>
+    <div style="display:flex;gap:12px;">
+      <a href="ar.html" class="btn btn-primary" style="padding:10px 20px;font-size:0.8rem;box-shadow:var(--shadow-glow-accent);">📱 Iniciar AR (GPS)</a>
+      <a href="index.html" class="btn btn-secondary" style="padding:10px 20px;font-size:0.8rem;">← Volver</a>
+    </div>
+  </div>
+
+  <!-- Sidebar Navigation -->
+  <div class="showroom-nav">
+    <button class="nav-item active" onclick="focusOnItem(-1)">
+      <span class="bullet"></span>
+      <span>Logo Central</span>
+    </button>
+    <button class="nav-item" onclick="focusOnItem(0)">
+      <span class="bullet"></span>
+      <span>Diseño Gráfico</span>
+    </button>
+    <button class="nav-item" onclick="focusOnItem(1)">
+      <span class="bullet"></span>
+      <span>Branding & Identidad</span>
+    </button>
+    <button class="nav-item" onclick="focusOnItem(2)">
+      <span class="bullet"></span>
+      <span>Diseño Editorial</span>
+    </button>
+    <button class="nav-item" onclick="focusOnItem(3)">
+      <span class="bullet"></span>
+      <span>Diseño Web & UI/UX</span>
+    </button>
+    <button class="nav-item" onclick="focusOnItem(4)">
+      <span class="bullet"></span>
+      <span>Packaging</span>
+    </button>
+    <button class="nav-item" onclick="focusOnItem(5)">
+      <span class="bullet"></span>
+      <span>Producción Audiovisual</span>
+    </button>
+  </div>
+
+  <!-- Viewport Controls (Blender Mode) -->
+  <div class="viewport-controls">
+    <button class="ctrl-btn" id="btnBlender" title="Modo Malla (Blender Wireframe)" onclick="toggleBlenderMode()">🧊</button>
+    <button class="ctrl-btn" id="btnAutoRotate" title="Auto-Rotación" onclick="toggleAutoRotate()">⟳</button>
+    <button class="ctrl-btn" title="Restaurar Cámara" onclick="resetCameraView()">⌂</button>
+  </div>
+
+  <!-- Detail Information Panel -->
+  <div class="detail-panel" id="detailPanel">
+    <button class="btn-close" onclick="closeDetailPanel()">✕</button>
+    <span class="service-tag" id="panelTag">Servicio</span>
+    <h3 id="panelTitle">Título del Servicio</h3>
+    <p id="panelDesc">Descripción detallada del servicio prestado por la compañía.</p>
+    <a href="index.html#servicios" class="btn btn-accent" style="width:100%;text-align:center;padding:10px 0;">Consultar Servicio</a>
+  </div>
+
+  <!-- Showroom Footer -->
+  <div class="showroom-footer">
+    <span>💡 Haz click en cualquier pedestal 3D o figura flotante para explorarlo en detalle.</span>
+    <button onclick="focusOnItem(-1)">Vista Global</button>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "./libs/three.module.js",
+      "three/addons/": "./libs/"
+    }
+  }
+  </script>
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from './libs/OrbitControls.js';
+    import { FontLoader } from './libs/FontLoader.js';
+    import { TextGeometry } from './libs/TextGeometry.js';
+
+    /* ═══════════════════════════════════════════════
+       STATE & PARAMETERS
+       ═══════════════════════════════════════════════ */
+    let currentFocus = -1; // -1 represents global/logo view, 0-5 are service pedestals
+    let blenderMode = false;
+    let isTransitioning = false;
+    let autoRotate = true;
+
+    // Camera target positions and lookAt targets for smooth animations
+    const globalCameraPos = new THREE.Vector3(0, 5, 12);
+    const globalLookAt = new THREE.Vector3(0, 0, 0);
+
+    const cameraTargets = [];
+    const lookAtTargets = [];
+    const pedestals = [];
+    const floatingMeshes = [];
+
+    // Service Details
+    const services = [
+      {
+        title: "Diseño Gráfico",
+        tag: "Comunicación Visual",
+        desc: "Creación de piezas visuales impactantes, folletos, posters, y publicidad creativa que conecta emocionalmente con tu audiencia objetiva.",
+        color: 0x00d4ff
+      },
+      {
+        title: "Branding & Identidad",
+        tag: "Marca & Estrategia",
+        desc: "Construcción integral de marcas icónicas. Logotipos, manuales de marca, tipografías corporativas y assets gráficos cohesivos para marcar la diferencia.",
+        color: 0x7c3aed
+      },
+      {
+        title: "Diseño Editorial",
+        tag: "Maquetación & Libros",
+        desc: "Diseño y diagramación profesional de revistas, catálogos comerciales, libros físicos y corporativos con acabados estéticos sofisticados.",
+        color: 0x00d4ff
+      },
+      {
+        title: "Diseño Web & UI/UX",
+        tag: "Plataformas Digitales",
+        desc: "Diseño de interfaces web dinámicas y modernas con flujos de navegación optimizados y una experiencia de usuario impecable e interactiva.",
+        color: 0x7c3aed
+      },
+      {
+        title: "Packaging Creativo",
+        tag: "Diseño de Empaques",
+        desc: "Empaques e ingeniería de empaque súper creativos que no solo protegen tu producto, sino que conquistan el anaquel y cuentan tu historia.",
+        color: 0x00d4ff
+      },
+      {
+        title: "Producción Audiovisual",
+        tag: "Motion Graphics & Video",
+        desc: "Producción de video publicitario corporativo, animaciones 3D, comerciales y motion graphics avanzados para dinamizar tu presencia digital.",
+        color: 0x7c3aed
+      }
+    ];
+
+    /* ═══════════════════════════════════════════════
+       THREE.JS SETUP
+       ═══════════════════════════════════════════════ */
+    // ── Guard: if WebGL not available, abort early and hide loader ──
+    if (typeof THREE === 'undefined' || !THREE.WebGLRenderer) {
+      document.getElementById('loader').classList.add('hidden');
+      document.querySelector('.loader-text').textContent = 'Tu navegador no soporta WebGL. Usa Chrome o Firefox.';
+      throw new Error('WebGL no disponible');
+    }
+
+    const container = document.getElementById('scene-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0e0525);
+    scene.fog = new THREE.FogExp2(0x0e0525, 0.008);
+
+    const camera = new THREE.PerspectiveCamera(55, window.innerWidth / window.innerHeight, 0.1, 500);
+    camera.position.copy(globalCameraPos);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    // Guard against toneMapping not available in older Three.js
+    if (renderer.toneMapping !== undefined) {
+      renderer.toneMapping = THREE.ACESFilmicToneMapping || THREE.CineonToneMapping;
+      renderer.toneMappingExposure = 1.8;
+    }
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.06;
+    controls.maxDistance = 25;
+    controls.minDistance = 3;
+    controls.target.copy(globalLookAt);
+
+    // Initial controls lock
+    controls.autoRotate = autoRotate;
+    controls.autoRotateSpeed = 1.0;
+
+    /* ═══════════════════════════════════════════════
+       LIGHTING (Blender Studio Style)
+       ═══════════════════════════════════════════════ */
+    const ambientLight = new THREE.AmbientLight(0x4c2a7a, 1.2);
+    scene.add(ambientLight);
+
+    const violetLight = new THREE.PointLight(0x9b6dff, 150, 40);
+    violetLight.position.set(-10, 8, 8);
+    scene.add(violetLight);
+
+    const cyanLight = new THREE.PointLight(0x00d4ff, 150, 40);
+    cyanLight.position.set(10, 8, -8);
+    scene.add(cyanLight);
+
+    const keyFrontLight = new THREE.DirectionalLight(0xffffff, 1.5);
+    keyFrontLight.position.set(0, 10, 15);
+    scene.add(keyFrontLight);
+
+    const rimLight = new THREE.DirectionalLight(0xffffff, 0.8);
+    rimLight.position.set(0, 12, -10);
+    scene.add(rimLight);
+
+    /* ═══════════════════════════════════════════════
+       3D GRID FLOOR (Blender Viewport Grid style)
+       ═══════════════════════════════════════════════ */
+    const gridHelper = new THREE.GridHelper(50, 50, 0x00d4ff, 0x331a66);
+    gridHelper.position.y = -2;
+    gridHelper.material.opacity = 0.4;
+    gridHelper.material.transparent = true;
+    scene.add(gridHelper);
+
+    // Glowing platform disk in the center
+    const centralDiskGeom = new THREE.RingGeometry(0, 2.5, 64);
+    const centralDiskMat = new THREE.MeshBasicMaterial({
+      color: 0x7c3aed,
+      transparent: true,
+      opacity: 0.05,
+      side: THREE.DoubleSide
+    });
+    const centralDisk = new THREE.Mesh(centralDiskGeom, centralDiskMat);
+    centralDisk.rotation.x = -Math.PI / 2;
+    centralDisk.position.y = -1.99;
+    scene.add(centralDisk);
+
+    // Glowing border ring
+    const borderRingGeom = new THREE.RingGeometry(2.45, 2.5, 64);
+    const borderRingMat = new THREE.MeshBasicMaterial({
+      color: 0x00d4ff,
+      transparent: true,
+      opacity: 0.25,
+      side: THREE.DoubleSide
+    });
+    const borderRing = new THREE.Mesh(borderRingGeom, borderRingMat);
+    borderRing.rotation.x = -Math.PI / 2;
+    borderRing.position.y = -1.98;
+    scene.add(borderRing);
+
+    /* ═══════════════════════════════════════════════
+       GLOWING BACKGROUND PARTICLES
+       ═══════════════════════════════════════════════ */
+    const PARTICLE_COUNT = 400;
+    const pPositions = new Float32Array(PARTICLE_COUNT * 3);
+    const pColors = new Float32Array(PARTICLE_COUNT * 3);
+    const colViolet = new THREE.Color(0x7c3aed);
+    const colCyan = new THREE.Color(0x00d4ff);
+
+    for (let i = 0; i < PARTICLE_COUNT; i++) {
+      pPositions[i * 3]     = (Math.random() - 0.5) * 45;
+      pPositions[i * 3 + 1] = (Math.random() - 0.5) * 35;
+      pPositions[i * 3 + 2] = (Math.random() - 0.5) * 45;
+
+      const mix = Math.random();
+      const col = colViolet.clone().lerp(colCyan, mix);
+      pColors[i * 3]     = col.r;
+      pColors[i * 3 + 1] = col.g;
+      pColors[i * 3 + 2] = col.b;
+    }
+
+    const pGeom = new THREE.BufferGeometry();
+    pGeom.setAttribute('position', new THREE.BufferAttribute(pPositions, 3));
+    pGeom.setAttribute('color', new THREE.BufferAttribute(pColors, 3));
+
+    const pMat = new THREE.PointsMaterial({
+      size: 0.08,
+      vertexColors: true,
+      transparent: true,
+      opacity: 0.5,
+      sizeAttenuation: true
+    });
+    const particles = new THREE.Points(pGeom, pMat);
+    scene.add(particles);
+
+    /* ═══════════════════════════════════════════════
+       CREATING THE ULTRA-SLEEK 3D KREID LOGO
+       ═══════════════════════════════════════════════ */
+    let mainTextMesh = null;
+    let subTextMesh = null;
+    let accentLineMesh = null;
+
+    const fontLoader = new FontLoader();
+    const FONT_URL = './libs/helvetiker_bold.typeface.json';
+
+    // ── LOADER TIMEOUT: hide after 12s even if font fails ──
+    let loaderHidden = false;
+    function hideLoader() {
+      if (loaderHidden) return;
+      loaderHidden = true;
+      document.getElementById('loader').classList.add('hidden');
+    }
+    setTimeout(hideLoader, 12000); // safety timeout
+
+    fontLoader.load(FONT_URL, (font) => {
+      // ── Main "KREID" Text ──
+      // Crucial: set BOTH height and depth to 0.02 to avoid default deep cylinder issue!
+      const mainGeom = new TextGeometry('KREID', {
+        font: font,
+        size: 1.8,
+        height: 0.02,
+        depth: 0.02,
+        curveSegments: 16,
+        bevelEnabled: true,
+        bevelThickness: 0.015,
+        bevelSize: 0.008,
+        bevelSegments: 4
+      });
+      mainGeom.center();
+
+      const mainMat = new THREE.MeshPhysicalMaterial({
+        color: 0xb794f6,
+        metalness: 0.6,
+        roughness: 0.18,
+        clearcoat: 0.5,
+        clearcoatRoughness: 0.1,
+        reflectivity: 1.0,
+        emissive: 0x2a1055,
+        emissiveIntensity: 0.15
+      });
+
+      mainTextMesh = new THREE.Mesh(mainGeom, mainMat);
+      mainTextMesh.position.y = 0.4;
+      scene.add(mainTextMesh);
+
+      // ── Subtitle "DESIGN STUDIO" ──
+      const subGeom = new TextGeometry('DESIGN STUDIO', {
+        font: font,
+        size: 0.32,
+        height: 0.01,
+        depth: 0.01,
+        curveSegments: 8,
+        bevelEnabled: false
+      });
+      subGeom.center();
+
+      const subMat = new THREE.MeshPhysicalMaterial({
+        color: 0x22e8ff,
+        metalness: 0.4,
+        roughness: 0.2,
+        clearcoat: 0.3,
+        emissive: 0x005566,
+        emissiveIntensity: 0.3
+      });
+
+      subTextMesh = new THREE.Mesh(subGeom, subMat);
+      subTextMesh.position.y = -1.2;
+      scene.add(subTextMesh);
+
+      // ── Accent Line ──
+      const lineGeom = new THREE.BoxGeometry(3.6, 0.04, 0.01);
+      const lineMat = new THREE.MeshBasicMaterial({ color: 0x00d4ff });
+      accentLineMesh = new THREE.Mesh(lineGeom, lineMat);
+      accentLineMesh.position.y = -0.5;
+      scene.add(accentLineMesh);
+
+      // Hide Loader
+      hideLoader();
+    }, undefined, (err) => {
+      console.error(err);
+      document.querySelector('.loader-text').textContent = 'Error cargando. Mostrando escena de todos modos...';
+      hideLoader(); // HIDE THE LOADER EVEN ON ERROR!
+    });
+
+    /* ═══════════════════════════════════════════════
+       INTERACTIVE SERVICE PEDESTALS (Virtual Gallery style)
+       ═══════════════════════════════════════════════ */
+    // 6 Pedestals placed in a circle of radius 6.5 meters
+    const RADIUS = 6.2;
+    const NUM_SERVICES = 6;
+
+    const shapesGeom = [
+      new THREE.TorusGeometry(0.5, 0.16, 12, 48),            // Diseño Gráfico
+      new THREE.DodecahedronGeometry(0.6),                  // Branding & Identidad
+      new THREE.CylinderGeometry(0.4, 0.4, 0.8, 16),        // Editorial
+      new THREE.IcosahedronGeometry(0.6),                   // Diseño Web
+      new THREE.BoxGeometry(0.8, 0.8, 0.8),                  // Packaging
+      new THREE.TorusKnotGeometry(0.38, 0.12, 64, 8, 2, 3)  // Producción AV
+    ];
+
+    for (let i = 0; i < NUM_SERVICES; i++) {
+      const angle = (i / NUM_SERVICES) * Math.PI * 2;
+      const x = Math.cos(angle) * RADIUS;
+      const z = Math.sin(angle) * RADIUS;
+
+      // Camera focal targets for smooth gliding animation
+      // The camera should position itself slightly outside the circle looking in at the pedestal
+      const camX = Math.cos(angle) * (RADIUS + 3.2);
+      const camZ = Math.sin(angle) * (RADIUS + 3.2);
+      cameraTargets.push(new THREE.Vector3(camX, 1.8, camZ));
+
+      // What the camera actually looks at
+      lookAtTargets.push(new THREE.Vector3(x, 0.8, z));
+
+      // ── Create Pedestal Base Mesh ──
+      const baseGroup = new THREE.Group();
+      baseGroup.position.set(x, -1.0, z);
+
+      // Pedestal stand
+      const standGeom = new THREE.CylinderGeometry(0.5, 0.6, 2.0, 32);
+      const standMat = new THREE.MeshPhysicalMaterial({
+        color: services[i].color,
+        transmission: 0.6, // Glassmorphic look!
+        opacity: 0.9,
+        transparent: true,
+        roughness: 0.25,
+        thickness: 0.5,
+        clearcoat: 0.6
+      });
+      const stand = new THREE.Mesh(standGeom, standMat);
+      stand.name = `pedestal_${i}`;
+      baseGroup.add(stand);
+
+      // Glowing Neon Cap on the Pedestal
+      const capGeom = new THREE.CylinderGeometry(0.52, 0.52, 0.05, 32);
+      const capMat = new THREE.MeshBasicMaterial({ color: services[i].color });
+      const cap = new THREE.Mesh(capGeom, capMat);
+      cap.position.y = 1.0;
+      baseGroup.add(cap);
+
+      scene.add(baseGroup);
+      pedestals.push(baseGroup);
+
+      // ── Create Beautiful Blender floating mesh shape above pedestal ──
+      const shapeMat = new THREE.MeshPhysicalMaterial({
+        color: services[i].color,
+        metalness: 0.7,
+        roughness: 0.15,
+        clearcoat: 0.8,
+        emissive: services[i].color,
+        emissiveIntensity: 0.15
+      });
+      const floatMesh = new THREE.Mesh(shapesGeom[i], shapeMat);
+      floatMesh.position.set(x, 0.9, z);
+      floatMesh.name = `shape_${i}`;
+      scene.add(floatMesh);
+      floatingMeshes.push(floatMesh);
+    }
+
+    /* ═══════════════════════════════════════════════
+       RAYCASTER FOR PEDESTAL INTERACTION (Clicking objects)
+       ═══════════════════════════════════════════════ */
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+
+    window.addEventListener('click', (e) => {
+      // Ignore click if clicking HTML UI elements
+      if (e.target.tagName !== 'CANVAS') return;
+
+      mouse.x = (e.clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(e.clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      // Check hits on floating shapes or pedestals
+      const intersects = raycaster.intersectObjects(scene.children, true);
+      let hitIdx = -1;
+
+      for (let i = 0; i < intersects.length; i++) {
+        const objName = intersects[i].object.name;
+        const parentName = intersects[i].object.parent ? intersects[i].object.parent.name : '';
+
+        if (objName.startsWith('shape_')) {
+          hitIdx = parseInt(objName.split('_')[1]);
+          break;
+        } else if (objName.startsWith('pedestal_')) {
+          hitIdx = parseInt(objName.split('_')[1]);
+          break;
+        }
+      }
+
+      if (hitIdx !== -1) {
+        focusOnItem(hitIdx);
+      }
+    });
+
+    /* ═══════════════════════════════════════════════
+       INTERACTIVE CAMERA TRANSITION SYSTEM
+       ═══════════════════════════════════════════════ */
+    const targetCameraPos = new THREE.Vector3().copy(globalCameraPos);
+    const targetLookAt = new THREE.Vector3().copy(globalLookAt);
+
+    window.focusOnItem = (idx) => {
+      if (isTransitioning) return;
+      currentFocus = idx;
+
+      // Update Side Nav Highlight
+      const navButtons = document.querySelectorAll('.nav-item');
+      navButtons.forEach((btn, i) => {
+        btn.classList.toggle('active', i === (idx + 1));
+      });
+
+      if (idx === -1) {
+        // Return to Global view
+        targetCameraPos.copy(globalCameraPos);
+        targetLookAt.copy(globalLookAt);
+        closeDetailPanel();
+        autoRotate = true;
+        controls.autoRotate = true;
+      } else {
+        // Target specific service pedestal
+        targetCameraPos.copy(cameraTargets[idx]);
+        targetLookAt.copy(lookAtTargets[idx]);
+        openDetailPanel(idx);
+        autoRotate = false;
+        controls.autoRotate = false;
+      }
+
+      // Smooth interpolation trigger
+      isTransitioning = true;
+      setTimeout(() => {
+        isTransitioning = false;
+      }, 1000);
+    };
+
+    function openDetailPanel(idx) {
+      const panel = document.getElementById('detailPanel');
+      document.getElementById('panelTitle').textContent = services[idx].title;
+      document.getElementById('panelTag').textContent = services[idx].tag;
+      document.getElementById('panelDesc').textContent = services[idx].desc;
+      document.getElementById('panelTag').style.color = `#${services[idx].color.toString(16).padStart(6, '0')}`;
+
+      panel.classList.add('visible');
+    }
+
+    window.closeDetailPanel = () => {
+      document.getElementById('detailPanel').classList.remove('visible');
+      if (currentFocus !== -1) {
+        focusOnItem(-1);
+      }
+    };
+
+    window.toggleAutoRotate = () => {
+      autoRotate = !autoRotate;
+      controls.autoRotate = autoRotate;
+      document.getElementById('btnAutoRotate').classList.toggle('active', autoRotate);
+    };
+
+    window.resetCameraView = () => {
+      focusOnItem(-1);
+      controls.reset();
+      camera.position.copy(globalCameraPos);
+      controls.target.copy(globalLookAt);
+    };
+
+    // Initialize auto-rotate active state button
+    document.getElementById('btnAutoRotate').classList.add('active');
+
+    /* ═══════════════════════════════════════════════
+       BLENDER / WIREFRAME VIEWPORT MODE (Toggle)
+       ═══════════════════════════════════════════════ */
+    window.toggleBlenderMode = () => {
+      blenderMode = !blenderMode;
+      document.getElementById('btnBlender').classList.toggle('active', blenderMode);
+
+      scene.traverse((child) => {
+        if (child.isMesh) {
+          if (child.name.startsWith('shape_') || child.name.startsWith('pedestal_') || child === mainTextMesh || child === subTextMesh) {
+            child.material.wireframe = blenderMode;
+            if (blenderMode) {
+              child.material.emissiveIntensity = 0.6;
+            } else {
+              child.material.emissiveIntensity = child === mainTextMesh ? 0.15 : 0.25;
+            }
+          }
+        }
+      });
+    };
+
+    /* ═══════════════════════════════════════════════
+       ANIMATION LOOP (Blender Studio rendering)
+       ═══════════════════════════════════════════════ */
+    const clock = new THREE.Clock();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const t = clock.getElapsedTime();
+
+      // Camera interpolation glide (gives organic virtual museum feel)
+      if (isTransitioning) {
+        camera.position.lerp(targetCameraPos, 0.08);
+        controls.target.lerp(targetLookAt, 0.08);
+      }
+
+      controls.update();
+
+      // Slow elegant rotation of particles
+      particles.rotation.y = t * 0.015;
+      particles.rotation.x = Math.sin(t * 0.01) * 0.05;
+
+      // Interactive floating shapes animation (hover wave + rotate)
+      for (let i = 0; i < NUM_SERVICES; i++) {
+        const shape = floatingMeshes[i];
+        if (shape) {
+          // Spin shape
+          shape.rotation.x = t * 0.4 + i;
+          shape.rotation.y = t * 0.3;
+
+          // Wave float up and down
+          shape.position.y = 0.9 + Math.sin(t * 1.5 + i) * 0.15;
+        }
+      }
+
+      // Slowly rotate central logo if camera isn't moving
+      if (mainTextMesh && autoRotate) {
+        mainTextMesh.rotation.y = Math.sin(t * 0.3) * 0.15;
+        if (subTextMesh) subTextMesh.rotation.y = Math.sin(t * 0.3) * 0.15;
+        if (accentLineMesh) accentLineMesh.rotation.y = Math.sin(t * 0.3) * 0.15;
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    /* ═══════════════════════════════════════════════
+       WINDOW RESIZE
+       ═══════════════════════════════════════════════ */
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>

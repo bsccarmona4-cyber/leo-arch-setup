@@ -1,0 +1,13 @@
+node_modules/
+.next/
+.env
+.env.local
+.env.production
+.env*.local
+auth_info_baileys/
+session/
+docker/session/
+*.pem
+.DS_Store
+*.tsbuildinfo
+.vercel

@@ -1,0 +1,75 @@
+configuration {
+    modi: "drun";
+    show-icons: true;
+    /* Ajusta "Papirus" por el nombre del tema de íconos que tengas instalado, si tienes otro */
+    icon-theme: "Papirus"; 
+    display-drun: "  Buscar:";
+    drun-display-format: "{name}";
+    font: "JetBrainsMono Nerd Font 11"; /* Cambia la fuente si usas otra */
+}
+
+* {
+    /* Paleta Dark Elegant */
+    bg: #0f0f0f;
+    bg-alt: #1a1a1a;
+    fg: #e0e0e0;
+    border-color: #262626;
+    
+    background-color: transparent;
+    text-color: @fg;
+}
+
+window {
+    background-color: @bg;
+    border: 1px;
+    border-color: @border-color;
+    border-radius: 12px; /* Aquí controlas qué tan redondo es el menú principal */
+    width: 600px;
+    padding: 20px;
+}
+
+inputbar {
+    children: [ prompt, entry ];
+    background-color: @bg-alt;
+    border-radius: 8px; /* Bordes de la barra de búsqueda */
+    padding: 12px;
+    margin: 0px 0px 15px 0px;
+}
+
+prompt {
+    text-color: @fg;
+    padding: 0px 10px 0px 0px;
+}
+
+entry {
+    text-color: @fg;
+    placeholder: "Escribe para buscar...";
+    placeholder-color: #666666;
+}
+
+listview {
+    columns: 1;
+    lines: 7; /* Cantidad de aplicaciones que se muestran a la vez */
+    spacing: 8px;
+    border: 0px;
+}
+
+element {
+    padding: 10px;
+    border-radius: 8px; /* Bordes de cada aplicación seleccionada */
+}
+
+element selected {
+    background-color: @bg-alt;
+    border: 1px;
+    border-color: @border-color;
+}
+
+element-icon {
+    size: 32px; /* ¡Aquí haces los íconos más grandes o pequeños! */
+    padding: 0px 15px 0px 0px;
+}
+
+element-text {
+    vertical-align: 0.5;
+}

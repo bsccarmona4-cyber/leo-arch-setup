@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block titulo %}Dashboard{% endblock %}
+{% block contenido %}
+<h1>Dashboard</h1>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-value">{{ resumen.hoy.ventas }}</div>
+        <div class="kpi-label">Ventas Hoy</div>
+    </div>
+    <div class="kpi-card accent">
+        <div class="kpi-value">${{ "%.0f"|format(resumen.hoy.ingresos) }}</div>
+        <div class="kpi-label">Ingresos Hoy</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-value">{{ resumen.mes.ventas }}</div>
+        <div class="kpi-label">Ventas del Mes</div>
+    </div>
+    <div class="kpi-card accent">
+        <div class="kpi-value">${{ "%.0f"|format(resumen.mes.ingresos) }}</div>
+        <div class="kpi-label">Ingresos del Mes</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-value">{{ resumen.total_clientes }}</div>
+        <div class="kpi-label">Clientes</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-value">{{ resumen.total_productos }}</div>
+        <div class="kpi-label">Productos</div>
+    </div>
+</div>
+
+<div class="grid-2">
+    <div class="card">
+        <h3>Top Clientes</h3>
+        <table>
+            <thead><tr><th>#</th><th>Cliente</th><th>Total</th><th>Pts</th></tr></thead>
+            <tbody>
+            {% for c in ranking %}
+            <tr><td>{{ loop.index }}</td><td>{{ c.nombre }}</td>
+                <td>${{ "%.0f"|format(c.total_gastado|float) }}</td>
+                <td>{{ c.puntos_disponibles or 0 }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="card">
+        <h3>Mas Vendidos</h3>
+        <table>
+            <thead><tr><th>Producto</th><th>Vendidos</th><th>Ingresos</th></tr></thead>
+            <tbody>
+            {% for p in top %}
+            <tr><td>{{ p.nombre }}</td><td>{{ p.total_vendido }}</td>
+                <td>${{ "%.0f"|format(p.total_ingresos|float) }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+{% if resumen.stock_bajo %}
+<div class="card alert-warning">
+    <h3>Stock Bajo</h3>
+    <div class="stock-grid">
+    {% for p in resumen.stock_bajo %}
+        <span class="stock-item">{{ p.nombre }}: <b>{{ p.stock }}</b></span>
+    {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}

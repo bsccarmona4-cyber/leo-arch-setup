@@ -1,0 +1,88 @@
+# --- MONITORES ---
+monitor=,preferred,auto,1
+
+# --- VARIABLES ---
+$mainMod = SUPER
+$terminal = kitty
+$fileManager = thunar
+$menu = rofi -show drun -show-icons
+$browser = firefox
+
+# --- AUTOINICIO ---
+exec-once = waybar
+exec-once = hyprpaper
+exec-once = wl-paste --type text --watch cliphist store
+exec-once = wl-paste --type image --watch cliphist store
+
+# --- ENTRADA Y MOUSE (SIN SUB-BLOQUES PROBLEMÁTICOS) ---
+input {
+    kb_layout = latam 
+    follow_mouse = 1
+    sensitivity = 0.2
+}
+
+# --- ESTÉTICA ELEGANTE ---
+general {
+    gaps_in = 5
+    gaps_out = 10
+    border_size = 1
+    col.active_border = rgba(ffffff55)
+    col.inactive_border = rgba(000000aa)
+    layout = dwindle
+}
+
+decoration {
+    rounding = 8
+    
+    # Regresamos la opacidad a sólido para proteger las letras
+    active_opacity = 1.0
+    inactive_opacity = 0.90
+    fullscreen_opacity = 1.0
+    
+    blur {
+        enabled = true
+        size = 3
+        passes = 1
+    }
+}
+
+animations {
+    enabled = true
+    animation = windows, 1, 4, default
+    animation = fade, 1, 10, default
+    animation = workspaces, 1, 4, default
+}
+
+# --- ATAJOS Y NAVEGACIÓN ---
+bind = $mainMod, Q, exec, $terminal
+bind = $mainMod, C, killactive,
+bind = $mainMod, M, exit,
+bind = $mainMod, E, exec, $fileManager
+bind = $mainMod, V, togglefloating,
+bind = $mainMod, R, exec, $menu
+bind = $mainMod, B, exec, $browser
+bind = $mainMod, F, fullscreen,
+
+bind = $mainMod, left, movefocus, l
+bind = $mainMod, right, movefocus, r
+bind = $mainMod, up, movefocus, u
+bind = $mainMod, down, movefocus, d
+
+bind = $mainMod, 1, workspace, 1
+bind = $mainMod, 2, workspace, 2
+bind = $mainMod, 3, workspace, 3
+bind = $mainMod, 4, workspace, 4
+
+bind = $mainMod SHIFT, 1, movetoworkspace, 1
+bind = $mainMod SHIFT, 2, movetoworkspace, 2
+bind = $mainMod SHIFT, 3, movetoworkspace, 3
+bind = $mainMod SHIFT, 4, movetoworkspace, 4
+
+# Movimiento y tamaño con el ratón
+bindm = $mainMod, mouse:272, movewindow
+bindm = $mainMod, mouse:273, resizewindow
+
+# --- HERRAMIENTAS ---
+bind = $mainMod, H, exec, cliphist list | rofi -dmenu | cliphist
+
+exec-once = swaybg -i ~/.config/hypr/montana.jpg -m fill

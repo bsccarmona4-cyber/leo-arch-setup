@@ -1,0 +1,23 @@
+name: Bump Homebrew Formula
+
+on:
+  release:
+    types: [released]
+  workflow_dispatch:
+    inputs:
+      tag_name:
+        description: 'Release tag (e.g. v1.2.1)'
+        required: true
+
+jobs:
+  bump:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: mislav/bump-homebrew-formula-action@v4
+        with:
+          formula-name: mcp-bash
+          homebrew-tap: yaniv-golan/homebrew-mcp-bash
+          tag-name: ${{ inputs.tag_name || github.event.release.tag_name }}
+          download-url: https://github.com/yaniv-golan/mcp-bash-framework/releases/download/${{ inputs.tag_name || github.event.release.tag_name }}/mcp-bash-${{ inputs.tag_name || github.event.release.tag_name }}.tar.gz
+        env:
+          COMMITTER_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN }}

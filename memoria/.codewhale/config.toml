@@ -1,0 +1,34 @@
+allow_shell = true
+api_key = ""  # RECONFIGURAR en la laptop nueva (ver .env-keys-backup.txt)
+default_text_model = "deepseek-v4-pro"
+reasoning_effort = "auto"
+
+[mcp]
+config = "/home/leo/.deepseek/mcp.json"
+
+[projects."/home/leo"]
+trust_level = "trusted"
+
+[projects."/home/leo/caveman"]
+trust_level = "trusted"
+
+[projects."/home/leo/guardian"]
+trust_level = "trusted"
+
+[projects."/home/leo/hallmark"]
+trust_level = "trusted"
+
+[projects."/home/leo/kreid"]
+trust_level = "trusted"
+
+[projects."/home/leo/mcp-servers"]
+trust_level = "trusted"
+
+[projects."/home/leo/obsidian-escuela"]
+trust_level = "trusted"
+
+[projects."/home/leo/pixelle-video"]
+trust_level = "trusted"
+
+[update]
+check_for_updates = false

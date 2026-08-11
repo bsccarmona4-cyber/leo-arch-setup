@@ -1,0 +1,1542 @@
+#!/usr/bin/env bash
+# CLI bundle command - creates MCPB bundles for distribution.
+
+set -euo pipefail
+
+if [[ -z "${BASH_VERSION:-}" ]]; then
+	printf 'Bash is required for mcp-bash bundle; BASH_VERSION missing\n' >&2
+	exit 1
+fi
+
+# Source common helpers and shared embed logic
+cli_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=common.sh disable=SC1091
+. "${cli_dir}/common.sh"
+# shellcheck source=embed.sh disable=SC1091
+. "${cli_dir}/embed.sh"
+
+# Alias for backward compatibility (referenced by test/unit/bundle_libs_sync.bats)
+# shellcheck disable=SC2034
+BUNDLE_REQUIRED_LIBS="${EMBED_REQUIRED_LIBS}"
+
+# gojq release version to bundle
+GOJQ_VERSION="0.12.16"
+
+# Get gojq download URL for platform/arch (Bash 3 compatible)
+_get_gojq_url() {
+	local key="$1"
+	case "${key}" in
+	darwin-amd64) echo "https://github.com/itchyny/gojq/releases/download/v${GOJQ_VERSION}/gojq_v${GOJQ_VERSION}_darwin_amd64.tar.gz" ;;
+	darwin-arm64) echo "https://github.com/itchyny/gojq/releases/download/v${GOJQ_VERSION}/gojq_v${GOJQ_VERSION}_darwin_arm64.tar.gz" ;;
+	linux-amd64) echo "https://github.com/itchyny/gojq/releases/download/v${GOJQ_VERSION}/gojq_v${GOJQ_VERSION}_linux_amd64.tar.gz" ;;
+	linux-arm64) echo "https://github.com/itchyny/gojq/releases/download/v${GOJQ_VERSION}/gojq_v${GOJQ_VERSION}_linux_arm64.tar.gz" ;;
+	win32-amd64) echo "https://github.com/itchyny/gojq/releases/download/v${GOJQ_VERSION}/gojq_v${GOJQ_VERSION}_windows_amd64.zip" ;;
+	*) echo "" ;;
+	esac
+}
+
+# Track bundled icon for manifest
+BUNDLED_ICON=""
+
+# Track target platforms for manifest
+BUNDLE_PLATFORMS="darwin linux win32"
+
+# Track if static registry mode is enabled for manifest
+BUNDLE_STATIC_REGISTRY=""
+
+# Helper to check if a space-separated list contains an item
+mcp_bundle_list_contains() {
+	local list="$1" item="$2"
+	case " ${list} " in *" ${item} "*) return 0 ;; esac
+	return 1
+}
+
+mcp_bundle_usage() {
+	cat <<'EOF'
+Usage:
+  mcp-bash bundle [options]
+
+Create an MCPB bundle for distribution via Claude Desktop.
+
+Options:
+  --output DIR       Output directory (default: current directory)
+  --name NAME        Bundle name (default: from server.meta.json or directory)
+  --version VERSION  Bundle version (default: from VERSION file)
+  --platform PLAT    Target platform: darwin, linux, win32, or all (default: all)
+  --include-gojq     Bundle gojq binary for systems without jq
+  --validate         Validate bundle structure without creating
+  --verbose          Show detailed progress
+  --help, -h         Show this help
+
+Configuration:
+  Create mcpb.conf in your project root to customize the bundle:
+
+    MCPB_NAME="my-server"
+    MCPB_VERSION="1.0.0"
+    MCPB_DESCRIPTION="My MCP server"
+    MCPB_AUTHOR_NAME="Your Name"
+    MCPB_AUTHOR_EMAIL="you@example.com"
+    MCPB_AUTHOR_URL="https://github.com/you"
+    MCPB_REPOSITORY="https://github.com/you/my-server"
+    MCPB_INCLUDE=".registry data/templates"  # Additional directories to bundle
+
+Examples:
+  mcp-bash bundle                        # Create bundle with defaults
+  mcp-bash bundle --validate             # Check without creating
+  mcp-bash bundle --output ./dist        # Output to dist directory
+  mcp-bash bundle --platform darwin      # macOS-only bundle
+  mcp-bash bundle --include-gojq         # Include gojq for JSON processing
+
+The bundle includes:
+  - Your tools, resources, and prompts
+  - An embedded copy of mcp-bash framework
+  - A manifest.json for MCPB compatibility
+  - Icon (if icon.png or icon.svg exists in project root)
+
+Next steps after bundling:
+  - Double-click the .mcpb file to install in any MCPB-compatible client
+  - Or drag it to the client window (e.g., Claude Desktop)
+EOF
+	exit 0
+}
+
+mcp_bundle_check_dependencies() {
+	local missing=""
+
+	# Required: zip or 7z command
+	if ! command -v zip >/dev/null 2>&1 && ! command -v 7z >/dev/null 2>&1; then
+		missing="${missing}zip (or 7z) "
+	fi
+
+	if [ -n "${missing}" ]; then
+		printf '  \342\234\227 Missing required commands: %s\n' "${missing}" >&2
+		printf '    Install: brew install zip (macOS), apt install zip (Linux), or use pre-installed 7z (Windows)\n' >&2
+		return 3
+	fi
+
+	return 0
+}
+
+# Cross-platform zip creation (prefers zip, falls back to 7z)
+mcp_bundle_create_zip() {
+	local output_path="$1"
+	local source_dir="$2"
+
+	if command -v zip >/dev/null 2>&1; then
+		(cd "${source_dir}" && zip -rq "${output_path}" .)
+	elif command -v 7z >/dev/null 2>&1; then
+		(cd "${source_dir}" && 7z a -tzip -bso0 -bsp0 "${output_path}" .)
+	else
+		printf 'Error: Neither zip nor 7z found\n' >&2
+		return 1
+	fi
+}
+
+# Cross-platform zip extraction (prefers unzip, falls back to 7z)
+mcp_bundle_extract_zip() {
+	local archive="$1"
+	local dest_dir="$2"
+
+	if command -v unzip >/dev/null 2>&1; then
+		unzip -q "${archive}" -d "${dest_dir}"
+	elif command -v 7z >/dev/null 2>&1; then
+		7z x -bso0 -bsp0 -o"${dest_dir}" "${archive}"
+	else
+		printf 'Error: Neither unzip nor 7z found\n' >&2
+		return 1
+	fi
+}
+
+mcp_bundle_download_gojq() {
+	local target_dir="$1"
+	local platform="$2"
+	local verbose="$3"
+
+	# Determine architecture
+	local arch
+	case "$(uname -m)" in
+	x86_64 | amd64) arch="amd64" ;;
+	arm64 | aarch64) arch="arm64" ;;
+	*)
+		printf '  \342\234\227 Unsupported architecture: %s\n' "$(uname -m)" >&2
+		return 1
+		;;
+	esac
+
+	local url_key="${platform}-${arch}"
+	local url
+	url="$(_get_gojq_url "${url_key}")"
+
+	if [ -z "${url}" ]; then
+		printf '  \342\234\227 No gojq binary available for %s-%s\n' "${platform}" "${arch}" >&2
+		return 1
+	fi
+
+	# Create temp directory for download
+	local tmp_dir
+	tmp_dir="$(mktemp -d "${TMPDIR:-/tmp}/gojq.XXXXXX")"
+	trap 'rm -rf "${tmp_dir}"' RETURN
+
+	if [ "${verbose}" = "true" ]; then
+		printf '    Downloading gojq for %s-%s...\n' "${platform}" "${arch}"
+	fi
+
+	# Download
+	local archive="${tmp_dir}/gojq.tar.gz"
+	if [ "${platform}" = "win32" ]; then
+		archive="${tmp_dir}/gojq.zip"
+	fi
+
+	if ! curl -fsSL "${url}" -o "${archive}" 2>/dev/null; then
+		printf '  \342\234\227 Failed to download gojq from %s\n' "${url}" >&2
+		return 1
+	fi
+
+	# Extract
+	mkdir -p "${tmp_dir}/extracted"
+	if [ "${platform}" = "win32" ]; then
+		mcp_bundle_extract_zip "${archive}" "${tmp_dir}/extracted"
+	else
+		tar -xzf "${archive}" -C "${tmp_dir}/extracted"
+	fi
+
+	# Find and copy gojq binary
+	local gojq_bin
+	gojq_bin="$(find "${tmp_dir}/extracted" -name 'gojq*' -type f | head -1)"
+
+	if [ -z "${gojq_bin}" ] || [ ! -f "${gojq_bin}" ]; then
+		printf '  \342\234\227 Could not find gojq binary in archive\n' >&2
+		return 1
+	fi
+
+	mkdir -p "${target_dir}"
+	local target_name="gojq"
+	if [ "${platform}" = "win32" ]; then
+		target_name="gojq.exe"
+	fi
+
+	cp "${gojq_bin}" "${target_dir}/${target_name}"
+	chmod +x "${target_dir}/${target_name}"
+
+	if [ "${verbose}" = "true" ]; then
+		printf '    Bundled gojq v%s for %s-%s\n' "${GOJQ_VERSION}" "${platform}" "${arch}"
+	fi
+
+	return 0
+}
+
+mcp_bundle_embed_gojq() {
+	local staging_server="$1"
+	local platforms="$2"
+	local verbose="$3"
+
+	local gojq_dir="${staging_server}/.mcp-bash/bin"
+	mkdir -p "${gojq_dir}"
+
+	# For single-platform bundles, download that platform's gojq
+	# For multi-platform, download current platform (user can re-bundle on target)
+	local platform
+	for platform in ${platforms}; do
+		if mcp_bundle_download_gojq "${gojq_dir}" "${platform}" "${verbose}"; then
+			return 0
+		fi
+	done
+
+	printf '  \342\232\240 Could not bundle gojq - bundle will require jq on target system\n' >&2
+	return 1
+}
+
+mcp_bundle_validate_project() {
+	local project_root="$1"
+	local verbose="${2:-false}"
+	local errors=0
+	local warnings=0
+
+	# Required: server.d/server.meta.json
+	if [ ! -f "${project_root}/server.d/server.meta.json" ]; then
+		printf '  \342\234\227 Missing required server.d/server.meta.json\n' >&2
+		printf '    \342\206\222 Run "mcp-bash init" to create project structure\n' >&2
+		errors=$((errors + 1))
+	fi
+
+	# Check for at least one tool, resource, or prompt
+	local has_content="false"
+	for dir in tools resources prompts; do
+		if [ -d "${project_root}/${dir}" ]; then
+			local count
+			count="$(find "${project_root}/${dir}" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')"
+			if [ "${count}" -gt 0 ]; then
+				has_content="true"
+				break
+			fi
+		fi
+	done
+
+	if [ "${has_content}" = "false" ]; then
+		printf '  \342\232\240 No tools, resources, or prompts found\n' >&2
+		warnings=$((warnings + 1))
+	fi
+
+	# Validate server.meta.json is valid JSON if we have JSON tooling
+	if [ "${errors}" -eq 0 ] && [ "${MCPBASH_JSON_TOOL:-none}" != "none" ]; then
+		if ! "${MCPBASH_JSON_TOOL_BIN}" '.' "${project_root}/server.d/server.meta.json" >/dev/null 2>&1; then
+			printf '  \342\234\227 Invalid JSON in server.d/server.meta.json\n' >&2
+			errors=$((errors + 1))
+		fi
+	fi
+
+	# Check for mcpb.conf
+	if [ ! -f "${project_root}/mcpb.conf" ]; then
+		if [ "${verbose}" = "true" ]; then
+			printf '  \342\232\240 No mcpb.conf found (optional but recommended for author info)\n' >&2
+		fi
+	fi
+
+	# Validate user_config schema if present
+	if [[ -n "${RESOLVED_USER_CONFIG:-}" ]]; then
+		if ! mcp_bundle_validate_user_config "${RESOLVED_USER_CONFIG}"; then
+			errors=$((errors + 1))
+		fi
+	fi
+
+	# Validate env_map references existing user_config keys
+	if [[ -n "${RESOLVED_USER_CONFIG_ENV_MAP:-}" ]]; then
+		if ! mcp_bundle_validate_env_map "${RESOLVED_USER_CONFIG:-}" "${RESOLVED_USER_CONFIG_ENV_MAP}"; then
+			errors=$((errors + 1))
+		fi
+	fi
+
+	# Validate args_map references existing user_config keys
+	if [[ -n "${RESOLVED_USER_CONFIG_ARGS_MAP:-}" ]]; then
+		if ! mcp_bundle_validate_args_map "${RESOLVED_USER_CONFIG:-}" "${RESOLVED_USER_CONFIG_ARGS_MAP}"; then
+			errors=$((errors + 1))
+		fi
+	fi
+
+	return "${errors}"
+}
+
+mcp_bundle_warn_missing_author() {
+	# MCPB spec requires author field - warn if we couldn't resolve one
+	if [ -z "${RESOLVED_AUTHOR_NAME:-}" ]; then
+		printf '  \342\232\240 Warning: No author name found (required by MCPB spec)\n' >&2
+		printf '    \342\206\222 Add MCPB_AUTHOR_NAME to mcpb.conf or set git user.name\n' >&2
+	fi
+}
+
+mcp_bundle_warn_nonsemver_version() {
+	# Validate version is valid semver (warning, not error)
+	# Semver regex: MAJOR.MINOR.PATCH with optional pre-release and build metadata
+	if [[ -n "${RESOLVED_VERSION:-}" ]]; then
+		local semver_re='^(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)\.(0|[1-9][0-9]*)(-[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?(\+[0-9A-Za-z-]+(\.[0-9A-Za-z-]+)*)?$'
+		if ! [[ "${RESOLVED_VERSION}" =~ ${semver_re} ]]; then
+			printf '  \342\232\240 Version "%s" is not valid semver (expected MAJOR.MINOR.PATCH)\n' "${RESOLVED_VERSION}" >&2
+			printf '    \342\206\222 MCPB clients may reject non-semver versions\n' >&2
+		fi
+	fi
+}
+
+mcp_bundle_load_config() {
+	local project_root="$1"
+	local config_file="${project_root}/mcpb.conf"
+
+	# Reset config variables (using MCPB_* prefix as per proposal)
+	MCPB_NAME=""
+	MCPB_VERSION=""
+	MCPB_DESCRIPTION=""
+	MCPB_AUTHOR_NAME=""
+	MCPB_AUTHOR_EMAIL=""
+	MCPB_AUTHOR_URL=""
+	MCPB_REPOSITORY=""
+	MCPB_INCLUDE=""
+	MCPB_STATIC=""
+	# Optional metadata fields (MCPB spec 0.3)
+	MCPB_LICENSE=""
+	MCPB_KEYWORDS=""
+	MCPB_HOMEPAGE=""
+	MCPB_DOCUMENTATION=""
+	MCPB_SUPPORT=""
+	MCPB_PRIVACY_POLICIES=""
+	# Compatibility constraints
+	MCPB_COMPAT_CLAUDE_DESKTOP=""
+	MCPB_RUNTIME_PYTHON=""
+	MCPB_RUNTIME_NODE=""
+
+	if [ -f "${config_file}" ]; then
+		# Source config file (simple KEY=VALUE format)
+		# shellcheck disable=SC1090
+		. "${config_file}"
+	fi
+
+	# Load user_config (must happen before validation)
+	if ! mcp_bundle_load_user_config "${project_root}"; then
+		return 1
+	fi
+}
+
+# Load user_config from various sources
+# Sets: RESOLVED_USER_CONFIG (JSON string), RESOLVED_USER_CONFIG_ENV_MAP (string), RESOLVED_USER_CONFIG_ARGS_MAP (string)
+# Called from: mcp_bundle_load_config() - must happen before validation
+mcp_bundle_load_user_config() {
+	local project_root="$1"
+	RESOLVED_USER_CONFIG=""
+	RESOLVED_USER_CONFIG_ENV_MAP=""
+	RESOLVED_USER_CONFIG_ARGS_MAP=""
+
+	# JSON tool required for user_config parsing
+	if [[ "${MCPBASH_JSON_TOOL:-none}" == "none" ]]; then
+		# Warn if user_config is explicitly configured but JSON tool unavailable
+		if [[ -n "${MCPB_USER_CONFIG_FILE:-}" ]]; then
+			printf '  \342\232\240 MCPB_USER_CONFIG_FILE set but no JSON tool available (install jq or gojq)\n' >&2
+		fi
+		# Skip user_config entirely - no JSON tool available
+		# This is not an error; bundles without user_config still work
+		return 0
+	fi
+
+	# Priority 1: External file via MCPB_USER_CONFIG_FILE
+	if [[ -n "${MCPB_USER_CONFIG_FILE:-}" ]]; then
+		local config_path="${MCPB_USER_CONFIG_FILE}"
+		# Resolve relative path
+		if [[ "${config_path#/}" = "${config_path}" ]]; then
+			config_path="${project_root}/${config_path}"
+		fi
+		if [[ -f "${config_path}" ]]; then
+			RESOLVED_USER_CONFIG=$(cat "${config_path}")
+		else
+			# User explicitly set this file - missing is an error, not warning
+			printf '  \342\234\227 MCPB_USER_CONFIG_FILE not found: %s\n' "${MCPB_USER_CONFIG_FILE}" >&2
+			return 1
+		fi
+	fi
+
+	# Priority 2: server.meta.json for user_config (if not already set), env_map, and args_map
+	# IMPORTANT: env_map/args_map are read unconditionally because they can come from
+	# server.meta.json even when user_config comes from external file (mixed sources)
+	# Consolidated into single jq call per json-handling.mdc rules
+	local meta_result meta_config meta_env_map meta_args_map
+	meta_result=$("${MCPBASH_JSON_TOOL_BIN}" -r '
+		[
+			(.user_config // {} | tojson),
+			(.user_config_env_map // {} | to_entries | map("\(.key)=\(.value)") | join(",")),
+			(.user_config_args_map // [] | join(","))
+		] | @tsv
+	' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)
+	if [[ -n "${meta_result}" ]]; then
+		# Parse TSV: first field is user_config JSON, second is env_map string, third is args_map string
+		# Use $'\t' variable instead of literal TAB character to prevent editors
+		# from converting tabs to spaces when modifying this file
+		local tab=$'\t'
+		meta_config="${meta_result%%"${tab}"*}"
+		local remainder="${meta_result#*"${tab}"}"
+		meta_env_map="${remainder%%"${tab}"*}"
+		meta_args_map="${remainder#*"${tab}"}"
+		# Only use meta user_config if not already set via external file
+		if [[ -z "${RESOLVED_USER_CONFIG}" && -n "${meta_config}" && "${meta_config}" != "{}" && "${meta_config}" != "null" ]]; then
+			RESOLVED_USER_CONFIG="${meta_config}"
+		fi
+		# Only use meta env_map if not set via mcpb.conf
+		if [[ -z "${MCPB_USER_CONFIG_ENV_MAP:-}" && -n "${meta_env_map}" ]]; then
+			RESOLVED_USER_CONFIG_ENV_MAP="${meta_env_map}"
+		fi
+		# Only use meta args_map if not set via mcpb.conf
+		if [[ -z "${MCPB_USER_CONFIG_ARGS_MAP:-}" && -n "${meta_args_map}" ]]; then
+			RESOLVED_USER_CONFIG_ARGS_MAP="${meta_args_map}"
+		fi
+	fi
+
+	# Override env mapping from mcpb.conf if set (takes priority)
+	if [[ -n "${MCPB_USER_CONFIG_ENV_MAP:-}" ]]; then
+		RESOLVED_USER_CONFIG_ENV_MAP="${MCPB_USER_CONFIG_ENV_MAP}"
+	fi
+
+	# Override args mapping from mcpb.conf if set (takes priority)
+	if [[ -n "${MCPB_USER_CONFIG_ARGS_MAP:-}" ]]; then
+		RESOLVED_USER_CONFIG_ARGS_MAP="${MCPB_USER_CONFIG_ARGS_MAP}"
+	fi
+
+	export RESOLVED_USER_CONFIG RESOLVED_USER_CONFIG_ENV_MAP RESOLVED_USER_CONFIG_ARGS_MAP
+}
+
+# Validate user_config schema - consolidated into single jq call for efficiency
+mcp_bundle_validate_user_config() {
+	local config_json="$1"
+
+	if [[ -z "${config_json}" || "${config_json}" == "null" ]]; then
+		return 0 # No user_config is valid
+	fi
+
+	# Single-pass validation with detailed error reporting
+	# Reports all errors found, not just the first one
+	local validation_result
+	validation_result=$("${MCPBASH_JSON_TOOL_BIN}" -r '
+		# First check that user_config is an object
+		if (type != "object") then
+			"user_config must be an object, got \(type)"
+		else
+		def validate_field($key; $val):
+			# Check config key constraints
+			if ($key | contains("=")) then
+				"field key \"\($key)\" cannot contain \"=\" (reserved for env_map delimiter)"
+			elif ($key | contains(",")) then
+				"field key \"\($key)\" cannot contain \",\" (reserved for env_map entry delimiter)"
+			# Check required fields
+			elif (($val | has("type") | not) or ($val | has("title") | not)) then
+				"field \"\($key)\" must have \"type\" and \"title\""
+			elif ($val.type | IN("string", "number", "boolean", "directory", "file") | not) then
+				"field \"\($key)\" has invalid type \"\($val.type)\" (must be string, number, boolean, directory, or file)"
+			# Type-specific property validation
+			elif ($val.sensitive == true and $val.type != "string") then
+				"field \"\($key)\": \"sensitive\" is only valid for string type"
+			elif ($val.multiple == true and ($val.type | IN("directory", "file") | not)) then
+				"field \"\($key)\": \"multiple\" is only valid for directory/file types"
+			elif (($val.min != null or $val.max != null) and $val.type != "number") then
+				"field \"\($key)\": \"min\"/\"max\" are only valid for number type"
+			elif ($val.min != null and $val.max != null and $val.min > $val.max) then
+				"field \"\($key)\": \"min\" (\($val.min)) must be <= \"max\" (\($val.max))"
+			# Default value type checking
+			elif ($val.default != null) then
+				if ($val.type == "string" and ($val.default | type) != "string") then
+					"field \"\($key)\": default must be string"
+				elif ($val.type == "number" and ($val.default | type) != "number") then
+					"field \"\($key)\": default must be number"
+				elif ($val.type == "number" and $val.min != null and ($val.default | type) == "number" and $val.default < $val.min) then
+					"field \"\($key)\": default (\($val.default)) must be >= min (\($val.min))"
+				elif ($val.type == "number" and $val.max != null and ($val.default | type) == "number" and $val.default > $val.max) then
+					"field \"\($key)\": default (\($val.default)) must be <= max (\($val.max))"
+				elif ($val.type == "boolean" and ($val.default | type) != "boolean") then
+					"field \"\($key)\": default must be boolean"
+				elif ($val.type == "directory" and ($val.default | type) != "string") then
+					"field \"\($key)\": default must be string (path)"
+				elif ($val.type == "file" and ($val.default | type) != "string") then
+					"field \"\($key)\": default must be string (path)"
+				else null end
+			else null end;
+
+		to_entries | map(validate_field(.key; .value)) | map(select(. != null)) | if length > 0 then join("\n") else "ok" end
+		end
+	' <<<"${config_json}" 2>&1)
+
+	if [[ "${validation_result}" != "ok" ]]; then
+		# Report all errors found
+		while IFS= read -r err; do
+			printf '  \342\234\227 %s\n' "${err}" >&2
+		done <<<"${validation_result}"
+		return 1
+	fi
+
+	return 0
+}
+
+# Validate env_map references only keys defined in user_config
+mcp_bundle_validate_env_map() {
+	local config_json="$1"
+	local env_map="$2"
+
+	if [[ -z "${env_map}" ]]; then
+		return 0 # No env_map is valid
+	fi
+
+	if [[ -z "${config_json}" || "${config_json}" == "null" ]]; then
+		# env_map set but no user_config - all references are invalid
+		local first_key
+		first_key=$(printf '%s' "${env_map}" | cut -d',' -f1 | cut -d'=' -f1)
+		printf '  \342\234\227 env_map key "%s" is not defined in user_config\n' "${first_key}" >&2
+		return 1
+	fi
+
+	# Get list of valid keys from user_config
+	local valid_keys
+	valid_keys=$("${MCPBASH_JSON_TOOL_BIN}" -r 'keys | join(",")' <<<"${config_json}")
+
+	# Check each env_map entry (use safer parsing than IFS splitting)
+	local entry config_key env_var_name
+	local seen_env_vars=""
+	while IFS= read -r entry; do
+		[[ -z "${entry}" ]] && continue
+		config_key="${entry%%=*}"
+		env_var_name="${entry#*=}"
+		# Validate config key exists in user_config
+		if [[ ",${valid_keys}," != *",${config_key},"* ]]; then
+			printf '  \342\234\227 env_map key "%s" is not defined in user_config\n' "${config_key}" >&2
+			return 1
+		fi
+		# Validate env var name doesn't contain comma (would break parsing)
+		if [[ "${env_var_name}" == *","* ]]; then
+			printf '  \342\234\227 env var name "%s" cannot contain comma\n' "${env_var_name}" >&2
+			return 1
+		fi
+		# Validate env var name is valid POSIX identifier (letter/underscore, then alphanumeric/underscore)
+		if [[ ! "${env_var_name}" =~ ^[a-zA-Z_][a-zA-Z0-9_]*$ ]]; then
+			printf '  \342\234\227 env var name "%s" is not a valid POSIX identifier\n' "${env_var_name}" >&2
+			return 1
+		fi
+		# Check for duplicate env var names
+		if [[ ",${seen_env_vars}," == *",${env_var_name},"* ]]; then
+			printf '  \342\234\227 duplicate env var name "%s"\n' "${env_var_name}" >&2
+			return 1
+		fi
+		seen_env_vars="${seen_env_vars},${env_var_name}"
+		# Warn (but don't fail) if env var collides with reserved MCPBASH variables
+		if [[ "${env_var_name}" == MCPBASH_* ]]; then
+			printf '  \342\232\240 env var "%s" collides with reserved MCPBASH namespace\n' "${env_var_name}" >&2
+		fi
+	done < <(printf '%s' "${env_map}" | tr ',' '\n' | grep -v '^$')
+
+	return 0
+}
+
+# Validate args_map references only keys defined in user_config
+mcp_bundle_validate_args_map() {
+	local config_json="$1"
+	local args_map="$2"
+
+	if [[ -z "${args_map}" ]]; then
+		return 0 # No args_map is valid
+	fi
+
+	if [[ -z "${config_json}" || "${config_json}" == "null" ]]; then
+		# args_map set but no user_config - all references are invalid
+		local first_key
+		first_key=$(printf '%s' "${args_map}" | cut -d',' -f1)
+		printf '  \342\234\227 args_map key "%s" is not defined in user_config\n' "${first_key}" >&2
+		return 1
+	fi
+
+	# Get list of valid keys from user_config
+	local valid_keys
+	valid_keys=$("${MCPBASH_JSON_TOOL_BIN}" -r 'keys | join(",")' <<<"${config_json}")
+
+	# Check each args_map entry
+	local config_key
+	while IFS= read -r config_key; do
+		[[ -z "${config_key}" ]] && continue
+		# Validate config key exists in user_config
+		if [[ ",${valid_keys}," != *",${config_key},"* ]]; then
+			printf '  \342\234\227 args_map key "%s" is not defined in user_config\n' "${config_key}" >&2
+			return 1
+		fi
+	done < <(printf '%s' "${args_map}" | tr ',' '\n' | grep -v '^$')
+
+	return 0
+}
+
+mcp_bundle_resolve_metadata() {
+	local project_root="$1"
+	local name_override="$2"
+	local version_override="$3"
+
+	# Priority: CLI override > mcpb.conf > server.meta.json > defaults
+
+	# Name resolution
+	if [ -n "${name_override}" ]; then
+		RESOLVED_NAME="${name_override}"
+	elif [ -n "${MCPB_NAME:-}" ]; then
+		RESOLVED_NAME="${MCPB_NAME}"
+	elif [ "${MCPBASH_JSON_TOOL:-none}" != "none" ] && [ -f "${project_root}/server.d/server.meta.json" ]; then
+		RESOLVED_NAME="$("${MCPBASH_JSON_TOOL_BIN}" -r '.name // empty' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)"
+	fi
+	if [ -z "${RESOLVED_NAME:-}" ]; then
+		RESOLVED_NAME="$(basename "${project_root}")"
+	fi
+
+	# Version resolution
+	if [ -n "${version_override}" ]; then
+		RESOLVED_VERSION="${version_override}"
+	elif [ -n "${MCPB_VERSION:-}" ]; then
+		RESOLVED_VERSION="${MCPB_VERSION}"
+	elif [ -f "${project_root}/VERSION" ]; then
+		RESOLVED_VERSION="$(tr -d '[:space:]' <"${project_root}/VERSION")"
+	elif [ "${MCPBASH_JSON_TOOL:-none}" != "none" ] && [ -f "${project_root}/server.d/server.meta.json" ]; then
+		RESOLVED_VERSION="$("${MCPBASH_JSON_TOOL_BIN}" -r '.version // empty' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)"
+	fi
+	if [ -z "${RESOLVED_VERSION:-}" ]; then
+		RESOLVED_VERSION="0.1.0"
+	fi
+
+	# Title resolution
+	if [ "${MCPBASH_JSON_TOOL:-none}" != "none" ] && [ -f "${project_root}/server.d/server.meta.json" ]; then
+		RESOLVED_TITLE="$("${MCPBASH_JSON_TOOL_BIN}" -r '.title // empty' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)"
+	fi
+	if [ -z "${RESOLVED_TITLE:-}" ]; then
+		# Title-case the name
+		RESOLVED_TITLE="$(mcp_runtime_titlecase "${RESOLVED_NAME}")"
+	fi
+
+	# Description resolution
+	if [ -n "${MCPB_DESCRIPTION:-}" ]; then
+		RESOLVED_DESCRIPTION="${MCPB_DESCRIPTION}"
+	elif [ "${MCPBASH_JSON_TOOL:-none}" != "none" ] && [ -f "${project_root}/server.d/server.meta.json" ]; then
+		RESOLVED_DESCRIPTION="$("${MCPBASH_JSON_TOOL_BIN}" -r '.description // empty' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)"
+	fi
+	if [ -z "${RESOLVED_DESCRIPTION:-}" ]; then
+		RESOLVED_DESCRIPTION="MCP server built with mcp-bash"
+	fi
+
+	# Author resolution (from mcpb.conf or server.meta.json)
+	if [ -n "${MCPB_AUTHOR_NAME:-}" ]; then
+		RESOLVED_AUTHOR_NAME="${MCPB_AUTHOR_NAME}"
+	elif [ "${MCPBASH_JSON_TOOL:-none}" != "none" ] && [ -f "${project_root}/server.d/server.meta.json" ]; then
+		RESOLVED_AUTHOR_NAME="$("${MCPBASH_JSON_TOOL_BIN}" -r '.author.name // .author // empty' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)"
+	fi
+	if [ -z "${RESOLVED_AUTHOR_NAME:-}" ]; then
+		# Try to get from git config
+		RESOLVED_AUTHOR_NAME="$(git config user.name 2>/dev/null || echo "")"
+	fi
+
+	if [ -n "${MCPB_AUTHOR_EMAIL:-}" ]; then
+		RESOLVED_AUTHOR_EMAIL="${MCPB_AUTHOR_EMAIL}"
+	elif [ "${MCPBASH_JSON_TOOL:-none}" != "none" ] && [ -f "${project_root}/server.d/server.meta.json" ]; then
+		RESOLVED_AUTHOR_EMAIL="$("${MCPBASH_JSON_TOOL_BIN}" -r '.author.email // empty' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)"
+	fi
+	if [ -z "${RESOLVED_AUTHOR_EMAIL:-}" ]; then
+		# Try to get from git config
+		RESOLVED_AUTHOR_EMAIL="$(git config user.email 2>/dev/null || echo "")"
+	fi
+
+	if [ -n "${MCPB_AUTHOR_URL:-}" ]; then
+		RESOLVED_AUTHOR_URL="${MCPB_AUTHOR_URL}"
+	elif [ "${MCPBASH_JSON_TOOL:-none}" != "none" ] && [ -f "${project_root}/server.d/server.meta.json" ]; then
+		RESOLVED_AUTHOR_URL="$("${MCPBASH_JSON_TOOL_BIN}" -r '.author.url // empty' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)"
+	fi
+	if [ -z "${RESOLVED_AUTHOR_URL:-}" ]; then
+		RESOLVED_AUTHOR_URL=""
+	fi
+
+	# Repository resolution
+	if [ -n "${MCPB_REPOSITORY:-}" ]; then
+		RESOLVED_REPOSITORY="${MCPB_REPOSITORY}"
+	elif [ "${MCPBASH_JSON_TOOL:-none}" != "none" ] && [ -f "${project_root}/server.d/server.meta.json" ]; then
+		RESOLVED_REPOSITORY="$("${MCPBASH_JSON_TOOL_BIN}" -r '.repository // empty' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)"
+	fi
+	if [ -z "${RESOLVED_REPOSITORY:-}" ]; then
+		# Try to get from git remote
+		RESOLVED_REPOSITORY="$(git config --get remote.origin.url 2>/dev/null | sed 's/\.git$//' || echo "")"
+	fi
+
+	# Long description resolution (file-based)
+	RESOLVED_LONG_DESCRIPTION=""
+	local long_desc_file=""
+	if [ -n "${MCPB_LONG_DESCRIPTION_FILE:-}" ]; then
+		long_desc_file="${MCPB_LONG_DESCRIPTION_FILE}"
+	elif [ "${MCPBASH_JSON_TOOL:-none}" != "none" ] && [ -f "${project_root}/server.d/server.meta.json" ]; then
+		long_desc_file="$("${MCPBASH_JSON_TOOL_BIN}" -r '.long_description_file // empty' "${project_root}/server.d/server.meta.json" 2>/dev/null || true)"
+	fi
+	# Read file content if file reference exists
+	if [ -n "${long_desc_file}" ]; then
+		# Resolve relative path from project root
+		local full_path="${long_desc_file}"
+		if [ "${long_desc_file#/}" = "${long_desc_file}" ]; then
+			full_path="${project_root}/${long_desc_file}"
+		fi
+		if [ -f "${full_path}" ]; then
+			RESOLVED_LONG_DESCRIPTION="$(cat "${full_path}")"
+		else
+			printf '  ⚠ Warning: long_description_file not found: %s\n' "${long_desc_file}" >&2
+		fi
+	fi
+
+	# Optional metadata fields - simple passthrough from mcpb.conf
+	RESOLVED_LICENSE="${MCPB_LICENSE:-}"
+	RESOLVED_HOMEPAGE="${MCPB_HOMEPAGE:-}"
+	RESOLVED_DOCUMENTATION="${MCPB_DOCUMENTATION:-}"
+	RESOLVED_SUPPORT="${MCPB_SUPPORT:-}"
+
+	# Keywords - space-separated in config, will be converted to JSON array
+	RESOLVED_KEYWORDS="${MCPB_KEYWORDS:-}"
+
+	# Privacy policies - space-separated URLs in config, will be converted to JSON array
+	RESOLVED_PRIVACY_POLICIES="${MCPB_PRIVACY_POLICIES:-}"
+
+	# Compatibility constraints
+	RESOLVED_COMPAT_CLAUDE_DESKTOP="${MCPB_COMPAT_CLAUDE_DESKTOP:-}"
+	RESOLVED_RUNTIME_PYTHON="${MCPB_RUNTIME_PYTHON:-}"
+	RESOLVED_RUNTIME_NODE="${MCPB_RUNTIME_NODE:-}"
+
+	# JSON passthroughs from server.meta.json (single jq call per json-handling.mdc)
+	RESOLVED_ICONS="null"
+	RESOLVED_SCREENSHOTS="null"
+	RESOLVED_PLATFORM_OVERRIDES="null"
+	RESOLVED_META="null"
+	RESOLVED_LOCALIZATION="null"
+	if [[ "${MCPBASH_JSON_TOOL:-none}" != "none" ]] && [[ -f "${project_root}/server.d/server.meta.json" ]]; then
+		local passthrough_result
+		passthrough_result="$("${MCPBASH_JSON_TOOL_BIN}" -c '[
+			(.icons // null),
+			(.screenshots // null),
+			(.server.mcp_config.platform_overrides // .platform_overrides // null),
+			(._meta // null),
+			(.localization // null)
+		]' "${project_root}/server.d/server.meta.json" 2>/dev/null || printf '[null,null,null,null,null]')"
+		local pt_val
+		pt_val="$(printf '%s' "${passthrough_result}" | "${MCPBASH_JSON_TOOL_BIN}" -c '.[0] // null')" && [[ "${pt_val}" != "null" ]] && RESOLVED_ICONS="${pt_val}"
+		pt_val="$(printf '%s' "${passthrough_result}" | "${MCPBASH_JSON_TOOL_BIN}" -c '.[1] // null')" && [[ "${pt_val}" != "null" ]] && RESOLVED_SCREENSHOTS="${pt_val}"
+		pt_val="$(printf '%s' "${passthrough_result}" | "${MCPBASH_JSON_TOOL_BIN}" -c '.[2] // null')" && [[ "${pt_val}" != "null" ]] && RESOLVED_PLATFORM_OVERRIDES="${pt_val}"
+		pt_val="$(printf '%s' "${passthrough_result}" | "${MCPBASH_JSON_TOOL_BIN}" -c '.[3] // null')" && [[ "${pt_val}" != "null" ]] && RESOLVED_META="${pt_val}"
+		pt_val="$(printf '%s' "${passthrough_result}" | "${MCPBASH_JSON_TOOL_BIN}" -c '.[4] // null')" && [[ "${pt_val}" != "null" ]] && RESOLVED_LOCALIZATION="${pt_val}"
+	fi
+
+	export RESOLVED_NAME RESOLVED_VERSION RESOLVED_TITLE RESOLVED_DESCRIPTION
+	export RESOLVED_AUTHOR_NAME RESOLVED_AUTHOR_EMAIL RESOLVED_AUTHOR_URL RESOLVED_REPOSITORY
+	export RESOLVED_LONG_DESCRIPTION
+	export RESOLVED_LICENSE RESOLVED_HOMEPAGE RESOLVED_DOCUMENTATION RESOLVED_SUPPORT
+	export RESOLVED_KEYWORDS RESOLVED_PRIVACY_POLICIES
+	export RESOLVED_COMPAT_CLAUDE_DESKTOP RESOLVED_RUNTIME_PYTHON RESOLVED_RUNTIME_NODE
+	export RESOLVED_ICONS RESOLVED_SCREENSHOTS
+	export RESOLVED_PLATFORM_OVERRIDES RESOLVED_META RESOLVED_LOCALIZATION
+}
+
+mcp_bundle_copy_project() {
+	local project_root="$1"
+	local staging_server="$2"
+	local verbose="$3"
+
+	# Reset icon tracking
+	BUNDLED_ICON=""
+
+	# Default directories to copy
+	local default_dirs="tools resources prompts completions server.d lib providers"
+
+	# Copy default project directories if they exist
+	local dir
+	for dir in ${default_dirs}; do
+		if [ -d "${project_root}/${dir}" ]; then
+			cp -R "${project_root}/${dir}" "${staging_server}/"
+			if [ "${verbose}" = "true" ]; then
+				printf '    Copied %s/\n' "${dir}"
+			fi
+		fi
+	done
+
+	# Copy custom directories from MCPB_INCLUDE (with validation)
+	local custom_count=0
+	if [ -n "${MCPB_INCLUDE:-}" ]; then
+		for dir in ${MCPB_INCLUDE}; do
+			# Normalize: strip trailing slash to ensure consistent cp -R behavior
+			dir="${dir%/}"
+
+			# Security: reject absolute paths, explicit ./ prefix, and path traversal
+			# Pattern catches: .., ../, /foo, foo/../bar, foo/..
+			# Note: ./.. is caught by ./* pattern (absolute/relative), not path traversal
+			case "${dir}" in
+			/* | ./*)
+				printf '  \342\232\240 Warning: MCPB_INCLUDE rejects absolute/relative path: %s\n' "${dir}" >&2
+				continue
+				;;
+			.. | */.. | ../* | */../*)
+				printf '  \342\232\240 Warning: MCPB_INCLUDE rejects path traversal: %s\n' "${dir}" >&2
+				continue
+				;;
+			esac
+
+			# Skip if path starts with or equals a default directory (avoid overlaps)
+			local skip="false"
+			local default
+			for default in ${default_dirs}; do
+				case "${dir}" in
+				"${default}" | "${default}"/*)
+					if [ "${verbose}" = "true" ]; then
+						printf '    Skipped %s/ (overlaps with default %s/)\n' "${dir}" "${default}"
+					fi
+					skip="true"
+					break
+					;;
+				esac
+			done
+			[ "${skip}" = "true" ] && continue
+
+			if [ -d "${project_root}/${dir}" ]; then
+				# Handle nested paths (e.g., config/schemas) vs top-level (e.g., .registry)
+				local target_parent
+				target_parent="$(dirname "${dir}")"
+				if [ "${target_parent}" = "." ]; then
+					cp -R "${project_root}/${dir}" "${staging_server}/"
+				else
+					mkdir -p "${staging_server}/${target_parent}"
+					cp -R "${project_root}/${dir}" "${staging_server}/${target_parent}/"
+				fi
+				custom_count=$((custom_count + 1))
+				if [ "${verbose}" = "true" ]; then
+					printf '    Copied %s/ (custom)\n' "${dir}"
+				fi
+			else
+				printf '  \342\232\240 Warning: MCPB_INCLUDE directory not found: %s\n' "${dir}" >&2
+			fi
+		done
+
+		if [ "${verbose}" = "true" ] && [ "${custom_count}" -gt 0 ]; then
+			printf '  \342\234\223 Included %s custom director%s\n' "${custom_count}" "$([ "${custom_count}" -eq 1 ] && echo "y" || echo "ies")"
+		fi
+	fi
+
+	# Copy VERSION file if present
+	if [ -f "${project_root}/VERSION" ]; then
+		cp "${project_root}/VERSION" "${staging_server}/"
+		if [ "${verbose}" = "true" ]; then
+			printf '    Copied VERSION\n'
+		fi
+	fi
+
+	# Copy icon if present (prefer PNG over SVG)
+	for icon in icon.png icon.svg; do
+		if [ -f "${project_root}/${icon}" ]; then
+			cp "${project_root}/${icon}" "${staging_server}/../"
+			BUNDLED_ICON="${icon}"
+			if [ "${verbose}" = "true" ]; then
+				printf '    Copied %s\n' "${icon}"
+			fi
+			break
+		fi
+	done
+
+	# Copy files referenced in icons array (themed/multi-size variants)
+	# Paths may be relative to project root (assets/icons/foo.png) or to
+	# server.d/ (../assets/icons/foo.png). Try project root first, then server.d/.
+	if [[ "${RESOLVED_ICONS:-null}" != "null" && "${MCPBASH_JSON_TOOL:-none}" != "none" ]]; then
+		local icon_src icon_resolved icon_dest
+		while IFS= read -r icon_src; do
+			[[ -z "${icon_src}" ]] && continue
+			# Only copy local paths (skip https:// URLs)
+			[[ "${icon_src}" == https://* ]] && continue
+			icon_resolved=""
+			icon_dest="${icon_src}"
+			if [[ -f "${project_root}/${icon_src}" ]]; then
+				icon_resolved="${project_root}/${icon_src}"
+			elif [[ -f "$(cd "${project_root}/server.d/$(dirname "${icon_src}")" 2>/dev/null && printf '%s/%s' "$(pwd)" "$(basename "${icon_src}")")" ]]; then
+				icon_resolved="$(cd "${project_root}/server.d/$(dirname "${icon_src}")" && printf '%s/%s' "$(pwd)" "$(basename "${icon_src}")")"
+				# Normalize dest path: strip project_root prefix to get a clean relative path
+				icon_dest="${icon_resolved#"${project_root}/"}"
+			fi
+			if [[ -n "${icon_resolved}" ]]; then
+				local icon_dir
+				icon_dir="$(dirname "${staging_server}/../${icon_dest}")"
+				mkdir -p "${icon_dir}"
+				cp "${icon_resolved}" "${staging_server}/../${icon_dest}"
+				if [ "${verbose}" = "true" ]; then
+					printf '    Copied icon variant: %s\n' "${icon_dest}"
+				fi
+			else
+				printf '  \342\232\240 Warning: icons src not found: %s (referenced in server.meta.json icons array)\n' "${icon_src}" >&2
+			fi
+		done < <(printf '%s' "${RESOLVED_ICONS}" | "${MCPBASH_JSON_TOOL_BIN}" -r '.[].src // empty' 2>/dev/null)
+	fi
+
+	# Copy files referenced in screenshots array
+	# Paths may be relative to project root or to server.d/. Try both.
+	if [[ "${RESOLVED_SCREENSHOTS:-null}" != "null" && "${MCPBASH_JSON_TOOL:-none}" != "none" ]]; then
+		local screenshot_path screenshot_resolved screenshot_dest
+		while IFS= read -r screenshot_path; do
+			[[ -z "${screenshot_path}" ]] && continue
+			[[ "${screenshot_path}" == https://* ]] && continue
+			screenshot_resolved=""
+			screenshot_dest="${screenshot_path}"
+			if [[ -f "${project_root}/${screenshot_path}" ]]; then
+				screenshot_resolved="${project_root}/${screenshot_path}"
+			elif [[ -f "$(cd "${project_root}/server.d/$(dirname "${screenshot_path}")" 2>/dev/null && printf '%s/%s' "$(pwd)" "$(basename "${screenshot_path}")")" ]]; then
+				screenshot_resolved="$(cd "${project_root}/server.d/$(dirname "${screenshot_path}")" && printf '%s/%s' "$(pwd)" "$(basename "${screenshot_path}")")"
+				screenshot_dest="${screenshot_resolved#"${project_root}/"}"
+			fi
+			if [[ -n "${screenshot_resolved}" ]]; then
+				local ss_dir
+				ss_dir="$(dirname "${staging_server}/../${screenshot_dest}")"
+				mkdir -p "${ss_dir}"
+				cp "${screenshot_resolved}" "${staging_server}/../${screenshot_dest}"
+				if [ "${verbose}" = "true" ]; then
+					printf '    Copied screenshot: %s\n' "${screenshot_dest}"
+				fi
+			else
+				printf '  \342\232\240 Warning: screenshot not found: %s (referenced in server.meta.json)\n' "${screenshot_path}" >&2
+			fi
+		done < <(printf '%s' "${RESOLVED_SCREENSHOTS}" | "${MCPBASH_JSON_TOOL_BIN}" -r '.[] // empty' 2>/dev/null)
+	fi
+}
+
+mcp_bundle_embed_framework() {
+	local staging_server="$1"
+	local verbose="$2"
+	mcp_embed_framework "${staging_server}" "${verbose}"
+}
+
+mcp_bundle_generate_wrapper() {
+	local staging_server="$1"
+	mcp_embed_generate_wrapper "${staging_server}"
+}
+
+mcp_bundle_scan_tools_array() {
+	local project_root="$1"
+	local tools_json="[]"
+
+	if [[ "${MCPBASH_JSON_TOOL:-none}" == "none" ]]; then
+		printf '%s' "${tools_json}"
+		return 0
+	fi
+
+	if [[ ! -d "${project_root}/tools" ]]; then
+		printf '%s' "${tools_json}"
+		return 0
+	fi
+
+	local meta_file
+	for meta_file in "${project_root}"/tools/*/tool.meta.json; do
+		[[ -f "${meta_file}" ]] || continue
+		local entry
+		entry="$("${MCPBASH_JSON_TOOL_BIN}" -c '{name: .name, description: .description} | with_entries(select(.value != null))' "${meta_file}" 2>/dev/null)" || continue
+		tools_json="$(printf '%s' "${tools_json}" | "${MCPBASH_JSON_TOOL_BIN}" -c --argjson e "${entry}" '. + [$e]')"
+	done
+
+	printf '%s' "${tools_json}"
+}
+
+mcp_bundle_scan_prompts_array() {
+	local project_root="$1"
+	local prompts_json="[]"
+
+	if [[ "${MCPBASH_JSON_TOOL:-none}" == "none" ]]; then
+		printf '%s' "${prompts_json}"
+		return 0
+	fi
+
+	if [[ ! -d "${project_root}/prompts" ]]; then
+		printf '%s' "${prompts_json}"
+		return 0
+	fi
+
+	local prompts_dir="${project_root}/prompts"
+	local meta_file
+	# Three glob patterns to cover all prompt layouts:
+	#   prompts/*.meta.json          - flat (e.g. greeting.meta.json)
+	#   prompts/*/prompt.meta.json   - nested, canonical name
+	#   prompts/*/*.meta.json        - nested, scaffolded (e.g. review/review.meta.json)
+	for meta_file in "${prompts_dir}"/*.meta.json "${prompts_dir}"/*/prompt.meta.json "${prompts_dir}"/*/*.meta.json; do
+		[[ -f "${meta_file}" ]] || continue
+		local meta_dir
+		meta_dir="$(dirname "${meta_file}")"
+
+		local entry
+		entry="$("${MCPBASH_JSON_TOOL_BIN}" -c '
+			{name: .name, description: .description}
+			+ (if (.arguments.properties // null) != null then
+				{arguments: [.arguments.properties | keys[]]}
+			  else {} end)
+			| with_entries(select(.value != null))
+		' "${meta_file}" 2>/dev/null)" || continue
+
+		# Resolve the template .txt file. The "path" field in meta.json may be:
+		#   - relative to prompts dir (runtime convention, e.g. "greeting.txt")
+		#   - relative to project root (scaffold convention, e.g. "prompts/review/review.txt")
+		# Try both, then fall back to a sibling .txt with the same stem.
+		local path_field txt_path=""
+		path_field="$("${MCPBASH_JSON_TOOL_BIN}" -r '.path // empty' "${meta_file}" 2>/dev/null)" || true
+
+		if [[ -n "${path_field}" ]]; then
+			if [[ -f "${prompts_dir}/${path_field}" ]]; then
+				txt_path="${prompts_dir}/${path_field}"
+			elif [[ -f "${project_root}/${path_field}" ]]; then
+				txt_path="${project_root}/${path_field}"
+			elif [[ -f "${meta_dir}/${path_field}" ]]; then
+				txt_path="${meta_dir}/${path_field}"
+			fi
+		fi
+
+		# Fallback: sibling .txt with same stem as the .meta.json
+		if [[ -z "${txt_path}" ]]; then
+			local stem
+			stem="$(basename "${meta_file}" .meta.json)"
+			if [[ -f "${meta_dir}/${stem}.txt" ]]; then
+				txt_path="${meta_dir}/${stem}.txt"
+			fi
+		fi
+
+		# Fallback: sibling .txt named after the parent directory
+		# (e.g. prompts/review/prompt.meta.json -> prompts/review/review.txt)
+		if [[ -z "${txt_path}" ]]; then
+			local dir_stem
+			dir_stem="$(basename "${meta_dir}")"
+			if [[ -f "${meta_dir}/${dir_stem}.txt" ]]; then
+				txt_path="${meta_dir}/${dir_stem}.txt"
+			fi
+		fi
+
+		# v0.3 requires text on every prompt -- skip entries without a template
+		if [[ -z "${txt_path}" ]]; then
+			continue
+		fi
+
+		local text_content
+		text_content="$(cat "${txt_path}")"
+		# Skip empty template files (v0.3 requires non-empty text)
+		if [[ -z "${text_content}" ]]; then
+			continue
+		fi
+		entry="$(printf '%s' "${entry}" | "${MCPBASH_JSON_TOOL_BIN}" -c --arg t "${text_content}" '. + {text: $t}')"
+
+		# Deduplicate: the expanded globs may match the same file twice
+		# (e.g. prompts/x/x.meta.json matches both */prompt.meta.json and */*.meta.json
+		# when x.meta.json is named prompt.meta.json). Check by name.
+		local entry_name
+		entry_name="$(printf '%s' "${entry}" | "${MCPBASH_JSON_TOOL_BIN}" -r '.name')"
+		local already
+		already="$(printf '%s' "${prompts_json}" | "${MCPBASH_JSON_TOOL_BIN}" -e --arg n "${entry_name}" 'map(select(.name == $n)) | length > 0' 2>/dev/null)" || already="false"
+		if [[ "${already}" == "true" ]]; then
+			continue
+		fi
+
+		prompts_json="$(printf '%s' "${prompts_json}" | "${MCPBASH_JSON_TOOL_BIN}" -c --argjson e "${entry}" '. + [$e]')"
+	done
+
+	printf '%s' "${prompts_json}"
+}
+
+mcp_bundle_generate_manifest() {
+	local staging_dir="$1"
+	local project_root="$2"
+	local template="${MCPBASH_HOME}/scaffold/bundle/manifest.json.template"
+	local output="${staging_dir}/manifest.json"
+
+	# Build platforms array from BUNDLE_PLATFORMS
+	local platforms_json="["
+	local first=true
+	for p in ${BUNDLE_PLATFORMS}; do
+		if [ "${first}" = "true" ]; then
+			platforms_json="${platforms_json}\"${p}\""
+			first=false
+		else
+			platforms_json="${platforms_json}, \"${p}\""
+		fi
+	done
+	platforms_json="${platforms_json}]"
+
+	# Detect if tools/prompts exist (for *_generated flags)
+	local has_tools="false"
+	local has_prompts="false"
+	local has_static="false"
+	if [ -d "${project_root}/tools" ] && [ -n "$(ls -A "${project_root}/tools" 2>/dev/null)" ]; then
+		has_tools="true"
+	fi
+	if [ -d "${project_root}/prompts" ] && [ -n "$(ls -A "${project_root}/prompts" 2>/dev/null)" ]; then
+		has_prompts="true"
+	fi
+	if [ "${BUNDLE_STATIC_REGISTRY:-}" = "true" ]; then
+		has_static="true"
+	fi
+
+	# Scan static tool/prompt declarations for store listing discovery
+	local tools_array_json="[]"
+	local prompts_array_json="[]"
+	if [[ "${has_tools}" == "true" ]]; then
+		tools_array_json="$(mcp_bundle_scan_tools_array "${project_root}")"
+	fi
+	if [[ "${has_prompts}" == "true" ]]; then
+		prompts_array_json="$(mcp_bundle_scan_prompts_array "${project_root}")"
+	fi
+
+	# Use JSON tool to build manifest if available, otherwise use template
+	if [ "${MCPBASH_JSON_TOOL:-none}" != "none" ]; then
+		# Build manifest with proper JSON escaping per MCPB v0.3 spec
+		local manifest
+		# Handle user_config as null or JSON object
+		local user_config_arg="null"
+		if [[ -n "${RESOLVED_USER_CONFIG:-}" && "${RESOLVED_USER_CONFIG}" != "{}" ]]; then
+			user_config_arg="${RESOLVED_USER_CONFIG}"
+		fi
+		manifest="$(
+			"${MCPBASH_JSON_TOOL_BIN}" -n \
+				--arg name "${RESOLVED_NAME}" \
+				--arg version "${RESOLVED_VERSION}" \
+				--arg display_name "${RESOLVED_TITLE}" \
+				--arg description "${RESOLVED_DESCRIPTION}" \
+				--arg long_description "${RESOLVED_LONG_DESCRIPTION:-}" \
+				--arg author_name "${RESOLVED_AUTHOR_NAME:-}" \
+				--arg author_email "${RESOLVED_AUTHOR_EMAIL:-}" \
+				--arg author_url "${RESOLVED_AUTHOR_URL:-}" \
+				--arg repository_url "${RESOLVED_REPOSITORY:-}" \
+				--arg icon "${BUNDLED_ICON:-}" \
+				--arg license "${RESOLVED_LICENSE:-}" \
+				--arg keywords "${RESOLVED_KEYWORDS:-}" \
+				--arg homepage "${RESOLVED_HOMEPAGE:-}" \
+				--arg documentation "${RESOLVED_DOCUMENTATION:-}" \
+				--arg support "${RESOLVED_SUPPORT:-}" \
+				--arg privacy_policies "${RESOLVED_PRIVACY_POLICIES:-}" \
+				--arg compat_claude_desktop "${RESOLVED_COMPAT_CLAUDE_DESKTOP:-}" \
+				--arg runtime_python "${RESOLVED_RUNTIME_PYTHON:-}" \
+				--arg runtime_node "${RESOLVED_RUNTIME_NODE:-}" \
+				--argjson platforms "${platforms_json}" \
+				--argjson tools_generated "${has_tools}" \
+				--argjson prompts_generated "${has_prompts}" \
+				--argjson tools_array "${tools_array_json}" \
+				--argjson prompts_array "${prompts_array_json}" \
+				--argjson icons_array "${RESOLVED_ICONS:-null}" \
+				--argjson screenshots_array "${RESOLVED_SCREENSHOTS:-null}" \
+				--argjson platform_overrides "${RESOLVED_PLATFORM_OVERRIDES:-null}" \
+				--argjson mcpb_meta "${RESOLVED_META:-null}" \
+				--argjson localization "${RESOLVED_LOCALIZATION:-null}" \
+				--argjson static_registry "${has_static}" \
+				--argjson user_config "${user_config_arg}" \
+				--arg env_map "${RESOLVED_USER_CONFIG_ENV_MAP:-}" \
+				--arg args_map "${RESOLVED_USER_CONFIG_ARGS_MAP:-}" \
+				'{
+				manifest_version: "0.3",
+				name: $name,
+				version: $version,
+				display_name: $display_name,
+				description: $description
+			}
+			| if $long_description != "" then . + {long_description: $long_description} else . end
+			| if $icon != "" then . + {icon: $icon} else . end
+			| if $icons_array != null and ($icons_array | length) > 0 then . + {icons: $icons_array} else . end
+			| if $screenshots_array != null and ($screenshots_array | length) > 0 then . + {screenshots: $screenshots_array} else . end
+			| if $localization != null then . + {localization: $localization} else . end
+			| if $license != "" then . + {license: $license} else . end
+			| if $keywords != "" then . + {keywords: ($keywords | split(" ") | map(select(. != "")))} else . end
+			| if $homepage != "" then . + {homepage: $homepage} else . end
+			| if $documentation != "" then . + {documentation: $documentation} else . end
+			| if $support != "" then . + {support: $support} else . end
+			| if $privacy_policies != "" then . + {privacy_policies: ($privacy_policies | split(" ") | map(select(. != "")))} else . end
+			| if $author_name != "" then . + {author: {name: $author_name}} else . end
+			| if $author_email != "" then .author.email = $author_email else . end
+			| if $author_url != "" then .author.url = $author_url else . end
+			| if $repository_url != "" then . + {repository: {type: "git", url: $repository_url}} else . end
+			| if ($tools_array | length) > 0 then . + {tools: $tools_array} else . end
+			| if $tools_generated then . + {tools_generated: true} else . end
+			| if ($prompts_array | length) > 0 then . + {prompts: $prompts_array} else . end
+			| if $prompts_generated then . + {prompts_generated: true} else . end
+			| if $user_config != null then . + {user_config: $user_config} else . end
+			| if $mcpb_meta != null then . + {_meta: $mcpb_meta} else . end
+			| . + {
+				server: {
+					type: "binary",
+					entry_point: "server/run-server.sh",
+					mcp_config: ({
+						command: "${__dirname}/server/run-server.sh",
+						args: ([] + (if $args_map != "" then ($args_map | split(",") | map(select(. != "")) | map("${user_config.\(.)}")) else [] end)),
+						env: ({
+							MCPBASH_PROJECT_ROOT: "${__dirname}/server",
+							MCPBASH_TOOL_ALLOWLIST: "*"
+						} + (if $static_registry then {MCPBASH_STATIC_REGISTRY: "1"} else {} end) + (if $env_map != "" then ($env_map | split(",") | map(select(. != "")) | map(split("=")) | map({key: .[1], value: ("${user_config." + .[0] + "}")}) | from_entries) else {} end))
+					} + (if $platform_overrides != null then {platform_overrides: $platform_overrides} else {} end))
+				},
+				compatibility: ({
+					platforms: $platforms
+				} + (if $compat_claude_desktop != "" then {claude_desktop: $compat_claude_desktop} else {} end)
+				  + (if ($runtime_python != "" or $runtime_node != "") then {runtimes: (
+				      (if $runtime_python != "" then {python: $runtime_python} else {} end) +
+				      (if $runtime_node != "" then {node: $runtime_node} else {} end)
+				    )} else {} end))
+			}'
+		)"
+		printf '%s\n' "${manifest}" >"${output}"
+	elif [ -f "${template}" ]; then
+		# Fallback to template substitution (doesn't support dynamic platforms/icon)
+		mcp_template_render "${template}" "${output}" \
+			"__NAME__=${RESOLVED_NAME}" \
+			"__VERSION__=${RESOLVED_VERSION}" \
+			"__DISPLAY_NAME__=${RESOLVED_TITLE}" \
+			"__DESCRIPTION__=${RESOLVED_DESCRIPTION}" \
+			"__AUTHOR_NAME__=${RESOLVED_AUTHOR_NAME:-Unknown}" \
+			"__AUTHOR_EMAIL__=${RESOLVED_AUTHOR_EMAIL:-}" \
+			"__AUTHOR_URL__=${RESOLVED_AUTHOR_URL:-}" \
+			"__REPOSITORY_URL__=${RESOLVED_REPOSITORY:-}"
+	else
+		# Inline fallback per MCPB v0.3 spec (limited functionality without JSON tool)
+		local icon_line=""
+		local static_registry_line=""
+		if [ -n "${BUNDLED_ICON:-}" ]; then
+			icon_line="\"icon\": \"${BUNDLED_ICON}\","
+		fi
+		if [ "${BUNDLE_STATIC_REGISTRY:-}" = "true" ]; then
+			static_registry_line=',
+        "MCPBASH_STATIC_REGISTRY": "1"'
+		fi
+		cat >"${output}" <<EOF
+{
+  "manifest_version": "0.3",
+  "name": "${RESOLVED_NAME}",
+  "version": "${RESOLVED_VERSION}",
+  "display_name": "${RESOLVED_TITLE}",
+  "description": "${RESOLVED_DESCRIPTION}",
+  ${icon_line}
+  "server": {
+    "type": "binary",
+    "entry_point": "server/run-server.sh",
+    "mcp_config": {
+      "command": "\${__dirname}/server/run-server.sh",
+      "args": [],
+      "env": {
+        "MCPBASH_PROJECT_ROOT": "\${__dirname}/server",
+        "MCPBASH_TOOL_ALLOWLIST": "*"${static_registry_line}
+      }
+    }
+  },
+  "compatibility": {
+    "platforms": ${platforms_json}
+  }
+}
+EOF
+	fi
+}
+
+mcp_bundle_create_archive() {
+	local staging_dir="$1"
+	local output_path="$2"
+	local verbose="$3"
+
+	# Create ZIP archive (uses zip or 7z)
+	mcp_bundle_create_zip "${output_path}" "${staging_dir}"
+
+	if [ "${verbose}" = "true" ]; then
+		local size
+		size="$(du -h "${output_path}" 2>/dev/null | cut -f1)"
+		printf '    Created archive (%s)\n' "${size}"
+	fi
+}
+
+mcp_bundle_count_components() {
+	local project_root="$1"
+	local tools=0
+	local resources=0
+	local prompts=0
+
+	if [ -d "${project_root}/tools" ]; then
+		tools="$(find "${project_root}/tools" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')"
+	fi
+	if [ -d "${project_root}/resources" ]; then
+		resources="$(find "${project_root}/resources" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')"
+	fi
+	if [ -d "${project_root}/prompts" ]; then
+		prompts="$(find "${project_root}/prompts" -mindepth 1 -maxdepth 1 -type d 2>/dev/null | wc -l | tr -d ' ')"
+	fi
+
+	echo "${tools}:${resources}:${prompts}"
+}
+
+mcp_cli_bundle() {
+	local output_dir=""
+	local name_override=""
+	local version_override=""
+	local platform_override=""
+	local include_gojq="false"
+	local validate_only="false"
+	local verbose="false"
+
+	# Parse arguments
+	while [ $# -gt 0 ]; do
+		case "$1" in
+		--output)
+			shift
+			output_dir="${1:-}"
+			;;
+		--name)
+			shift
+			name_override="${1:-}"
+			;;
+		--version)
+			shift
+			version_override="${1:-}"
+			;;
+		--platform)
+			shift
+			platform_override="${1:-}"
+			;;
+		--include-gojq)
+			include_gojq="true"
+			;;
+		--validate)
+			validate_only="true"
+			;;
+		--verbose)
+			verbose="true"
+			;;
+		--help | -h)
+			mcp_bundle_usage
+			;;
+		*)
+			printf 'Unknown option: %s\n' "$1" >&2
+			printf 'Run "mcp-bash bundle --help" for usage\n' >&2
+			exit 2
+			;;
+		esac
+		shift
+	done
+
+	# Default output directory
+	if [ -z "${output_dir}" ]; then
+		output_dir="${PWD}"
+	fi
+
+	# Handle platform selection
+	if [ -n "${platform_override}" ]; then
+		case "${platform_override}" in
+		darwin | linux | win32)
+			BUNDLE_PLATFORMS="${platform_override}"
+			;;
+		all)
+			BUNDLE_PLATFORMS="darwin linux win32"
+			;;
+		*)
+			printf 'Unknown platform: %s\n' "${platform_override}" >&2
+			printf 'Valid platforms: darwin, linux, win32, all\n' >&2
+			exit 2
+			;;
+		esac
+	fi
+
+	# Initialize runtime for JSON tooling and project detection
+	require_bash_runtime
+	initialize_runtime_paths
+
+	# Detect JSON tool
+	mcp_runtime_detect_json_tool
+
+	# Find project root
+	mcp_scaffold_require_project_root
+
+	# Load config first (includes user_config - must happen before validation)
+	if ! mcp_bundle_load_config "${MCPBASH_PROJECT_ROOT}"; then
+		printf '\n\342\234\227 Bundle configuration failed.\n' >&2
+		exit 1
+	fi
+
+	# Validate project (now has access to user_config)
+	printf 'Validating project...\n'
+	if ! mcp_bundle_validate_project "${MCPBASH_PROJECT_ROOT}" "${verbose}"; then
+		printf '\n\342\234\227 Bundle validation failed.\n' >&2
+		exit 1
+	fi
+	printf '  \342\234\223 Validated project structure\n'
+
+	# Resolve metadata
+	mcp_bundle_resolve_metadata "${MCPBASH_PROJECT_ROOT}" "${name_override}" "${version_override}"
+
+	# Warn if author is missing (required by MCPB spec)
+	mcp_bundle_warn_missing_author
+
+	# Warn if version is not valid semver
+	mcp_bundle_warn_nonsemver_version
+
+	# Static registry mode handling (default: true for zero-config fast cold start)
+	# Bundle creators can opt out with MCPB_STATIC=false in mcpb.conf
+	case "${MCPB_STATIC:-true}" in
+	false | 0 | no | off) BUNDLE_STATIC_REGISTRY="" ;;
+	*) BUNDLE_STATIC_REGISTRY="true" ;;
+	esac
+
+	if [ "${BUNDLE_STATIC_REGISTRY}" = "true" ]; then
+		if [ "${verbose}" = "true" ]; then
+			printf '  Pre-generating registry cache for static mode...\n'
+		fi
+		# Pre-generate registries (uses MCPBASH_HOME which is set by common.sh)
+		local refresh_output=""
+		if ! refresh_output=$("${MCPBASH_HOME}/bin/mcp-bash" registry refresh --project-root "${MCPBASH_PROJECT_ROOT}" --no-notify 2>&1); then
+			printf '  \342\232\240 Warning: Failed to pre-generate registries for static mode\n' >&2
+			if [ -n "${refresh_output}" ]; then
+				printf '    %s\n' "${refresh_output}" >&2
+			fi
+			printf '    Bundle will work but may have slower cold start\n' >&2
+			# Don't fail the bundle - static mode is an optimization
+		else
+			if [ "${verbose}" = "true" ]; then
+				printf '    Registry cache generated successfully\n'
+			fi
+		fi
+		# Ensure .registry is included (MCPB_INCLUDE is space-separated)
+		if ! mcp_bundle_list_contains "${MCPB_INCLUDE:-}" ".registry"; then
+			MCPB_INCLUDE="${MCPB_INCLUDE:+$MCPB_INCLUDE }.registry"
+		fi
+	fi
+
+	if [ "${verbose}" = "true" ]; then
+		printf '  \342\234\223 Resolved metadata: %s v%s\n' "${RESOLVED_NAME}" "${RESOLVED_VERSION}"
+		if [ -n "${RESOLVED_AUTHOR_NAME:-}" ]; then
+			printf '    Author: %s\n' "${RESOLVED_AUTHOR_NAME}"
+		fi
+	fi
+
+	# If validate only, stop here
+	if [ "${validate_only}" = "true" ]; then
+		printf '\n\342\234\223 Validation passed. Bundle would be: %s-%s.mcpb\n' "${RESOLVED_NAME}" "${RESOLVED_VERSION}"
+		exit 0
+	fi
+
+	# Check dependencies (only needed for actual bundling, not validation)
+	if ! mcp_bundle_check_dependencies; then
+		exit 3
+	fi
+
+	# Create staging directory
+	local staging_dir
+	staging_dir="$(mktemp -d "${TMPDIR:-/tmp}/mcpbash.bundle.XXXXXX")"
+	trap 'rm -rf "${staging_dir}"' EXIT
+
+	local staging_server="${staging_dir}/server"
+	mkdir -p "${staging_server}"
+
+	# Copy project content
+	printf 'Bundling project...\n'
+	mcp_bundle_copy_project "${MCPBASH_PROJECT_ROOT}" "${staging_server}" "${verbose}"
+
+	# Embed framework
+	mcp_bundle_embed_framework "${staging_server}" "${verbose}"
+
+	# Embed gojq if requested
+	if [ "${include_gojq}" = "true" ]; then
+		if mcp_bundle_embed_gojq "${staging_server}" "${BUNDLE_PLATFORMS}" "${verbose}"; then
+			printf '  \342\234\223 Embedded gojq for JSON processing\n'
+		fi
+	fi
+
+	# Generate wrapper script
+	mcp_bundle_generate_wrapper "${staging_server}"
+	if [ "${verbose}" = "true" ]; then
+		printf '    Generated run-server.sh\n'
+	fi
+
+	# Generate manifest
+	mcp_bundle_generate_manifest "${staging_dir}" "${MCPBASH_PROJECT_ROOT}"
+	printf '  \342\234\223 Generated manifest.json\n'
+
+	# Create output directory if needed and resolve to absolute path
+	mkdir -p "${output_dir}"
+	output_dir="$(cd "${output_dir}" && pwd)"
+
+	# Create archive
+	local bundle_filename="${RESOLVED_NAME}-${RESOLVED_VERSION}.mcpb"
+	local output_path="${output_dir}/${bundle_filename}"
+
+	# Remove existing bundle if present
+	rm -f "${output_path}"
+
+	mcp_bundle_create_archive "${staging_dir}" "${output_path}" "${verbose}"
+
+	# Count components
+	local counts
+	counts="$(mcp_bundle_count_components "${MCPBASH_PROJECT_ROOT}")"
+	local tools="${counts%%:*}"
+	local rest="${counts#*:}"
+	local resources="${rest%%:*}"
+	local prompts="${rest#*:}"
+
+	# Get framework size
+	local fw_size
+	fw_size="$(du -sh "${staging_server}/.mcp-bash" 2>/dev/null | cut -f1)"
+
+	# Final output
+	local size
+	size="$(du -h "${output_path}" 2>/dev/null | cut -f1)"
+
+	printf '  \342\234\223 Bundled framework (%s)\n' "${fw_size}"
+	printf '  \342\234\223 Included %s tools, %s resources, %s prompts\n' "${tools}" "${resources}" "${prompts}"
+	if [ -n "${BUNDLED_ICON:-}" ]; then
+		printf '  \342\234\223 Included icon: %s\n' "${BUNDLED_ICON}"
+	fi
+	printf '  \342\234\223 Target platforms: %s\n' "${BUNDLE_PLATFORMS}"
+	printf '\n'
+	printf 'Created: %s (%s)\n' "${output_path}" "${size}"
+	printf '\n'
+	printf 'Next steps:\n'
+	printf '  \342\200\242 Install: Double-click the .mcpb file or drag to an MCPB-compatible client\n'
+	printf '    (e.g., Claude Desktop, or any app supporting the MCPB format)\n'
+	printf '  \342\200\242 Verify: Check that your tools appear in the client\n'
+	printf '  \342\200\242 Publish: Submit to https://registry.modelcontextprotocol.io/\n'
+
+	exit 0
+}

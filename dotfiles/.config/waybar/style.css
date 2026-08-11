@@ -1,0 +1,31 @@
+* {
+    font-family: "JetBrains Mono", "Font Awesome 6 Free";
+    font-size: 13px;
+    font-weight: bold;
+    border: none;
+}
+
+window#waybar {
+    background-color: rgba(15, 15, 15, 0.45); /* Más transparente */
+    border-radius: 12px; /* Esquinas redondas */
+    color: #F0F0F0;
+}
+
+#workspaces button {
+    padding: 0 15px;
+    color: #808080;
+}
+
+#workspaces button.active {
+    color: #FFFFFF;
+}
+
+#clock {
+    color: #FFFFFF;
+    font-size: 14px; /* Reloj un poco más grande */
+}
+
+#network, #pulseaudio, #battery {
+    padding: 0 15px;
+    color: #E0E0E0;
+}

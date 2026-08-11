@@ -1,0 +1,366 @@
+# mcp-bash
+
+Pure Bash MCP server framework. Bash≥3.2 + jq/gojq. Stdio transport only.
+
+## SETUP & LAYOUT
+
+- Framework install (read-only): `~/.local/share/mcp-bash/` (XDG compliant), with symlink at `~/.local/bin/mcp-bash`.
+- Project tree (project root auto-detected when you run `mcp-bash` inside it; for MCP clients set `MCPBASH_PROJECT_ROOT=/path/to/project` explicitly) typically includes:
+  - `tools/`, `resources/`, `prompts/`, `server.d/`, optional `lib/`, `config/`, `.registry/` (generated).
+- Project creation & scaffolding:
+  - Initialize in current directory: `bin/mcp-bash init [--name NAME] [--no-hello]`.
+  - Create new project in new directory: `bin/mcp-bash new <name> [--no-hello]`.
+  - Scaffold assets in an existing project: `bin/mcp-bash scaffold tool|prompt|resource <name>`.
+- Recommended flow to create a new server:
+  1) Install the framework once via a verified download: fetch `install.sh` + `SHA256SUMS`, verify with `sha256sum -c`, then `bash install.sh --verify <sha>` (fallback one-liner: `curl -fsSL https://raw.githubusercontent.com/yaniv-golan/mcp-bash-framework/main/install.sh | bash -- --yes`).
+  2) Create a project dir and initialize: `mkdir ~/my-mcp-server && cd ~/my-mcp-server && mcp-bash init --name my-mcp-server`.
+  3) Generate wiring for clients: `mcp-bash config --wrapper` (TTY creates `./my-mcp-server.sh`, piped/redirected prints to stdout) or `mcp-bash config --client <client>` for pasteable JSON.
+  4) Add tools/resources/prompts via `mcp-bash scaffold tool|prompt|resource <name>`, then `mcp-bash validate` before wiring to clients.
+- Validation & config:
+  - Validate project: `bin/mcp-bash validate [--project-root DIR] [--fix] [--json] [--explain-defaults] [--strict]`.
+  - Generate MCP client config snippets / JSON descriptor: `bin/mcp-bash config [--project-root DIR] [--show|--json|--client NAME|--wrapper]` (`--show` prints labeled snippets for all clients; use `--client` to filter).
+  - Environment diagnostics: `bin/mcp-bash doctor [--json]` (local operator use; exposes paths and env).
+  - Registry cache: `bin/mcp-bash registry status [--project-root DIR]`.
+- Framework files:
+  - `bin/mcp-bash`, `lib/*.sh`, `handlers/*.sh`, `sdk/tool-sdk.sh`, `providers/file.sh|git.sh|https.sh`, `scaffold/*`.
+- Project files:
+  - `tools/<name>/tool.sh` + `tools/<name>/tool.meta.json`.
+  - `resources/<name>.meta.json` + content files.
+  - `prompts/<name>.meta.json` + template files.
+  - `server.d/register.sh` (runs only when `MCPBASH_ALLOW_PROJECT_HOOKS=true` and has safe ownership/permissions), `server.d/env.sh`, `server.d/server.meta.json`, optional `server.d/policy.sh` (defines `mcp_tools_policy_check` to allow/deny tools centrally).
+  - `config/roots.json`, `.registry/` (registry cache, not committed).
+
+## Quick Start for AI Agents Building MCP Servers
+
+If you are an AI agent building an MCP server project, follow these steps:
+
+1. **Create project:** `mcp-bash new my-server && cd my-server`
+2. **Add tools:** `mcp-bash scaffold tool my-tool-name` — this generates `tools/my-tool-name/tool.sh` and `tools/my-tool-name/tool.meta.json` with the correct SDK sourcing and structure. Always use the scaffold instead of writing tool files from scratch.
+3. **Implement logic** in `tools/my-tool-name/tool.sh`. The scaffold already sources the SDK (`source "${MCP_SDK:?}/tool-sdk.sh"`). Use `mcp_args_get`, `mcp_result_success`, `mcp_error` — not raw jq.
+4. **Generate client config:** `mcp-bash config --client claude-desktop`
+   - **CRITICAL:** The config output includes `MCPBASH_TOOL_ALLOWLIST`. Without it, ALL tools are silently blocked (default-deny policy). Do not remove it.
+5. **Test:** `mcp-bash run-tool my-tool-name --allow-self --args '{"key":"value"}'`
+
+### If your tool wraps an external CLI
+
+MCP hosts (Claude Desktop, Cursor) launch servers with a minimal PATH that excludes version manager shims. Your tool's CLI dependency may not be found at runtime even though it's installed.
+
+**Do not** call CLIs as bare commands (e.g., `mycli search ...`). Instead:
+
+```bash
+source "${MCP_SDK:?}/tool-sdk.sh"
+# Copy mcp_detect_cli from docs/BEST-PRACTICES.md §4.4 into your project's lib/
+source "${MCPBASH_PROJECT_ROOT}/lib/cli-detect.sh"
+MYCLI=$(mcp_detect_cli mycli "pip install my-package") || mcp_fail -32603 "mycli not found"
+"${MYCLI}" search "$query"
+```
+
+Or use `BASH_SOURCE` path resolution if the CLI is bundled with your project:
+
+```bash
+MYCLI="$(cd "$(dirname "${BASH_SOURCE[0]}")/../../../bin" && pwd)/mycli"
+```
+
+**Error handling for CLI wrappers:** Use `set -uo pipefail` (no `-e`) when your CLI returns non-zero for business errors:
+
+```bash
+set -uo pipefail  # not set -euo — -e would exit before error handling
+source "${MCP_SDK:?}/tool-sdk.sh"
+result=$("${MYCLI}" get "$id" 2>&1) || {
+    mcp_result_error "$(mcp_json_obj type "cli_error" message "CLI failed: ${result}")"
+    exit 0
+}
+mcp_result_success "$(printf '%s' "$result" | jq -c '.')"
+```
+
+Note: `mcp_result_error` expects a JSON object with `type` and `message` fields. Use `mcp_json_obj type "..." message "..."` to build it — do not pass a plain string.
+
+## EMBEDDED RESOURCES (type:"resource")
+
+- **Preferred**: Use `mcp_result_text_with_resource` helper:
+  ```bash
+  mcp_result_text_with_resource '{"status":"done"}' --path /tmp/file.txt --mime text/plain
+  # Multiple: --path /file1 --mime text/plain --path /file2 --mime image/png
+  ```
+- **Manual**: Write to `MCP_TOOL_RESOURCES_FILE` (TSV `path<TAB>mime<TAB>uri` or JSON array).
+- The framework appends `{type:"resource", resource:{uri,mimeType,text|blob}}` to `result.content`.
+- Binary files are auto-base64-encoded to `blob`; text stays in `text`.
+- Paths must be readable and inside allowed roots; invalid entries are skipped (debug logs will note skips).
+
+## TOOL STRUCTURE
+
+- Tools are Bash scripts invoked by the framework via stdio.
+- Standard pattern (see `scaffold/tool/tool.sh` or `examples/00-hello-tool/tools/hello/tool.sh`):
+  - `#!/usr/bin/env bash`, `set -euo pipefail`.
+  - Assume `MCP_SDK` is set by the framework to the `sdk/` directory; exit with a clear error if it is not.
+  - `source "${MCP_SDK}/tool-sdk.sh"` to load SDK helpers.
+  - Read args via `mcp_args_get` / `mcp_args_raw`.
+  - Validate inputs; call `mcp_fail_invalid_args` or `mcp_fail <code> "msg" [data_json]` on error.
+  - Build structured results via `mcp_json_obj` / `mcp_json_arr` and emit via `mcp_emit_json` (preferred), or use `mcp_emit_text` for plain text.
+
+## METADATA (TOOLS/RESOURCES/PROMPTS/COMPLETIONS)
+
+- Tool metadata (`tools/<name>/tool.meta.json`):
+  - Fields: `name`, `description`, `inputSchema` (JSON Schema), optional `outputSchema`, `timeoutSecs`.
+  - Prefer `inputSchema`; `arguments` is a legacy alias accepted for back-compat.
+  - Minimal example (one line):
+    - `{"name":"ns.toolname","description":"desc","inputSchema":{"type":"object","properties":{"myarg":{"type":"string"}},"required":["myarg"]},"outputSchema":{"type":"object","properties":{"result":{"type":"string"}}},"timeoutSecs":30}`
+- Resource metadata (`resources/<name>.meta.json`):
+  - Fields: `name`, `description`, `uri`, `mimeType`, `provider`.
+  - Minimal example (one line):
+    - `{"name":"res.name","description":"desc","uri":"file://./path/to/file.txt","mimeType":"text/plain","provider":"file"}`
+  - Providers: `file`, `https`, `git`; git provider is disabled by default (enable with `MCPBASH_ENABLE_GIT_PROVIDER=true`).
+- Prompt metadata (`prompts/<name>.meta.json`):
+  - Fields: `name`, `description`, `path` (template file), `arguments` schema.
+  - Templates are plain text; example: `Hello {{var}}!`.
+  - Only `{{var}}` placeholders are substituted (values come from `prompts/get` `arguments`).
+- Completions (manual only, via `server.d/register.sh`):
+  - Use:
+    - `mcp_completion_manual_begin`
+    - `mcp_completion_register_manual '{"name":"ns.completion","path":"completions/name.sh","timeoutSecs":5}'`
+    - `mcp_completion_manual_finalize`
+  - Completion script paths are resolved relative to `MCPBASH_PROJECT_ROOT`.
+
+## SDK & RUNTIME
+
+- SDK helpers live in `sdk/tool-sdk.sh` and require `MCP_SDK` to be set by the framework.
+- Args:
+  - `mcp_args_raw` → raw JSON args string.
+  - `mcp_args_get '<jq_filter>'` → extract value via jq/gojq.
+- Request metadata (`_meta` from tools/call):
+  - `mcp_meta_raw` → raw JSON `_meta` string from the tools/call request.
+  - `mcp_meta_get '<jq_filter>'` → extract value from `_meta` via jq/gojq.
+  - Use cases: pass auth context, rate limiting IDs, or behavior flags not generated by the LLM.
+- Output:
+  - `mcp_emit_text "string"` → plain text result.
+  - `mcp_emit_json '{"k":"v"}'` → JSON result (compacted).
+- JSON construction helpers:
+  - `mcp_json_escape "value"` → returns a quoted JSON string literal using the framework’s JSON tool (or a safe fallback).
+  - `mcp_json_obj key1 "val1" key2 "val2" ...` → returns `{"key1":"val1","key2":"val2",...}` (all values treated as strings; odd arg count is a fatal error).
+  - `mcp_json_arr "v1" "v2" ...` → returns `["v1","v2",...]` (all values treated as strings).
+- Errors:
+  - `mcp_fail <code> "msg" [data_json]` → JSON-RPC error.
+  - `mcp_fail_invalid_args "msg"` → `-32602` invalid params.
+- Progress & cancellation:
+  - `mcp_progress <0-100> "msg" [total]` → progress notifications.
+  - `mcp_run_with_progress --pattern REGEX [--extract json|match1|ratio] [--stderr-file FILE] -- cmd args` → forward subprocess progress to MCP (see BEST-PRACTICES.md §4.9).
+  - `mcp_is_cancelled` → exit status 0 when cancelled (tools should check regularly in long loops).
+- Logging:
+  - `mcp_log_debug|info|warn|error "logger" "msg_or_json"` → `notifications/message`.
+- Roots helpers:
+  - `mcp_roots_list` → newline-separated roots paths.
+  - `mcp_roots_count` → root count.
+  - `mcp_roots_contains "/path"` → exit 0 if path is within any root.
+- Elicitation helpers:
+  - `mcp_elicit "msg" '<schema_json>' [timeout_secs]`.
+  - `mcp_elicit_string "msg" ["fieldname"]`.
+  - `mcp_elicit_confirm "msg"`.
+  - `mcp_elicit_choice "msg" "opt1" "opt2" ...`.
+- Configuration loading helpers:
+  - `mcp_config_load --env VAR --file path --example path --defaults '{...}'` → load config with precedence (env var → file → example → defaults).
+  - `mcp_config_get '.key' --default value` → extract value from loaded config by jq path.
+- Error helpers:
+  - `mcp_error "type" "message" [--hint "guidance"] [--data '{...}']` → convenience wrapper for tool execution errors with consistent schema; `--hint` provides LLM-friendly actionable guidance.
+- Secure download helpers:
+  - `mcp_download_safe --url URL --out PATH [--allow hosts] [--timeout N] [--max-bytes N] [--retries N]` → SSRF-safe HTTPS download with automatic retries, exponential backoff, and structured JSON output (`{success:true, bytes:N, path:...}` or `{success:false, error:{...}}`). Always returns 0 (safe with `set -e`).
+  - `mcp_download_safe_or_fail --url URL --out PATH [...]` → fail-fast wrapper that returns the output path on success or fails the tool with `-32602` on error.
+- JSON tooling:
+  - Framework detects `gojq` or `jq` and exports `MCPBASH_JSON_TOOL` and `MCPBASH_JSON_TOOL_BIN` for tools.
+  - Tools can optionally call `${MCPBASH_JSON_TOOL_BIN}` directly; always prefer `-c` for compact JSON and `-r` for raw values.
+- Modes:
+  - `MCPBASH_MODE=full` when JSON tool is available (default); full tool/resource/prompt/completion surfaces enabled.
+  - `MCPBASH_MODE=minimal` when no JSON tool or `MCPBASH_FORCE_MINIMAL=true`; only lifecycle, ping, logging.
+
+## ROOTS (FILESYSTEM SCOPING)
+
+- Client-provided MCP Roots:
+  - If client advertises roots support, server calls `roots/list` after `initialized`.
+  - Tool env gets:
+    - `MCP_ROOTS_JSON` → JSON array of roots (`uri`, `name`, normalized `path`).
+    - `MCP_ROOTS_PATHS` → newline-separated absolute paths.
+    - `MCP_ROOTS_COUNT` → root count.
+  - Use SDK helpers `mcp_roots_list`, `mcp_roots_count`, `mcp_roots_contains <path>`.
+- Fallback precedence when client does not supply roots or times out: `--roots` (run-tool only, comma-separated) → `MCPBASH_ROOTS` (colon-separated; relative paths resolve against `MCPBASH_PROJECT_ROOT`) → `config/roots.json` → default project root.
+- Validation:
+  - `--roots`/`MCPBASH_ROOTS` must point to existing, readable paths (fail fast).
+  - Client roots replace cache on success; malformed payloads keep prior cache.
+  - Timeouts keep current roots quietly; symlinks are resolved and paths canonicalized (drive letters uppercased on MSYS/Windows).
+- Resource roots:
+  - Scope filesystem access for resource providers with `MCP_RESOURCES_ROOTS` when needed (multi-tenant or remote deployments).
+
+## ELICITATION
+
+- Enabled only when client advertises `capabilities.elicitation` in `initialize`.
+- Tool env:
+  - `MCP_ELICIT_SUPPORTED="1"` when elicitation is supported, `"0"` otherwise.
+  - `MCP_ELICIT_REQUEST_FILE`, `MCP_ELICIT_RESPONSE_FILE` → internal paths used by SDK for request/response handoff (tools normally just call helpers).
+- Response contract:
+  - Normalized response: `{"action":"accept|decline|cancel|error","content":...}`.
+  - Tools should only read `.content` when `action="accept"`.
+
+## ENV VARS & LIMITS
+
+- Project root:
+  - For MCP clients (Claude Desktop, Cursor, Windsurf, etc.), set `MCPBASH_PROJECT_ROOT` to the project directory containing `tools/`, `resources/`, `prompts/`.
+  - For local CLI usage (`mcp-bash init`, `mcp-bash scaffold`, `mcp-bash validate`, `mcp-bash config`, etc.), the framework auto-detects the project root when run from inside a project directory (looks for `server.d/server.meta.json` up the tree).
+- Directory overrides:
+  - `MCPBASH_TOOLS_DIR`, `MCPBASH_RESOURCES_DIR`, `MCPBASH_PROMPTS_DIR`, `MCPBASH_SERVER_DIR`, `MCPBASH_REGISTRY_DIR`.
+- Concurrency, timeouts, sizes:
+  - `MCPBASH_MAX_CONCURRENT_REQUESTS` (default `16` worker slots).
+  - Per-tool timeout via `timeoutSecs` in metadata; global default from `MCPBASH_DEFAULT_TOOL_TIMEOUT` (30s if unset).
+  - `MCPBASH_MAX_TOOL_OUTPUT_SIZE` (default 10MB logical limit).
+  - `MCPBASH_MAX_TOOL_STDERR_SIZE` (default same as output limit).
+  - `MCPBASH_MAX_RESOURCE_BYTES` (default same as output limit).
+  - `MCPBASH_REGISTRY_MAX_BYTES` (default `104857600`).
+  - `MCPBASH_ENV_PAYLOAD_THRESHOLD` (default `65536` bytes) → spill large args/metadata to temp files.
+- Server lifecycle (zombie process mitigation):
+  - `MCPBASH_IDLE_TIMEOUT` (default 3600s) → exit after no client activity; 0 to disable.
+  - `MCPBASH_IDLE_TIMEOUT_ENABLED` (default `true`) → master switch for idle timeout.
+  - `MCPBASH_ORPHAN_CHECK_ENABLED` (default `true` on Unix, `false` on Windows) → exit if parent process dies.
+  - `MCPBASH_ORPHAN_CHECK_INTERVAL` (default 30s) → orphan check frequency.
+- Progress & logging throttles:
+  - `MCPBASH_MAX_PROGRESS_PER_MIN` (default 100 per request).
+  - `MCPBASH_MAX_LOGS_PER_MIN` (default 100 per request).
+- Logging:
+  - `MCPBASH_LOG_LEVEL` (default `info`; accepts `debug`, `info`, `notice`, `warning`, `error`, ...; can also be changed via `logging/setLevel`).
+  - `MCPBASH_LOG_VERBOSE=true` → include file paths and manual-registration script output in logs (security risk; see `docs/LOGGING.md`).
+- Minimal/full mode control:
+  - `MCPBASH_FORCE_MINIMAL=true` → force minimal capability tier even when JSON tooling is available.
+- Tool env isolation:
+  - `MCPBASH_TOOL_ENV_MODE=minimal|inherit|allowlist` (default `minimal`).
+  - `MCPBASH_TOOL_ENV_ALLOWLIST` → extra env var names allowed when mode is `allowlist`.
+- Registry and TTLs:
+  - `MCPBASH_REGISTRY_REFRESH_PATH` → optional subpath to limit `registry refresh` scanning.
+  - `MCP_TOOLS_TTL`, `MCP_RESOURCES_TTL`, `MCP_PROMPTS_TTL` → registry cache TTLs (`docs/REGISTRY.md`).
+- Stdout corruption safeguards:
+  - `MCPBASH_CORRUPTION_WINDOW` (default 60s).
+  - `MCPBASH_CORRUPTION_THRESHOLD` (default 3 events); exceeding threshold triggers forced exit.
+- HTTPS provider:
+  - `MCPBASH_HTTPS_ALLOW_HOSTS` / `MCPBASH_HTTPS_DENY_HOSTS` → host allow/deny lists (private/loopback always blocked).
+  - `MCPBASH_HTTPS_TIMEOUT` (≤60s) and `MCPBASH_HTTPS_MAX_BYTES` (≤20MB).
+- Git provider:
+  - Disabled by default; enable with `MCPBASH_ENABLE_GIT_PROVIDER=true`.
+  - `MCPBASH_GIT_ALLOW_HOSTS` / `MCPBASH_GIT_DENY_HOSTS` → allow/deny lists (private/loopback always blocked).
+- `MCPBASH_GIT_TIMEOUT` (default ~30s, capped at 60s).
+- `MCPBASH_GIT_MAX_KB` (default 50MB, capped at 1GB).
+
+## TESTING HELPERS
+
+- Batch harness: `test/common/env.sh` exposes `test_run_mcp <workspace> requests.ndjson responses.ndjson` to send a request batch through one server process (preferred for most tests).
+- Interactive helper: `test/common/session.sh` lets tests start one server and call tools sequentially via `mcp_session_start`/`mcp_session_call`/`mcp_session_end` (skips notifications, overwrites EXIT traps, no timeout; use only when prebuilding NDJSON is awkward).
+
+## PROVIDERS
+
+- `file` provider (`providers/file.sh`):
+  - Handles `file://` URIs.
+  - Enforces roots (`MCPBASH_ROOTS`, `config/roots.json`, or client roots).
+- `https` provider (`providers/https.sh`):
+  - Handles `https://` URIs with timeout/size guardrails and host allow/deny lists.
+  - Redirects and insecure protocols are disabled.
+  - For tool authors: use `mcp_download_safe` SDK helper (SSRF-safe, retries, JSON output) instead of calling provider directly.
+- `git` provider (`providers/git.sh`):
+  - Handles git-backed resources when `MCPBASH_ENABLE_GIT_PROVIDER=true`.
+  - Uses shallow clones with time and size limits.
+
+## PROTOCOL & ERRORS
+
+- Protocol:
+  - MCP version `2025-11-25` with downgrade support to `2025-06-18`, `2025-03-26`, and `2024-11-05`.
+  - Transport: stdio only. JSON-RPC 2.0. One JSON object per line.
+  - Capabilities: tools, resources, prompts, completion, logging, progress, pagination, subscriptions, `listChanged` notifications.
+- JSON-RPC error codes:
+  - `-32700` → parse error / invalid JSON normalization.
+  - `-32600` → invalid request (missing method, disallowed batch arrays).
+  - `-32601` → method not found / unsupported method.
+  - `-32602` → invalid params (bad args, unsupported protocol version, invalid cursor, invalid log level).
+  - `-32603` → internal error (provider failure, output size limit, registry errors, empty handler response).
+  - `-32000` → server not initialized (`initialize` not completed).
+  - `-32001` → tool cancelled (SIGTERM/INT).
+  - `-32002` → resource not found (`resources/read`).
+  - `-32003` → server shutting down (rejecting new work).
+  - `-32005` → `exit` called before `shutdown` requested.
+- Tool vs resource failures:
+  - Tool failures: use `isError=true` with `_meta.exitCode` and captured stderr; client sees a successful JSON-RPC response with error payload.
+  - Resource failures: use JSON-RPC error objects; no `isError` flag.
+  - Oversized tool/resource outputs: response is replaced with `-32603` error; partial payloads are never returned.
+- Provider exit code mapping (from `docs/ERRORS.md`):
+  - `file.sh`: exit `2` (outside allowed roots) → `-32603`; exit `3` (missing file) → `-32002`.
+  - `git.sh`: exit `4` (invalid URI or missing git) → `-32602`; exit `5` (clone/fetch failure) → `-32603`.
+  - `https.sh`: exit `4` (invalid URI or missing curl/wget) → `-32602`; exit `5` (network/timeout) → `-32603`; exit `6` (payload exceeds `MCPBASH_HTTPS_MAX_BYTES`) → `-32603`.
+  - Any other provider exit → `-32603` with stderr text when available.
+
+## PATTERNS & EXAMPLES
+
+- Common patterns (see `examples/` for full code):
+  - Args + validation: `examples/01-args-and-validation/tools/echo-arg/tool.sh`.
+  - Logging + levels: `examples/02-logging-and-levels/tools/logger/tool.sh`.
+  - Progress + cancellation: `examples/03-progress-and-cancellation/tools/slow/tool.sh`.
+  - Roots basics: `examples/04-roots-basics`.
+  - Resources basics: `examples/05-resources-basics`.
+  - Embedded resources: `examples/06-embedded-resources`.
+  - Prompts basics: `examples/07-prompts-basics`.
+  - Elicitation: `examples/08-elicitation`.
+  - Registry overrides + live progress: `examples/09-registry-overrides`.
+  - CLI wrapper: `examples/15-cli-wrapper/tools/system-info/tool.sh` — `mcp_detect_cli`, `set -uo pipefail`, `mcp_result_error`-with-JSON-object.
+  - Advanced ffmpeg studio: `examples/advanced/ffmpeg-studio`.
+
+## COMMANDS & TESTING
+
+- Core commands:
+  - Initialize project in current directory: `bin/mcp-bash init [--name NAME] [--no-hello]`.
+  - Create new project in new directory: `bin/mcp-bash new <name> [--no-hello]`.
+  - Scaffold assets in a project: `bin/mcp-bash scaffold tool|prompt|resource <name>`.
+  - Run server: `bin/mcp-bash` (auto-detects project root when run inside a project directory; for MCP clients set `MCPBASH_PROJECT_ROOT` explicitly).
+  - Run a single tool without starting the server: `bin/mcp-bash run-tool <name> [--args JSON] [--roots paths] [--dry-run] [--timeout SECS] [--verbose] [--no-refresh] [--minimal] [--project-root DIR] [--print-env]`.
+  - Debug mode: `bin/mcp-bash debug` (enables payload logging and preserved state; see `docs/DEBUGGING.md`).
+  - Registry refresh: `bin/mcp-bash registry refresh [--project-root DIR] [--no-notify] [--quiet] [--filter SUBPATH]`.
+  - Validate project: `bin/mcp-bash validate [--project-root DIR] [--fix] [--json] [--explain-defaults] [--strict]`.
+  - Generate MCP client config snippets / JSON descriptor: `bin/mcp-bash config [--project-root DIR] [--show|--json|--client NAME|--wrapper]`.
+  - Diagnose environment: `bin/mcp-bash doctor [--json]` (local diagnostic; reveals paths/env).
+  - Registry status: `bin/mcp-bash registry status [--project-root DIR]` (hash/mtime/counts).
+  - Run examples via MCP Inspector:
+    - `npx @modelcontextprotocol/inspector --transport stdio -- ./examples/run 00-hello-tool` (or other example).
+- Test suites (from repo root; see `TESTING.md`):
+  - Lint: `./test/lint.sh`.
+  - Smoke: `./test/smoke.sh`.
+  - Per-tool smoke: each scaffolded tool ships `tools/<name>/smoke.sh` to validate stdout JSON; update its sample args when you change `tool.meta.json`.
+  - Unit: `./test/unit/run.sh`.
+    - Filter: `./test/unit/run.sh lock.bats` (or pass multiple `*.bats`).
+  - Integration: `./test/integration/run.sh`.
+  - Examples: `./test/examples/run.sh` (NDJSON harness + `run-tool` smoke for hello).
+  - `run-tool` coverage: unit (`test/unit/run_tool_cli.bats`) and example smoke (`test/examples/test_run_tool_smoke.sh`).
+  - Compatibility: `./test/compatibility/run.sh`.
+  - Stress: `./test/stress/run.sh`.
+- Test runner flags:
+  - `VERBOSE=1` → stream per-test logs.
+  - `UNICODE=1` → use emoji status markers.
+  - `MCPBASH_LOG_JSON_TOOL=log` → log JSON tooling detection during tests.
+  - `MCPBASH_UNIT_TEST_TIMEOUT_SECONDS=120` → per-test timeout for `./test/unit/run.sh`.
+
+## MCPB BUNDLES
+
+- Create distributable `.mcpb` packages: `mcp-bash bundle [--output DIR] [--platform darwin|linux|win32|all]`.
+- Bundle configuration via `mcpb.conf` in project root:
+  - Server metadata: `MCPB_NAME`, `MCPB_VERSION`, `MCPB_DESCRIPTION`, `MCPB_AUTHOR_NAME`, `MCPB_AUTHOR_EMAIL`.
+  - Registry metadata: `MCPB_LICENSE` (SPDX identifier), `MCPB_KEYWORDS` (space-separated), `MCPB_HOMEPAGE`, `MCPB_DOCUMENTATION`, `MCPB_SUPPORT`, `MCPB_PRIVACY_POLICIES`.
+  - Compatibility constraints: `MCPB_COMPAT_CLAUDE_DESKTOP` (semver), `MCPB_RUNTIME_PYTHON`, `MCPB_RUNTIME_NODE`.
+  - User configuration: `MCPB_USER_CONFIG_FILE` (schema JSON path), `MCPB_USER_CONFIG_ENV_MAP` (e.g., `api_key=MY_API_KEY`), `MCPB_USER_CONFIG_ARGS_MAP` (fields to pass as args).
+- User config field types: `string` (with `sensitive`, `default`), `number` (with `min`, `max`, `default`), `boolean`, `directory`, `file` (with `multiple`, `default`).
+- Variable substitution in manifest: `${user_config.KEY}`, `${__dirname}`, `${HOME}`, `${DOCUMENTS}`, `${DESKTOP}`, `${DOWNLOADS}`, `${/}` (path separator).
+- Static registry mode (default for bundles): Pre-generates `.registry/*.json` for faster cold start; set `MCPB_STATIC=false` to opt out.
+- See `docs/MCPB.md` for full documentation.
+
+## CONVENTIONS
+
+- Bash:
+  - Use `set -euo pipefail`, `local` variables, `[[ ]]` conditionals, and `printf` over `echo`.
+  - Quote variable expansions; avoid one-letter variable names in shared scripts.
+- JSON:
+  - Prefer `gojq` (when available) then `jq`.
+  - Always compact JSON (`-c`) before emitting; use `-r` for raw strings.
+- Naming:
+  - Framework functions: `mcp_<module>_<name>`.
+  - Tool names: `^[a-zA-Z0-9_-]{1,64}$`, no dots (Some clients including Claude Desktop rejects them); prefer hyphenated namespaces (e.g., `example-hello`).
+- Discovery:
+  - Auto-discovered: tools, resources, prompts (from configured dirs).
+  - Manual-only: completions and any custom overrides via `server.d/register.sh`.

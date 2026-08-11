@@ -1,0 +1,596 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,user-scalable=no">
+<title>El Circo Interior</title>
+<script type="importmap">
+{
+  "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+  }
+}
+</script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{overflow:hidden;background:#000;width:100vw;height:100vh;font-family:'Courier New',monospace;cursor:default}
+#blocker{position:fixed;inset:0;background:rgba(0,0,0,.92);display:flex;align-items:center;justify-content:center;z-index:100;flex-direction:column}
+#blocker h1{font-size:3em;color:#8b0000;text-shadow:0 0 30px #f40,0 0 60px #f20;letter-spacing:.3em;margin-bottom:10px;animation:pulse 3s infinite}
+#blocker .sub{color:#c63;font-size:.85em;margin-bottom:30px;letter-spacing:.2em;opacity:.7}
+#blocker .btn{padding:15px 50px;font-size:1.2em;background:transparent;border:2px solid #8b0000;color:#c63;cursor:pointer;font-family:inherit;letter-spacing:.2em;transition:.3s}
+#blocker .btn:hover{background:#8b0000;color:#000}
+#blocker .keys{color:#842;font-size:.7em;margin-top:30px;text-align:center;line-height:2;opacity:.4}
+@keyframes pulse{0%,100%{opacity:.8}50%{opacity:1}}
+#hud{position:fixed;bottom:30px;left:50%;transform:translateX(-50%);z-index:50;pointer-events:none;opacity:0}
+#hud .dot{width:16px;height:16px;border:1.5px solid rgba(200,100,50,.4);border-radius:50%;margin:auto;position:relative}
+#hud .dot:after,#hud .dot:before{content:'';position:absolute;background:rgba(200,100,50,.2)}
+#hud .dot:after{width:1px;height:16px;left:7.5px;top:0}
+#hud .dot:before{width:16px;height:1px;left:0;top:7.5px}
+#miedo{position:fixed;top:20px;right:15px;z-index:50;pointer-events:none;opacity:0}
+#miedo .bar{width:5px;height:100px;background:rgba(100,30,30,.3);border:1px solid #400;border-radius:3px;overflow:hidden}
+#miedo .fill{width:100%;height:0%;background:linear-gradient(to top,#400,#f20,#f84);border-radius:3px}
+#miedo .lbl{color:#622;font-size:.45em;text-align:center;margin-top:3px}
+#zona{position:fixed;bottom:70px;left:50%;transform:translateX(-50%);z-index:50;pointer-events:none;color:rgba(200,100,50,.3);font-size:.6em;letter-spacing:.3em;opacity:0}
+#zona.show{opacity:1}
+#subs{position:fixed;bottom:120px;left:50%;transform:translateX(-50%);z-index:50;pointer-events:none;color:rgba(200,100,50,.5);font-size:.7em;text-align:center;opacity:0;max-width:500px}
+#subs.show{opacity:1}
+#fin{position:fixed;inset:0;z-index:200;background:#000;display:none;align-items:center;justify-content:center;flex-direction:column;opacity:0}
+#fin.show{display:flex;opacity:1}
+#fin h2{font-size:4em;color:#8b0000;text-shadow:0 0 40px #f40;letter-spacing:.3em;margin-bottom:20px;animation:pulse 2s infinite}
+#fin p{color:#842;font-size:1em;letter-spacing:.2em}
+</style>
+</head>
+<body>
+<div id="blocker">
+<h1>CIRCO INTERIOR</h1>
+<div class="sub">— pesadilla infantil —</div>
+<button class="btn" id="start">▶ ENTRAR</button>
+<div class="keys">WASD mover | MOUSE mirar | SHIFT agachar | ESPACIO saltar<br>E interactuar | TAB linterna</div>
+</div>
+<div id="hud"><div class="dot"></div></div>
+<div id="miedo"><div class="bar"><div class="fill" id="fearFill"></div></div><div class="lbl">MIEDO</div></div>
+<div id="zona">CARPA PRINCIPAL</div>
+<div id="subs"></div>
+<div id="fin"><h2>FIN</h2><p>siempre estuvo allí...</p></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
+
+// --- SCENE SETUP ---
+const W = innerWidth, H = innerHeight;
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x07080a);
+scene.fog = new THREE.FogExp2(0x07080a, 0.018);
+
+const camera = new THREE.PerspectiveCamera(70, W/H, 0.1, 60);
+camera.position.set(0, 1.6, 8);
+camera.rotation.order = 'YXZ';
+
+const renderer = new THREE.WebGLRenderer({antialias:true});
+renderer.setSize(W, H);
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.prepend(renderer.domElement);
+
+const pl = new PointerLockControls(camera, document.body);
+scene.add(pl.getObject());
+
+// --- COMPOSER ---
+const composer = new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene, camera));
+
+const vhs = new ShaderPass({
+  name:'VHS',
+  uniforms: {tDiffuse:{value:null}, uTime:{value:0}, fear:{value:0}, glitch:{value:0}},
+  vertexShader:'varying vec2 v;void main(){v=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+  fragmentShader:'varying vec2 v;uniform sampler2D tDiffuse;uniform float uTime,fear,glitch;float r(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.545);}void main(){vec2 uv=v;float g=glitch;if(g>.5&&r(uv+uTime)>.7)uv.x+=r(vec2(uv.y,uTime))*.03*g;vec4 c;float ab=.0015*(1.+fear*2.);c.r=texture2D(tDiffuse,uv+vec2(ab,0)).r;c.g=texture2D(tDiffuse,uv).g;c.b=texture2D(tDiffuse,uv-vec2(ab,0)).b;c.a=1.;float vg=1.-length(uv-.5)*length(uv-.5)*(.6+fear*.8);c.rgb*=vg;;c.rgb*=vec3(1.,.88,.75);if(fear>.5){float gr=dot(c.rgb,vec3(.299,.587,.114));c.rgb=mix(c.rgb,vec3(gr),fear*.4);}gl_FragColor=c;}'
+});
+composer.addPass(vhs);
+
+const bloom = new UnrealBloomPass(new THREE.Vector2(W,H), .2, .5, .1);
+composer.addPass(bloom);
+composer.addPass(new OutputPass());
+
+// --- LIGHTS ---
+scene.add(new THREE.AmbientLight(0x223344, .3));
+const moon = new THREE.DirectionalLight(0x4466aa, .15);
+moon.position.set(-5, 10, 5);
+moon.castShadow = true;
+scene.add(moon);
+
+// --- WORLD ---
+// Carpa principal
+const carpa = new THREE.Group();
+
+// Suelo
+const suelo = new THREE.Mesh(
+  new THREE.CircleGeometry(25, 32),
+  new THREE.MeshStandardMaterial({color:0xc4a062, roughness:.9})
+);
+suelo.rotation.x = -Math.PI/2;
+suelo.position.y = -.1;
+suelo.receiveShadow = true;
+carpa.add(suelo);
+
+// Paredes carpa (8 lados)
+const paredMat = new THREE.MeshStandardMaterial({color:0x8b1a1a, roughness:.8, side:THREE.DoubleSide, transparent:true, opacity:.9});
+const pared = new THREE.Mesh(new THREE.CylinderGeometry(14, 14, 5, 8, 1, true), paredMat);
+pared.position.y = 2.5;
+pared.castShadow = true;
+carpa.add(pared);
+
+// Techo cono
+const techoMat = new THREE.MeshStandardMaterial({color:0x8b1a1a, roughness:.9, side:THREE.DoubleSide, transparent:true, opacity:.85});
+const techo = new THREE.Mesh(new THREE.ConeGeometry(14, 4, 8), techoMat);
+techo.position.y = 6;
+techo.castShadow = true;
+carpa.add(techo);
+
+// Postes
+const posteMat = new THREE.MeshStandardMaterial({color:0x5a3a2a, roughness:.9});
+for (let i = 0; i < 8; i++) {
+  const a = (i/8) * Math.PI * 2;
+  const p = new THREE.Mesh(new THREE.CylinderGeometry(.15, .25, 5.5, 6), posteMat);
+  p.position.set(Math.sin(a)*13.5, 2.75, Math.cos(a)*13.5);
+  p.castShadow = true;
+  carpa.add(p);
+}
+
+// Luces colgantes
+const bulbMat = new THREE.MeshStandardMaterial({color:0xffaa44, emissive:0xff6600, emissiveIntensity:2});
+const carpaLuz = [];
+for (let i = 0; i < 10; i++) {
+  const a = (i/10) * Math.PI * 2;
+  const r = 10;
+  const b = new THREE.Mesh(new THREE.SphereGeometry(.12, 6, 6), bulbMat);
+  b.position.set(Math.sin(a)*r, 4.5, Math.cos(a)*r);
+  carpa.add(b);
+  const l = new THREE.PointLight(0xff8844, .8, 8);
+  l.position.copy(b.position);
+  l.castShadow = true;
+  carpa.add(l);
+  carpaLuz.push(l);
+}
+scene.add(carpa);
+
+// Pasillo
+const pasillo = new THREE.Group();
+pasillo.visible = false;
+
+const pasMat = new THREE.MeshStandardMaterial({color:0x2e3440, roughness:.9});
+const pasSuelo = new THREE.Mesh(new THREE.PlaneGeometry(30, 4), new THREE.MeshStandardMaterial({color:0x2a2a3a, roughness:.8}));
+pasSuelo.rotation.x = -Math.PI/2;
+pasSuelo.position.y = -.1;
+pasSuelo.receiveShadow = true;
+pasillo.add(pasSuelo);
+
+for (let z of [-2, 2]) {
+  for (let seg of [[-15,-10.5],[-9.5,-5.5],[-4.5,-.5],[.5,4.5],[5.5,9.5],[10.5,15]]) {
+    const w = seg[1] - seg[0];
+    const px = seg[0] + w/2;
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(w, 3.5), pasMat);
+    m.position.set(px, 1.75, z);
+    if (z > 0) m.rotation.y = Math.PI;
+    pasillo.add(m);
+  }
+}
+for (let z of [-2, 2]) {
+  for (let px of [-10, -5, 0, 5, 10]) {
+    const m = new THREE.Mesh(new THREE.PlaneGeometry(1, 1), pasMat);
+    m.position.set(px, 3.25, z);
+    if (z > 0) m.rotation.y = Math.PI;
+    pasillo.add(m);
+  }
+}
+scene.add(pasillo);
+// Puertas
+const ptaMat = new THREE.MeshStandardMaterial({color:0x5a3a2a, roughness:.9});
+function makeDoor(x,y,z,ry) {
+  const g = new THREE.Group();
+  const f = new THREE.Mesh(new THREE.BoxGeometry(1.2, 2.5, .08), ptaMat);
+  f.position.set(0, 1.25, 0);
+  f.castShadow = true;
+  g.add(f);
+  const marco = new THREE.Mesh(new THREE.BoxGeometry(1.4, 2.7, .12), new THREE.MeshStandardMaterial({color:0x3a2215}));
+  marco.position.set(0, 1.35, 0);
+  marco.castShadow = true;
+  g.add(marco);
+  g.position.set(x,y,z);
+  g.rotation.y = ry;
+  return g;
+}
+// Puerta Z1 -> Z2 (detras de cortina)
+const door1 = makeDoor(0, 0, 13.5, 0);
+carpa.add(door1);
+// Puerta Z2 -> Z3 (fondo pasillo)
+const door2 = makeDoor(0, 0, 14.5, 0);
+pasillo.add(door2);
+
+
+
+// Backrooms
+const back = new THREE.Group();
+back.visible = false;
+const bkMat = new THREE.MeshStandardMaterial({color:0xc4a030, roughness:.7});
+const bkSuelo = new THREE.Mesh(new THREE.PlaneGeometry(24, 24), new THREE.MeshStandardMaterial({color:0xd4b040, roughness:.6}));
+bkSuelo.rotation.x = -Math.PI/2;
+bkSuelo.position.y = -.1;
+bkSuelo.receiveShadow = true;
+back.add(bkSuelo);
+
+for (let gx = -9; gx <= 9; gx += 6) {
+  for (let gz = -9; gz <= 9; gz += 6) {
+    if (Math.random() > .4) {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(6, 3), bkMat);
+      m.position.set(gx+3, 1.5, gz);
+      back.add(m);
+    }
+    if (Math.random() > .4) {
+      const m = new THREE.Mesh(new THREE.PlaneGeometry(6, 3), bkMat);
+      m.position.set(gx, 1.5, gz+3);
+      m.rotation.y = Math.PI/2;
+      back.add(m);
+    }
+  }
+}
+scene.add(back);
+
+// --- VISITOR (monstruo procedural simple) ---
+const visitor = new THREE.Group();
+const vMat = new THREE.MeshStandardMaterial({color:0x1a1a1e, roughness:.55, metalness:.12});
+const vHeadMat = new THREE.MeshStandardMaterial({color:0x1e1e24, roughness:.4, metalness:.18});
+
+// Torso
+const torso = new THREE.Mesh(new THREE.CapsuleGeometry(.12, .5, 6, 12), vMat);
+torso.position.y = 1.1;
+torso.castShadow = true;
+visitor.add(torso);
+
+// Cabeza (30% mas grande, ovalada)
+const head = new THREE.Mesh(new THREE.SphereGeometry(.15, 12, 12), vHeadMat);
+head.scale.set(1.3, 1, 1.1);
+head.position.set(0, 1.6, 0);
+head.castShadow = true;
+visitor.add(head);
+
+// Brazos largos (15% mas)
+[.32, -.32].forEach((sx, idx) => {
+  const arm = new THREE.Mesh(new THREE.CapsuleGeometry(.025, .35, 6, 8), vMat);
+  arm.position.set(sx, 1.15, 0);
+  arm.rotation.z = sx > 0 ? -.3 : .3;
+  arm.castShadow = true;
+  visitor.add(arm);
+  // antebrazo
+  const fa = new THREE.Mesh(new THREE.CapsuleGeometry(.02, .3, 6, 8), vMat);
+  fa.position.set(sx * 1.6, .85, 0);
+  fa.rotation.z = sx > 0 ? -.4 : .4;
+  fa.castShadow = true;
+  visitor.add(fa);
+});
+
+// Piernas
+[-.12, .12].forEach((sx) => {
+  const leg = new THREE.Mesh(new THREE.CapsuleGeometry(.035, .4, 6, 8), vMat);
+  leg.position.set(sx, .35, 0);
+  leg.castShadow = true;
+  visitor.add(leg);
+});
+
+visitor.position.set(0, 0, -18);
+visitor.rotation.y = Math.PI;
+scene.add(visitor);
+
+// Luz del visitor
+const vLight = new THREE.PointLight(0xff2222, 1, 6);
+vLight.position.set(0, 1.6, 0);
+scene.add(vLight);
+
+// --- GAME STATE ---
+let running = false, flashOn = false, zone = 1, miedo = 0;
+let gameTime = 0, glitchTimer = 0, nextGlitch = 5000 + Math.random()*4000;
+let subTimer = null, climaxDone = false, z2hint = false, z3hint = false;
+const keys = {w:0,a:0,s:0,d:0,shift:0,space:0};
+const clock = new THREE.Clock();
+
+// --- AUDIO ---
+let actx = null;
+function initAudio() {
+  if (actx) return;
+  try {
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+    // ambient noise
+    const buf = actx.createBuffer(1, actx.sampleRate*2, actx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1)*Math.pow(Math.random(),3);
+    const src = actx.createBufferSource();
+    src.buffer = buf; src.loop = true;
+    const f = actx.createBiquadFilter();
+    f.type = 'lowpass'; f.frequency.value = 180;
+    const g = actx.createGain(); g.gain.value = .025;
+    src.connect(f); f.connect(g); g.connect(actx.destination);
+    src.start();
+    // creaks
+    function creak() {
+      const o = actx.createOscillator(), g2 = actx.createGain(), f2 = actx.createBiquadFilter();
+      f2.type = 'bandpass'; f2.frequency.value = 200+Math.random()*800; f2.Q.value = 10;
+      o.type = 'sine'; o.frequency.value = 100+Math.random()*600;
+      g2.gain.setValueAtTime(0, actx.currentTime);
+      g2.gain.linearRampToValueAtTime(.03+Math.random()*.04, actx.currentTime+.05);
+      g2.gain.linearRampToValueAtTime(0, actx.currentTime+.3+Math.random()*.5);
+      o.connect(f2); f2.connect(g2); g2.connect(actx.destination);
+      o.start(); o.stop(actx.currentTime+1);
+      setTimeout(creak, 4000+Math.random()*8000);
+    }
+    setTimeout(creak, 3000);
+  } catch(e) { console.warn('audio fail'); }
+}
+function playStep() {
+  if (!actx) return;
+  try {
+    const buf = actx.createBuffer(1, actx.sampleRate*.1, actx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) {
+      const t = i/actx.sampleRate;
+      d[i] = (Math.exp(-t*40)*.8 + (Math.random()*2-1)*.2 + Math.sin(t*200*Math.PI*2)*Math.exp(-t*20)*.3)*.3;
+    }
+    const src = actx.createBufferSource();
+    src.buffer = buf;
+    const g = actx.createGain(); g.gain.value = .06;
+    src.connect(g); g.connect(actx.destination);
+    src.start();
+  } catch(e) {}
+}
+function playGlitch() {
+  if (!actx) return;
+  try {
+    const buf = actx.createBuffer(1, actx.sampleRate*.05, actx.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i = 0; i < d.length; i++) d[i] = (Math.random()*2-1)*Math.random()*.5;
+    const src = actx.createBufferSource(); src.buffer = buf;
+    const g = actx.createGain(); g.gain.value = .1;
+    src.connect(g); g.connect(actx.destination);
+    src.start();
+  } catch(e) {}
+}
+
+// --- UI ---
+const blocker = document.getElementById('blocker');
+const startBtn = document.getElementById('start');
+const subs = document.getElementById('subs');
+const finEl = document.getElementById('fin');
+const fearFill = document.getElementById('fearFill');
+const zonaEl = document.getElementById('zona');
+
+function sub(texto, dur=4000) {
+  subs.textContent = texto;
+  subs.classList.add('show');
+  if (subTimer) clearTimeout(subTimer);
+  subTimer = setTimeout(() => subs.classList.remove('show'), dur);
+}
+
+function switchZone(nz) {
+  zone = nz;
+  carpa.visible = nz === 1;
+  pasillo.visible = nz === 2;
+  back.visible = nz === 3;
+  const names = {1:'CARPA PRINCIPAL', 2:'PASILLO', 3:'BACKROOMS'};
+  zonaEl.textContent = names[nz] || `ZONA ${nz}`;
+  zonaEl.classList.add('show');
+  const fogs = {1:.018, 2:.025, 3:.04};
+  scene.fog = new THREE.FogExp2(0x07080a, fogs[nz]);
+  if (nz === 3) sub('Los pasillos no terminan...', 5000);
+}
+
+function triggerClimax() {
+  sub('LA SOMBRA SE ACERCA', 5000);
+  gameTime = 0;
+  let t = 0;
+  const si = setInterval(() => {
+    t += .05;
+    const inten = Math.max(0, 1 - t/6) * .15;
+    camera.position.x += (Math.random()-.5) * inten;
+    camera.position.z += (Math.random()-.5) * inten;
+    if (t > 6) {
+      clearInterval(si);
+      sub('...', 3000);
+      setTimeout(() => {
+        finEl.classList.add('show');
+        running = false;
+        if (pl.isLocked) pl.unlock();
+      }, 4000);
+    }
+  }, 50);
+}
+
+// --- CONTROLS ---
+document.addEventListener('keydown', e => {
+  const k = e.code;
+  if (k === 'KeyW') keys.w = 1;
+  else if (k === 'KeyA') keys.a = 1;
+  else if (k === 'KeyS') keys.s = 1;
+  else if (k === 'KeyD') keys.d = 1;
+  else if (k === 'ShiftLeft' || k === 'ShiftRight') { keys.shift = 1; e.preventDefault(); }
+  else if (k === 'Space') { keys.space = 1; e.preventDefault(); }
+  else if (k === 'Tab') { e.preventDefault(); flashOn = !flashOn; }
+  else if (k === 'KeyE') {
+    if (zone === 1) switchZone(2);
+    else if (zone === 2) switchZone(3);
+  }
+});
+document.addEventListener('keyup', e => {
+  const k = e.code;
+  if (k === 'KeyW') keys.w = 0;
+  else if (k === 'KeyA') keys.a = 0;
+  else if (k === 'KeyS') keys.s = 0;
+  else if (k === 'KeyD') keys.d = 0;
+  else if (k === 'ShiftLeft' || k === 'ShiftRight') keys.shift = 0;
+  else if (k === 'Space') keys.space = 0;
+});
+
+document.addEventListener('click', () => { if (running && !pl.isLocked) pl.lock(); });
+
+startBtn.addEventListener('click', () => {
+  blocker.style.display = 'none';
+  document.getElementById('miedo').style.opacity = '1';
+  zonaEl.classList.add('show');
+  initAudio();
+  document.body.requestPointerLock();
+  pl.lock();
+  running = true;
+  clock.start();
+  setTimeout(() => sub('La carpa cruje en la distancia...', 4000), 1000);
+  setTimeout(() => sub('No hay nadie aqui. Pero algo observa.', 5000), 5000);
+});
+
+// --- RESIZE ---
+window.addEventListener('resize', () => {
+  const w = innerWidth, h = innerHeight;
+  camera.aspect = w/h; camera.updateProjectionMatrix();
+  renderer.setSize(w, h); composer.setSize(w, h);
+});
+
+// --- VHS GLITCH ---
+const glitchEl = document.createElement('div');
+glitchEl.style.cssText = 'position:fixed;inset:0;z-index:11;pointer-events:none;opacity:0;background:rgba(0,0,0,.85)';
+glitchEl.id = 'glitch-overlay';
+document.body.appendChild(glitchEl);
+
+function glitchFlash() {
+  glitchEl.style.opacity = '1';
+  let frames = 2 + Math.floor(Math.random()*3);
+  const go = () => {
+    if (frames <= 0) { glitchEl.style.opacity = '0'; return; }
+    glitchEl.style.transform = `translateY(${(Math.random()-.5)*30}px)`;
+    glitchEl.style.clipPath = `inset(${10+Math.random()*40}px 0 ${10+Math.random()*40}px 0)`;
+    glitchEl.style.background = `rgba(${Math.random()>.5?255:100},${Math.random()*155+50},${50+Math.random()*100},${.3+Math.random()*.5})`;
+    frames--;
+    setTimeout(go, 30+Math.random()*40);
+  };
+  go();
+  setTimeout(() => { glitchEl.style.opacity = '0'; glitchEl.style.transform = ''; glitchEl.style.clipPath = ''; }, 500);
+}
+
+// --- PARTICLES ---
+const pGeo = new THREE.BufferGeometry();
+const pPos = new Float32Array(300);
+for (let i = 0; i < 300; i++) pPos[i] = (Math.random()-.5)*20;
+pGeo.setAttribute('position', new THREE.BufferAttribute(pPos, 3));
+const pMat = new THREE.PointsMaterial({color:0xffffff, size:.04, transparent:true, opacity:.1, blending:THREE.AdditiveBlending, depthWrite:false});
+const particles = new THREE.Points(pGeo, pMat);
+particles.position.y = 2;
+scene.add(particles);
+
+// --- SHADOW SPRITE ---
+const shCanvas = document.createElement('canvas');
+shCanvas.width = 64; shCanvas.height = 64;
+const shCtx = shCanvas.getContext('2d');
+const gr = shCtx.createRadialGradient(32,32,0,32,32,32);
+gr.addColorStop(0,'rgba(0,0,0,1)');
+gr.addColorStop(.5,'rgba(0,0,0,.5)');
+gr.addColorStop(1,'rgba(0,0,0,0)');
+shCtx.fillStyle = gr; shCtx.fillRect(0,0,64,64);
+const shTex = new THREE.CanvasTexture(shCanvas);
+const shadow = new THREE.Sprite(new THREE.SpriteMaterial({map:shTex, blending:THREE.MultiplyBlending, transparent:true, opacity:0, depthWrite:false}));
+shadow.scale.set(6,6,1);
+scene.add(shadow);
+let shAngle = 0, shDist = 12;
+
+// --- LOOP ---
+function loop() {
+  requestAnimationFrame(loop);
+  const dt = Math.min(clock.getDelta(), .05);
+  
+  if (!running) { composer.render(); return; }
+  
+  gameTime += dt;
+  miedo = Math.min(1, miedo + dt * .005);
+  if (fearFill) fearFill.style.height = (miedo*100) + '%';
+  
+  // Movimiento
+  const fwd = new THREE.Vector3(-Math.sin(camera.rotation.y), 0, -Math.cos(camera.rotation.y));
+  const right = new THREE.Vector3(fwd.z, 0, -fwd.x);
+  const spd = 5 * (keys.shift ? .5 : 1);
+  const mv = new THREE.Vector3();
+  if (keys.w) mv.add(fwd);
+  if (keys.s) mv.sub(fwd);
+  if (keys.d) mv.add(right);
+  if (keys.a) mv.sub(right);
+  if (mv.length() > 0) {
+    mv.normalize().multiplyScalar(spd * dt);
+    camera.position.x += mv.x;
+    camera.position.z += mv.z;
+    if (Math.random() < dt*5) playStep();
+  }
+  const targetH = keys.shift ? .7 : 1.6;
+  camera.position.y += (targetH - camera.position.y) * .1;
+  const lim = 22;
+  camera.position.x = Math.max(-lim, Math.min(lim, camera.position.x));
+  camera.position.z = Math.max(-lim, Math.min(lim, camera.position.z));
+  
+  // Visitor orbit
+  const distToVisitor = camera.position.distanceTo(visitor.position);
+if (miedo > .2 && distToVisitor < 18) {
+    const speed = 4 * 1.12;
+    const radius = miedo > .8 ? 2.5 : 5;
+    shAngle += (speed / radius) * dt;
+    const vx = camera.position.x + Math.cos(shAngle) * radius;
+    const vz = camera.position.z + Math.sin(shAngle) * radius;
+    visitor.position.set(vx, 0, vz);
+    // face player
+    visitor.rotation.y = Math.atan2(-(camera.position.x - vx), -(camera.position.z - vz));
+    
+    // Materializacion
+    const op = Math.min(1, miedo * 1.5);
+    visitor.children.forEach(c => { if (c.isMesh) { c.material.transparent = true; c.material.opacity = op; } });
+    vLight.intensity = 1 + miedo * 3;
+  } else {
+    visitor.position.set(0, 0, -18);
+  }
+  
+  // Sombra
+  shAngle += dt * (.15 + miedo * .2);
+  shDist = 12 - miedo * 7;
+  shadow.position.set(
+    camera.position.x + Math.sin(shAngle)*shDist,
+    .3,
+    camera.position.z + Math.cos(shAngle)*shDist
+  );
+  shadow.material.opacity += (Math.min(.6, miedo*.5 + (zone===3?.3:0)) - shadow.material.opacity) * dt * 2;
+  shadow.scale.setScalar(3 + miedo*6);
+  
+  // VHS
+  vhs.uniforms.fear.value = miedo;
+  vhs.uniforms.uTime.value = gameTime;
+  glitchTimer += dt * 1000;
+  if (glitchTimer > nextGlitch) {
+    nextGlitch = 30000 + Math.random()*40000;
+    glitchTimer = 0;
+    glitchFlash();
+    playGlitch();
+  }
+  bloom.strength = .15 + miedo * .8;
+  
+  // Particulas
+  particles.rotation.y += dt * .02;
+  
+  // Eventos zona
+  if (zone === 1 && gameTime > 10 && !z2hint) { z2hint = true; sub('Una puerta al fondo... presiona E', 5000); }
+  if (zone === 2 && gameTime > 5 && !z3hint) { z3hint = true; sub('Puerta al fondo del pasillo... presiona E', 5000); }
+  if (zone === 3 && !climaxDone) { climaxDone = true; setTimeout(triggerClimax, 8000); }
+  
+  composer.render();
+}
+
+loop();
+console.log('CIRCO INTERIOR INICIADO');
+</script>
+</body>
+</html>

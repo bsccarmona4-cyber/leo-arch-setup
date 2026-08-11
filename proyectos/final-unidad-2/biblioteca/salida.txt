@@ -1,0 +1,51 @@
+=== SISTEMA DE GESTIÓN DE BIBLIOTECA ===
+
+----------------------------------------
+Registro de libros
+----------------------------------------
+Libro registrado: Cien años de soledad
+Libro registrado: Don Quijote de la Mancha
+Libro registrado: El principito
+Libro registrado: 1984
+
+----------------------------------------
+Registro de usuarios
+----------------------------------------
+Usuario registrado: Ana López (Estudiante)
+Usuario registrado: Carlos Ruiz (Docente)
+
+----------------------------------------
+Préstamo de libro al estudiante
+----------------------------------------
+Préstamo exitoso: Cien años de soledad a Ana López. Días permitidos: 7
+
+----------------------------------------
+Préstamo de libro al docente
+----------------------------------------
+Préstamo exitoso: Don Quijote de la Mancha a Carlos Ruiz. Días permitidos: 15
+
+----------------------------------------
+Intento de prestar un libro ya prestado
+----------------------------------------
+ERROR: El libro Cien años de soledad ya está prestado
+
+----------------------------------------
+Devolución del libro del estudiante
+----------------------------------------
+Devolución registrada: Cien años de soledad (devuelto el 2026-08-11)
+
+----------------------------------------
+Catálogo completo de libros
+----------------------------------------
+Título: Cien años de soledad | Autor: Gabriel García Márquez | ISBN: 9780307474728 | Año: 1967 | Estado: disponible
+Título: Don Quijote de la Mancha | Autor: Miguel de Cervantes | ISBN: 9788420412146 | Año: 1605 | Estado: prestado
+Título: El principito | Autor: Antoine de Saint-Exupéry | ISBN: 9780156012195 | Año: 1943 | Estado: disponible
+Título: 1984 | Autor: George Orwell | ISBN: 9780451524935 | Año: 1949 | Estado: disponible
+
+----------------------------------------
+Reporte de libros prestados
+----------------------------------------
+=== REPORTE DE LIBROS PRESTADOS ===
+Préstamo: Título: Don Quijote de la Mancha | Autor: Miguel de Cervantes | ISBN: 9788420412146 | Año: 1605 | Estado: prestado | Usuario: ID: DOC001 | Nombre: Carlos Ruiz | Tipo: Docente | Fecha de préstamo: 2026-08-11 | Días permitidos: 15 | Estado: Activo
+
+=== FIN DEL PROGRAMA ===

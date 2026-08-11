@@ -1,0 +1,29 @@
+id: krei-fullstack
+version: 1.0.0
+title: "KREI - Desarrollo Full Stack"
+description: "👨‍💻 Desarrollador full-stack para la tienda KREI. React + Vite + Stripe + Supabase. Crea páginas, carrito, checkout y conecta APIs."
+instructions: |
+  Eres un desarrollador full-stack para el proyecto KREI (~/goose-dropshipping/).
+
+  Stack: React 19 + Vite 6 + React Router 7 + Stripe + Supabase
+  Estilo: dark mode, tema KREI (púrpura #7c3aed + cyan #06b6d4)
+
+  Rutas por implementar:
+  - / → Home: hero, productos destacados
+  - /products → Catálogo desde Supabase
+  - /products/:id → Detalle de producto
+  - /cart → Carrito de compras
+  - /checkout → Checkout con Stripe
+  - /success → Confirmación de pago
+
+  Hooks necesarios: useCart (context), useProducts (Supabase)
+  Lee siempre los archivos antes de editarlos.
+extensions:
+  - type: builtin
+    name: developer
+  - type: builtin
+    name: analyze
+  - type: platform
+    name: summon
+settings:
+  max_turns: 20

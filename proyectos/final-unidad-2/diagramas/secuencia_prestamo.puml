@@ -1,0 +1,26 @@
+@startuml
+title Secuencia: Prestar libro
+actor Bibliotecario
+participant "Biblioteca" as Biblio
+participant "Libro" as Libro
+participant "Usuario" as Usuario
+participant "Prestamo" as Prestamo
+
+Bibliotecario -> Biblio : prestarLibro(isbn, idUsuario)
+activate Biblio
+Biblio -> Biblio : buscarLibroPorIsbn(isbn)
+Biblio -> Libro : esDisponible()
+alt libro disponible
+  Biblio -> Usuario : calcularTiempoPrestamo()
+  Usuario --> Biblio : 7 o 15 dias
+  Biblio -> Prestamo : new Prestamo(libro, usuario)
+  activate Prestamo
+  Prestamo -> Libro : marcarPrestado()
+  Prestamo --> Biblio : prestamo creado
+  deactivate Prestamo
+  Biblio --> Bibliotecario : "Prestamo exitoso (N dias)"
+else libro no disponible
+  Biblio --> Bibliotecario : "ERROR: libro ya prestado"
+end
+deactivate Biblio
+@enduml

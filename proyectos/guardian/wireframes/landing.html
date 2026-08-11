@@ -1,0 +1,341 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Guardián — Anti-Fraude Digital</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #FAFAF9;
+      color: #292524;
+      line-height: 1.6;
+    }
+    .container { max-width: 1100px; margin: 0 auto; padding: 0 24px; }
+
+    /* Navigation */
+    nav {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 16px 0; border-bottom: 1px solid #E7E5E4;
+    }
+    .logo {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 600; font-size: 18px; color: #292524;
+    }
+    .logo-mark {
+      width: 32px; height: 32px; border-radius: 8px;
+      background: #6366F1; display: flex; align-items: center; justify-content: center;
+    }
+    .logo-mark svg { width: 18px; height: 18px; fill: none; stroke: white; stroke-width: 2; }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a {
+      text-decoration: none; color: #78716C; font-size: 14px; font-weight: 500;
+      transition: color 0.2s;
+    }
+    .nav-links a:hover { color: #292524; }
+    .btn {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; border-radius: 8px; font-size: 14px; font-weight: 500;
+      text-decoration: none; cursor: pointer; border: none;
+      transition: all 0.2s;
+    }
+    .btn-primary { background: #6366F1; color: #FFFFFF; }
+    .btn-primary:hover { background: #5558E6; }
+    .btn-secondary {
+      background: transparent; color: #292524; border: 1px solid #E7E5E4;
+    }
+    .btn-secondary:hover { background: #F5F5F4; }
+
+    /* Hero */
+    .hero {
+      padding: 80px 0 64px; text-align: center; max-width: 720px; margin: 0 auto;
+    }
+    .hero h1 {
+      font-size: 48px; font-weight: 700; letter-spacing: -0.03em;
+      color: #292524; line-height: 1.1; margin-bottom: 16px;
+    }
+    .hero h1 span { color: #6366F1; }
+    .hero p {
+      font-size: 18px; color: #78716C; max-width: 560px; margin: 0 auto 32px;
+    }
+    .hero-input {
+      display: flex; gap: 8px; max-width: 560px; margin: 0 auto;
+      background: #FFFFFF; border: 1px solid #E7E5E4; border-radius: 12px;
+      padding: 4px; box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+    }
+    .hero-input:focus-within { border-color: #6366F1; box-shadow: 0 0 0 3px rgba(99,102,241,0.12); }
+    .hero-input input {
+      flex: 1; border: none; outline: none; padding: 12px 16px;
+      font-size: 15px; font-family: inherit; color: #292524; background: transparent;
+    }
+    .hero-input input::placeholder { color: #A8A29E; }
+    .hero-input .btn { border-radius: 8px; }
+    .badges {
+      display: flex; gap: 24px; justify-content: center; margin-top: 24px;
+    }
+    .badge-item {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 13px; color: #A8A29E;
+    }
+    .badge-dot {
+      width: 8px; height: 8px; border-radius: 50%; display: inline-block;
+    }
+    .badge-dot.green { background: #16A34A; }
+    .badge-dot.indigo { background: #6366F1; }
+
+    /* Steps */
+    .steps { padding: 80px 0; }
+    .steps-header { text-align: center; margin-bottom: 48px; }
+    .steps-header .label {
+      display: inline-block; padding: 4px 12px; border-radius: 100px;
+      background: #EEF2FF; color: #6366F1; font-size: 12px; font-weight: 500;
+      letter-spacing: 0.05em; margin-bottom: 16px;
+    }
+    .steps-header h2 { font-size: 32px; font-weight: 700; color: #292524; margin-bottom: 8px; }
+    .steps-header p { color: #78716C; max-width: 480px; margin: 0 auto; }
+    .steps-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;
+    }
+    .step-card {
+      background: #FFFFFF; border: 1px solid #E7E5E4; border-radius: 12px;
+      padding: 32px; transition: box-shadow 0.2s;
+    }
+    .step-card:hover { box-shadow: 0 4px 12px rgba(0,0,0,0.06); }
+    .step-number {
+      width: 40px; height: 40px; border-radius: 50%;
+      background: #F5F5F4; color: #78716C;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 14px; font-weight: 600; margin-bottom: 16px;
+    }
+    .step-card h3 { font-size: 18px; font-weight: 600; margin-bottom: 8px; color: #292524; }
+    .step-card p { font-size: 14px; color: #78716C; line-height: 1.6; }
+
+    /* Stats */
+    .stats-bar {
+      text-align: center; padding: 32px; background: #F5F5F4; border-radius: 12px;
+      margin: 40px 0;
+    }
+    .stats-bar .number {
+      font-size: 36px; font-weight: 700; color: #6366F1;
+    }
+    .stats-bar .label { font-size: 14px; color: #78716C; margin-top: 4px; }
+
+    /* Footer */
+    footer {
+      padding: 32px 0; border-top: 1px solid #E7E5E4; margin-top: 80px;
+    }
+    footer .container {
+      display: flex; justify-content: space-between; align-items: center;
+    }
+    footer .links { display: flex; gap: 24px; }
+    footer .links a { color: #A8A29E; font-size: 13px; text-decoration: none; }
+    footer .links a:hover { color: #292524; }
+    footer .copyright { color: #D6D3D1; font-size: 13px; }
+
+    /* Result Card */
+    .result-card {
+      background: #FFFFFF; border: 1px solid #E7E5E4; border-radius: 12px;
+      padding: 40px; max-width: 640px; margin: 40px auto;
+    }
+    .result-verdict {
+      text-align: center; margin-bottom: 32px;
+    }
+    .result-verdict .badge {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 6px 16px; border-radius: 100px; font-size: 14px; font-weight: 600;
+      letter-spacing: 0.03em;
+    }
+    .result-verdict .badge.danger {
+      background: #FEF2F2; color: #991B1B; border: 1px solid #FECACA;
+    }
+    .score-ring {
+      width: 96px; height: 96px; border-radius: 50%;
+      border: 6px solid #FEF2F2; display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 16px; position: relative;
+    }
+    .score-ring .fill {
+      position: absolute; inset: 0; border-radius: 50%;
+      border: 6px solid #DC2626; border-top-color: transparent;
+      transform: rotate(-45deg);
+    }
+    .score-ring .value { font-size: 28px; font-weight: 700; color: #DC2626; }
+    .result-detail { margin-bottom: 24px; }
+    .result-detail .url-box {
+      background: #FAFAF9; border: 1px solid #E7E5E4; border-radius: 8px;
+      padding: 16px; font-family: 'JetBrains Mono', monospace; font-size: 13px;
+      color: #44403C; word-break: break-all; margin-bottom: 16px;
+    }
+    .result-grid {
+      display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;
+    }
+    .result-info {
+      background: #FAFAF9; border: 1px solid #E7E5E4; border-radius: 8px;
+      padding: 16px;
+    }
+    .result-info .label {
+      font-size: 11px; font-weight: 600; color: #A8A29E;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 4px;
+    }
+    .result-info .value { font-size: 14px; color: #292524; }
+    .result-explanation {
+      background: #FAFAF9; border: 1px solid #E7E5E4; border-radius: 8px;
+      padding: 16px; margin-bottom: 24px;
+    }
+    .result-explanation .label {
+      font-size: 11px; font-weight: 600; color: #A8A29E;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
+    }
+    .result-explanation p { font-size: 14px; color: #44403C; line-height: 1.6; }
+    .result-tips { }
+    .result-tips .label {
+      font-size: 11px; font-weight: 600; color: #A8A29E;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
+    }
+    .result-tips ul { list-style: none; }
+    .result-tips li {
+      padding: 8px 0; border-bottom: 1px solid #F5F5F4;
+      font-size: 14px; color: #44403C; display: flex; gap: 8px;
+    }
+    .result-tips li:last-child { border-bottom: none; }
+    .result-tips li::before { content: ''; }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .hero h1 { font-size: 32px; }
+      .steps-grid { grid-template-columns: 1fr; }
+      .result-grid { grid-template-columns: 1fr; }
+      nav .nav-links { display: none; }
+      .container { padding: 0 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <nav>
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4" stroke-width="2.5"/>
+          </svg>
+        </div>
+        Guardián
+      </div>
+      <div class="nav-links">
+        <a href="#">Cómo funciona</a>
+        <a href="#">Dashboard</a>
+        <a href="#" class="btn btn-primary">Probar ahora</a>
+      </div>
+    </nav>
+  </div>
+
+  <div class="container">
+    <section class="hero">
+      <h1>Protege a tu familia<br>de fraudes en <span>México</span></h1>
+      <p>Analiza links sospechosos al instante. Recibe un veredicto claro con explicación y recomendaciones. Hecho para México.</p>
+      <div class="hero-input">
+        <input type="url" placeholder="Pega el link sospechoso aquí..." value="https://sats-gob-mx.devolucion-impuestos.com/ingresar">
+        <button class="btn btn-primary">Analizar</button>
+      </div>
+      <div class="badges">
+        <span class="badge-item"><span class="badge-dot green"></span> Análisis en segundos</span>
+        <span class="badge-item"><span class="badge-dot indigo"></span> Privacidad total</span>
+        <span class="badge-item"><span class="badge-dot indigo"></span> Sin instalación</span>
+      </div>
+    </section>
+
+    <!-- Result Card Example -->
+    <div class="result-card">
+      <div class="result-verdict">
+        <div class="score-ring">
+          <div class="fill"></div>
+          <span class="value">72</span>
+        </div>
+        <span class="badge danger">ESTAFA DETECTADA</span>
+      </div>
+
+      <div class="result-detail">
+        <div class="url-box">
+          https://sats-gob-mx.devolucion-impuestos.com/ingresar
+        </div>
+        <div class="result-grid">
+          <div class="result-info">
+            <div class="label">Tipo de amenaza</div>
+            <div class="value">Phishing</div>
+          </div>
+          <div class="result-info">
+            <div class="label">Marca suplantada</div>
+            <div class="value">SAT</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="result-explanation">
+        <div class="label">Análisis</div>
+        <p>Este sitio suplanta al SAT. Solicita RFC y contraseña para una supuesta devolución de impuestos. Los sitios oficiales del SAT terminan en .gob.mx. El SAT no realiza devoluciones por WhatsApp ni pide contraseñas por enlaces externos.</p>
+      </div>
+
+      <div class="result-tips">
+        <div class="label">Recomendaciones</div>
+        <ul>
+          <li>No ingreses ningún dato personal o bancario.</li>
+          <li>El SAT no pide información por WhatsApp.</li>
+          <li>Bloquea y reporta el número como spam.</li>
+          <li>Si tienes dudas, llama al SAT directamente: 55 627 22 728.</li>
+        </ul>
+      </div>
+    </div>
+
+    <section class="steps">
+      <div class="steps-header">
+        <div class="label">Tres pasos simples</div>
+        <h2>Cómo funciona</h2>
+        <p>Recibiste un link sospechoso. En tres pasos sabes si es seguro.</p>
+      </div>
+      <div class="steps-grid">
+        <div class="step-card">
+          <div class="step-number">01</div>
+          <h3>Pega el link</h3>
+          <p>Copia la URL sospechosa de WhatsApp, SMS o correo. Pégala en el campo de búsqueda.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">02</div>
+          <h3>Analizamos al instante</h3>
+          <p>DeepSeek analiza el dominio, certificados, reputación y patrones de phishing en segundos.</p>
+        </div>
+        <div class="step-card">
+          <div class="step-number">03</div>
+          <h3>Recibe el veredicto</h3>
+          <p>Vas a ver si es seguro, sospechoso o fraude con score de riesgo y consejos de seguridad.</p>
+        </div>
+      </div>
+      <div class="stats-bar">
+        <div class="number">1,247</div>
+        <div class="label">análisis realizados protegiendo a familias mexicanas</div>
+      </div>
+    </section>
+  </div>
+
+  <footer>
+    <div class="container">
+      <div class="logo" style="font-size:14px;">
+        <div class="logo-mark" style="width:28px;height:28px;">
+          <svg viewBox="0 0 24 24" style="width:16px;height:16px;">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4" stroke-width="2.5"/>
+          </svg>
+        </div>
+        Guardián
+      </div>
+      <div class="links">
+        <a href="#">Dashboard</a>
+        <a href="#">Privacidad</a>
+        <a href="#">Términos</a>
+      </div>
+      <div class="copyright">Hecho en México</div>
+    </div>
+  </footer>
+</body>
+</html>

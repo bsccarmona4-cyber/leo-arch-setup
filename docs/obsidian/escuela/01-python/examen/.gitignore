@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+dist/
+build/
+
+# Entorno
+.env
+.venv/
+venv/
+
+# Base de datos SQLite
+*.db
+
+# Backups locales
+backups/*.db
+!backups/.gitkeep
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db

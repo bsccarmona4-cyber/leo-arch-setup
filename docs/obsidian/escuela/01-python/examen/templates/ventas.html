@@ -1,0 +1,371 @@
+{% extends "base.html" %}
+{% block titulo %}Punto de Venta{% endblock %}
+{% block contenido %}
+<h1>Punto de Venta</h1>
+
+<div class="pos-layout">
+    <!-- COLUMNA IZQUIERDA: Productos -->
+    <div class="pos-productos">
+        <div class="card" style="padding:12px;">
+            <div style="display:flex; gap:6px; margin-bottom:8px;">
+                <input type="text" id="search-prod" placeholder="🔍 Buscar por nombre o ID..."
+                       class="search-input" style="flex:1;" oninput="filtrarProductos()">
+            </div>
+            <div class="cat-tabs" id="cat-tabs">
+                <button class="cat-tab active" onclick="filtrarCat('')">Todos</button>
+                {% for cat in categorias %}
+                <button class="cat-tab" onclick="filtrarCat('{{ cat }}')">{{ cat }}</button>
+                {% endfor %}
+            </div>
+            <div id="product-list" class="product-grid-dense">
+                {% for p in productos %}
+                <div class="product-card-dense" data-nombre="{{ p.nombre.lower() }}" data-cat="{{ p.categoria }}"
+                     data-id="{{ p.id }}" data-precio="{{ p.precio }}" data-stock="{{ p.stock }}"
+                     onclick="agregarAlCarrito({{ p.id }}, '{{ p.nombre|e }}', {{ p.precio }})">
+                    <span class="pd-id">#{{ p.id }}</span>
+                    <span class="pd-name">{{ p.nombre }}</span>
+                    <span class="pd-price">${{ "%.2f"|format(p.precio) }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- COLUMNA DERECHA: Cliente + Carrito + Cobro -->
+    <div class="pos-carrito">
+        <!-- CLIENTE -->
+        <div class="card" style="padding:12px; margin-bottom:10px;">
+            <div style="display:flex; gap:8px; align-items:center;">
+                <input type="number" id="cliente-id" placeholder="ID Cliente"
+                       style="width:100px;" onkeydown="if(event.key==='Enter')cargarClientePorId()">
+                <button class="btn btn-sm" onclick="cargarClientePorId()">🔍</button>
+                <span style="color:var(--text-dim);">|</span>
+                <input type="text" id="cliente-nombre" placeholder="o buscar por nombre..."
+                       style="flex:1;" oninput="buscarClientesNombre()">
+                <button class="btn btn-sm" onclick="toggleNuevoCliente()">+ Nuevo</button>
+            </div>
+            <div id="cliente-results" style="max-height:100px; overflow-y:auto; font-size:0.85em;"></div>
+            <div id="cliente-info" style="display:none; margin-top:8px; padding:8px; background:#2a1f18; border-radius:6px;">
+                <span id="cliente-info-text"></span>
+                <button class="btn-sm btn-danger" onclick="quitarCliente()" style="float:right;">✕</button>
+            </div>
+            <!-- Form nuevo cliente inline -->
+            <div id="nuevo-cliente-form" style="display:none; margin-top:8px; padding:10px; background:#1a1210; border-radius:6px;">
+                <input type="text" id="nc-nombre" placeholder="Nombre" style="width:100%; margin-bottom:4px;">
+                <input type="text" id="nc-tel" placeholder="Teléfono (opcional)" style="width:100%; margin-bottom:4px;">
+                <button class="btn btn-sm btn-success" onclick="registrarClienteRapido()">Guardar</button>
+            </div>
+        </div>
+
+        <!-- CARRITO -->
+        <div class="card" style="padding:12px; flex:1; display:flex; flex-direction:column;">
+            <div style="flex:1; overflow-y:auto; max-height:350px;">
+                <table id="cart-table">
+                    <thead><tr><th>Producto</th><th style="width:70px;">Cant</th><th style="width:70px;">Sub</th><th style="width:30px;"></th></tr></thead>
+                    <tbody><tr><td colspan="4" style="text-align:center; color:var(--text-dim);">Agrega productos del panel izquierdo</td></tr></tbody>
+                </table>
+            </div>
+            <div id="cart-total" style="text-align:right; font-size:1.4em; padding:10px 0; border-top:1px solid var(--border);"></div>
+
+            <!-- DESCUENTOS -->
+            <div id="descuentos-section" style="display:none; background:#1a1210; border-radius:8px; padding:10px; margin-bottom:8px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:6px;">
+                    <span style="font-weight:600;">⭐ Descuentos disponibles</span>
+                    <span id="puntos-badge" style="background:var(--accent); color:#1a1210; padding:2px 10px; border-radius:12px; font-size:0.85em; font-weight:700;"></span>
+                </div>
+                <div id="promo-options" style="display:flex; flex-wrap:wrap; gap:6px;"></div>
+            </div>
+
+<button class="btn btn-success" onclick="procesarVenta()" style="width:100%; font-size:1.15em; padding:12px;">
+            Cobrar <span id="btn-total">$0.00</span>
+            </button>
+        </div>
+    </div>
+</div>
+
+<!-- Ticket Modal -->
+<div id="ticket-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h2>🧾 Venta Completada</h2>
+        <pre id="ticket-body"></pre>
+        <button class="btn" onclick="cerrarTicket()">Nueva Venta</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let cart = [];
+let clienteId = null;
+let clienteNombre = null;
+let puntosDisponibles = 0;
+let promoSeleccionada = null;
+
+// ─── PRODUCTOS ────────────────────────────
+let catActiva = '';
+
+function filtrarCat(cat) {
+    catActiva = cat;
+    document.querySelectorAll('.cat-tab').forEach(b => b.classList.remove('active'));
+    event.target.classList.add('active');
+    filtrarProductos();
+}
+
+function filtrarProductos() {
+    const q = document.getElementById('search-prod').value.toLowerCase();
+    document.querySelectorAll('.product-card-dense').forEach(card => {
+        const matchNombre = card.dataset.nombre.includes(q);
+        const matchId = card.dataset.id === q;
+        const matchCat = !catActiva || card.dataset.cat === catActiva;
+        card.style.display = (matchNombre || matchId) && matchCat ? '' : 'none';
+    });
+}
+
+function agregarAlCarrito(id, nombre, precio) {
+    const exist = cart.find(i => i.id_producto === id);
+    if (exist) {
+        exist.cantidad++;
+    } else {
+        cart.push({id_producto: id, nombre, precio_unitario: precio, cantidad: 1});
+    }
+    renderizarCarrito();
+}
+
+function renderizarCarrito() {
+    const tbody = document.querySelector('#cart-table tbody');
+    let total = 0;
+    if (cart.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center; color:var(--text-dim);">Agrega productos del panel izquierdo</td></tr>';
+    } else {
+        tbody.innerHTML = cart.map((item, i) => {
+            const sub = item.precio_unitario * item.cantidad;
+            total += sub;
+            return `<tr>
+                <td>${item.nombre}</td>
+                <td><button class="btn-sm" onclick="cambiarCant(${i},-1)">−</button>
+                    <span style="margin:0 5px;">${item.cantidad}</span>
+                    <button class="btn-sm" onclick="cambiarCant(${i},1)">+</button></td>
+                <td style="color:var(--accent);">$${sub.toFixed(2)}</td>
+                <td><button class="btn-sm btn-danger" onclick="cart.splice(${i},1);renderizarCarrito();">✕</button></td>
+            </tr>`;
+        }).join('');
+    }
+    document.getElementById('cart-total').innerHTML = `<b>Total: $${total.toFixed(2)}</b>`;
+    document.getElementById('btn-total').textContent = '$' + total.toFixed(2);
+    actualizarDescuentos();
+}
+
+function cambiarCant(i, delta) {
+    cart[i].cantidad += delta;
+    if (cart[i].cantidad < 1) cart.splice(i, 1);
+    renderizarCarrito();
+}
+
+// ─── CLIENTES ─────────────────────────────
+
+async function cargarClientePorId() {
+    const id = document.getElementById('cliente-id').value.trim();
+    if (!id) return;
+    try {
+        const data = await fetcher('/api/clientes/' + id);
+        if (data.error) { alert('Cliente no encontrado'); return; }
+        seleccionarCliente(data.id, data.nombre);
+        document.getElementById('cliente-nombre').value = '';
+        document.getElementById('cliente-results').innerHTML = '';
+    } catch(e) {
+        alert('Cliente no encontrado');
+    }
+}
+
+async function buscarClientesNombre() {
+    const q = document.getElementById('cliente-nombre').value.trim();
+    if (q.length < 2) { document.getElementById('cliente-results').innerHTML = ''; return; }
+    const data = await fetcher('/api/clientes/buscar?q=' + encodeURIComponent(q));
+    document.getElementById('cliente-results').innerHTML = data.map(c =>
+        `<div onclick="seleccionarCliente(${c.id},'${c.nombre.replace(/'/g,"\\'")}')"
+              style="cursor:pointer;padding:4px 8px;border-bottom:1px solid var(--border);">
+            <b>#${c.id}</b> ${c.nombre} — ${c.telefono||'sin tel'} — <span style="color:var(--accent);">${c.puntos_disponibles||0} pts</span>
+        </div>`
+    ).join('');
+}
+
+async function seleccionarCliente(id, nombre) {
+    clienteId = id;
+    clienteNombre = nombre;
+    document.getElementById('cliente-info').style.display = '';
+    document.getElementById('cliente-info-text').innerHTML = `<b>#${id}</b> ${nombre}`;
+    // Cargar promos que puede pagar
+    const data = await fetcher('/api/promociones/cliente/' + id);
+    puntosDisponibles = data.puntos_disponibles;
+    document.getElementById('puntos-badge').textContent = puntosDisponibles + ' pts';
+    document.getElementById('descuentos-section').style.display = 'block';
+    promoSeleccionada = null;
+    renderizarPromos(data.promociones);
+    actualizarDescuentos();
+}
+
+function quitarCliente() {
+    clienteId = null; clienteNombre = null; puntosDisponibles = 0;
+    promoSeleccionada = null;
+    document.getElementById('cliente-info').style.display = 'none';
+    document.getElementById('descuentos-section').style.display = 'none';
+    document.getElementById('cliente-id').value = '';
+    document.getElementById('cliente-nombre').value = '';
+    actualizarDescuentos();
+}
+
+function renderizarPromos(promos) {
+    const container = document.getElementById('promo-options');
+    if (promos.length === 0) {
+        container.innerHTML = '<span style="color:var(--text-dim); font-size:0.85em;">Sin puntos suficientes para canjear.</span>';
+        return;
+    }
+    container.innerHTML = promos.map(p => {
+        const selected = promoSeleccionada && promoSeleccionada.id === p.id;
+        return `<button class="promo-chip ${selected ? 'selected' : ''}"
+                        onclick="togglePromo(${p.id},${p.puntos_requeridos},'${p.tipo_recompensa}',${p.valor_recompensa},'${p.nombre.replace(/'/g,"\\'")}')"
+                        style="cursor:pointer; border:1px solid ${selected ? 'var(--accent)' : 'var(--border)'};
+                               background:${selected ? '#3a2a1a' : '#1a1210'}; color:var(--text);
+                               padding:6px 12px; border-radius:8px; font-size:0.85em;">
+            ${p.nombre}<br><small style="color:var(--accent);">${p.puntos_requeridos} pts</small>
+        </button>`;
+    }).join('');
+}
+
+function togglePromo(id, pts, tipo, valor, nombre) {
+    if (promoSeleccionada && promoSeleccionada.id === id) {
+        promoSeleccionada = null;
+    } else {
+        promoSeleccionada = {id, puntos_requeridos: pts, tipo_recompensa: tipo, valor_recompensa: valor, nombre};
+    }
+    // Re-render promos para actualizar el highlight
+    const data = {puntos_disponibles: puntosDisponibles, promociones: []};
+    document.querySelectorAll('.promo-chip').forEach((btn, i) => {
+        data.promociones.push({id:parseInt(btn.textContent), puntos_requeridos:0});
+    });
+    actualizarDescuentos();
+    renderizarPromos(data.promociones); 
+    // HACK: refetch
+    if (clienteId) cargarDescuentos();
+}
+
+async function cargarDescuentos() {
+    if (!clienteId) return;
+    const data = await fetcher('/api/promociones/cliente/' + clienteId);
+    puntosDisponibles = data.puntos_disponibles;
+    document.getElementById('puntos-badge').textContent = puntosDisponibles + ' pts';
+    renderizarPromos(data.promociones);
+    actualizarDescuentos();
+}
+
+function actualizarDescuentos() {
+    const descSection = document.getElementById('descuentos-section');
+    if (!clienteId || puntosDisponibles === 0) {
+        descSection.style.display = 'none';
+    } else {
+        descSection.style.display = 'block';
+        // Limpiar badge cuando hay promo seleccionada
+        const badge = document.getElementById('puntos-badge');
+        if (promoSeleccionada) {
+            badge.textContent = `-${promoSeleccionada.puntos_requeridos} pts → ${promoSeleccionada.nombre}`;
+            badge.style.background = 'var(--success)';
+            badge.style.color = '#fff';
+        } else {
+            badge.textContent = puntosDisponibles + ' pts';
+            badge.style.background = 'var(--accent)';
+            badge.style.color = '#1a1210';
+        }
+    }
+    // Actualizar total con descuento
+    let subtotal = cart.reduce((s, i) => s + i.precio_unitario * i.cantidad, 0);
+    if (promoSeleccionada && promoSeleccionada.tipo_recompensa === 'descuento') {
+        const desc = subtotal * (promoSeleccionada.valor_recompensa / 100);
+        document.getElementById('btn-total').textContent = '$' + (subtotal - desc).toFixed(2) + ' (-' + promoSeleccionada.valor_recompensa + '%)';
+    } else {
+        document.getElementById('btn-total').textContent = '$' + subtotal.toFixed(2);
+    }
+}
+
+// ─── NUEVO CLIENTE RÁPIDO ─────────────────
+
+function toggleNuevoCliente() {
+    const f = document.getElementById('nuevo-cliente-form');
+    f.style.display = f.style.display === 'none' ? '' : 'none';
+}
+
+async function registrarClienteRapido() {
+    const nombre = document.getElementById('nc-nombre').value.trim();
+    if (!nombre) { alert('Nombre requerido'); return; }
+    const tel = document.getElementById('nc-tel').value.trim() || null;
+    const data = await fetcher('/api/clientes/rapido', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({nombre, telefono: tel})
+    });
+    if (data.error) { alert(data.error); return; }
+    seleccionarCliente(data.id, data.nombre);
+    document.getElementById('nuevo-cliente-form').style.display = 'none';
+    document.getElementById('nc-nombre').value = '';
+    document.getElementById('nc-tel').value = '';
+}
+
+// ─── COBRO ────────────────────────────────
+
+async function procesarVenta() {
+    if (cart.length === 0) { alert('Agrega productos a la orden.'); return; }
+    let descuento = 0, puntosCanjeados = 0;
+    if (promoSeleccionada) {
+        puntosCanjeados = promoSeleccionada.puntos_requeridos;
+        if (promoSeleccionada.tipo_recompensa === 'descuento') {
+            descuento = promoSeleccionada.valor_recompensa;
+        }
+    }
+    const items = cart.map(i => ({id_producto: i.id_producto, cantidad: i.cantidad}));
+    try {
+        const data = await fetcher('/ventas', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({items, id_cliente: clienteId, puntos_canjeados: puntosCanjeados, descuento})
+        });
+        if (data.exito) {
+            const t = data.ticket;
+            let ticketText = 'CAFETERIA POS — Ticket #' + t.id_venta + '\n';
+            ticketText += '═'.repeat(42) + '\n';
+            t.detalles.forEach(d => {
+                ticketText += d.cantidad + 'x ' + d.nombre.padEnd(24) + ' $' + d.subtotal.toFixed(2) + '\n';
+            });
+            if (descuento > 0) ticketText += 'DESCUENTO ' + descuento + '%'.padStart(30) + '\n';
+            ticketText += '─'.repeat(42) + '\n';
+            ticketText += 'TOTAL:'.padEnd(32) + ' $' + t.total.toFixed(2) + '\n';
+            if (t.puntos_otorgados > 0) ticketText += 'Puntos +' + t.puntos_otorgados + '\n';
+            ticketText += '═'.repeat(42) + '\nGracias por su compra';
+            document.getElementById('ticket-body').textContent = ticketText;
+            document.getElementById('ticket-modal').style.display = 'flex';
+            cart = [];
+            clienteId = null; clienteNombre = null;
+            puntosDisponibles = 0; promoSeleccionada = null;
+            renderizarCarrito();
+            document.getElementById('cliente-info').style.display = 'none';
+            document.getElementById('descuentos-section').style.display = 'none';
+            document.getElementById('cliente-id').value = '';
+        } else {
+            alert('Error: ' + data.mensaje);
+        }
+    } catch(e) {
+        alert('Error al procesar venta');
+    }
+}
+
+function cerrarTicket() {
+    document.getElementById('ticket-modal').style.display = 'none';
+    location.reload();
+}
+
+// ─── ATAJOS DE TECLADO ────────────────────
+document.addEventListener('keydown', function(e) {
+    if (e.key === 'F2') { document.getElementById('cliente-id').focus(); e.preventDefault(); }
+    if (e.key === 'F3') { document.getElementById('search-prod').focus(); e.preventDefault(); }
+    if (e.key === 'F12') { procesarVenta(); e.preventDefault(); }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,158 @@
+/* ═══════════════════════════════════════════
+   CollectionsSection — Editorial lifestyle
+   Three visual collections: Rostro, Cuerpo, Bienestar
+   ═══════════════════════════════════════════ */
+
+.collections-section {
+  background: var(--cream);
+  padding: 64px 0;
+}
+
+.collections-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 28px;
+}
+
+.collection-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--gray-200);
+  transition: transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1),
+    box-shadow 0.3s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.collection-card:hover {
+  transform: translateY(-6px);
+  box-shadow: var(--shadow-lg);
+}
+
+/* ─── Image ─── */
+.collection-image-wrap {
+  position: relative;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+
+.collection-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+
+.collection-card:hover .collection-image {
+  transform: scale(1.06);
+}
+
+.collection-image-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    to top,
+    rgba(0, 0, 0, 0.55) 0%,
+    rgba(0, 0, 0, 0.15) 50%,
+    transparent 100%
+  );
+}
+
+.collection-image-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 24px 20px 18px;
+}
+
+.collection-name {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--white);
+  line-height: calc(1 + 0.3 / 1.25);
+  margin-bottom: 4px;
+}
+
+.collection-desc {
+  font-size: 0.82rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.5;
+}
+
+/* ─── Products ─── */
+.collection-products {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  background: var(--gray-200);
+  border-top: 1px solid var(--gray-200);
+}
+
+.collection-product-link {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 14px 20px;
+  background: var(--white);
+  text-decoration: none;
+  transition: background 0.2s;
+}
+
+.collection-product-link:hover {
+  background: var(--cream);
+}
+
+.collection-product-name {
+  font-size: 0.88rem;
+  font-weight: 500;
+  color: var(--dark);
+}
+
+.collection-product-price {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--rose);
+}
+
+/* ─── CTA ─── */
+.collection-cta {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--rose);
+  text-decoration: none;
+  border-top: 1px solid var(--gray-100);
+  transition: background 0.2s, color 0.2s;
+}
+
+.collection-cta:hover {
+  background: var(--rose-light);
+  color: var(--rose-dark);
+}
+
+/* ─── Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .collection-card:hover {
+    transform: none;
+  }
+
+  .collection-card:hover .collection-image {
+    transform: none;
+  }
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .collections-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .collections-section {
+    padding: 48px 0;
+  }
+}

@@ -1,0 +1,354 @@
+#!/usr/bin/env python3
+"""Genera el PDF del documento KREID v2 — General, sin productos específicos ni sourcing"""
+import os
+from playwright.sync_api import sync_playwright
+
+DOCS = os.path.expanduser("~/kreid/docs")
+OUTPUT = os.path.join(DOCS, "KREID_Proyecto_General.pdf")
+HTML_PATH = os.path.join(DOCS, "KREID_Proyecto_General.html")
+
+html = """<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<style>
+  @page { margin: 2cm; size: A4; }
+  body { font-family: 'Segoe UI', system-ui, sans-serif; color: #1a1a1a; line-height: 1.6; font-size: 10.5pt; }
+  .cover { text-align: center; padding: 120px 0; page-break-after: always; }
+  .cover h1 { font-size: 48pt; color: #1a56db; margin: 0; letter-spacing: 6px; }
+  .cover h2 { font-size: 20pt; color: #6b7280; margin: 10px 0 40px; }
+  .cover .meta { font-size: 10pt; color: #9ca3af; }
+  h1 { color: #1a56db; border-bottom: 2px solid #1a56db; padding-bottom: 6px; margin-top: 30px; font-size: 16pt; }
+  h2 { color: #1e40af; margin-top: 22px; font-size: 13pt; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0; font-size: 10pt; }
+  th, td { border: 1px solid #d1d5db; padding: 7px 10px; text-align: left; }
+  th { background: #1a56db; color: white; }
+  .green { background: #d1fae5; color: #065f46; padding: 1px 6px; border-radius: 3px; font-weight: bold; font-size: 9pt; }
+  .yellow { background: #fef3c7; color: #92400e; padding: 1px 6px; border-radius: 3px; font-weight: bold; font-size: 9pt; }
+  .red { background: #fee2e2; color: #991b1b; padding: 1px 6px; border-radius: 3px; font-weight: bold; font-size: 9pt; }
+  .page-break { page-break-before: always; }
+  img { max-width: 100%; margin: 10px 0; border-radius: 6px; box-shadow: 0 2px 8px rgba(0,0,0,.1); }
+  .footer { text-align: center; color: #9ca3af; font-size: 8pt; margin-top: 40px; padding-top: 20px; border-top: 1px solid #e5e7eb; }
+  ul, ol { padding-left: 20px; }
+  li { margin: 3px 0; }
+  .note { background: #eff6ff; border-left: 4px solid #1a56db; padding: 10px 14px; margin: 14px 0; font-size: 10pt; border-radius: 0 6px 6px 0; }
+  .warning { background: #fffbeb; border-left: 4px solid #f59e0b; padding: 10px 14px; margin: 14px 0; font-size: 10pt; border-radius: 0 6px 6px 0; }
+</style>
+</head>
+<body>
+
+<!-- ═══ PORTADA ═══ -->
+<div class="cover">
+  <h1>KREID</h1>
+  <h2>Plataforma de Comercio Electrónico — México</h2>
+  <p class="meta">Documento del Proyecto · Agosto 2026 · Versión 2.0</p>
+</div>
+
+<!-- ═══ 1. VISIÓN GENERAL ═══ -->
+<h1>1. Visión General</h1>
+
+<p>KREID es una plataforma de comercio electrónico enfocada en categorías de alta demanda en el mercado mexicano. Opera bajo un modelo de venta multicanal que integra <strong>TikTok Shop como canal principal de conversión</strong>, complementado con tienda propia y presencia en marketplaces.</p>
+
+<p>El enfoque está en categorías con ventanas de oportunidad comprobadas: mercados donde la competencia es baja o fragmentada, el ticket es atractivo, y el público objetivo ya está presente en las plataformas seleccionadas.</p>
+
+<h2>Métricas objetivo</h2>
+<table>
+<tr><th>Métrica</th><th>Meta</th></tr>
+<tr><td>Margen bruto por venta</td><td>≥ 60% después de comisiones de plataforma y envío</td></tr>
+<tr><td>CAC (costo de adquisición por cliente)</td><td>≤ $150 MXN</td></tr>
+<tr><td>ROAS (retorno sobre inversión publicitaria)</td><td>≥ 2.5× sostenido</td></tr>
+<tr><td>Tasa de conversión</td><td>≥ 3% en TikTok Shop, ≥ 2% en web propia</td></tr>
+</table>
+
+<!-- ═══ 2. CATEGORÍAS Y NICHOS ═══ -->
+<div class="page-break"></div>
+<h1>2. Nichos Identificados</h1>
+
+<p>Se realizó una auditoría de mercado en Amazon México abarcando 8 categorías y ~60 subcategorías. Cada una fue evaluada con datos de reviews reales, número de competidores y tendencia de crecimiento. A continuación se presentan los nichos con mayor potencial, organizados por categoría.</p>
+
+<div class="note">
+<strong>Metodología:</strong> Cada subcategoría se verificó con búsquedas independientes. <strong>[2]</strong> indica verificación con 2+ fuentes. <strong>[1]</strong> indica 1 fuente.
+</div>
+
+<h2>2.1 Belleza y Cuidado Personal</h2>
+<table>
+<tr><th>Subcategoría</th><th>Estado</th><th>Observación</th></tr>
+<tr><td>Dispositivos de terapia lumínica facial</td><td><span class="green">VIABLE [2]</span></td><td>2 marcas activas. Crecimiento mensual constante. Ticket medio-alto.</td></tr>
+<tr><td>Dispositivos de microcorriente</td><td><span class="red">SATURADO</span></td><td>Marca dominante con +1,900 reviews. Barrera de entrada alta.</td></tr>
+<tr><td>Cosméticos y consumibles</td><td><span class="red">SATURADO</span></td><td>5+ canales establecidos. Marcas multinacionales.</td></tr>
+</table>
+
+<h2>2.2 Recuperación Muscular y Bienestar</h2>
+<table>
+<tr><th>Subcategoría</th><th>Estado</th><th>Observación</th></tr>
+<tr><td>Botas de compresión para piernas</td><td><span class="green">VIABLE [1]</span></td><td>12+ productos, 0-113 reviews. Ticket $1,300-$10,000.</td></tr>
+<tr><td>Rodillos de fascia</td><td><span class="green">VIABLE [2]</span></td><td>Mercado fragmentado sin marca dominante. Ticket accesible.</td></tr>
+<tr><td>Pistolas de masaje</td><td><span class="red">SATURADO</span></td><td>Marca líder con +19,000 reviews. Mercado tomado.</td></tr>
+</table>
+
+<h2>2.3 Hogar — Organización y Almacenaje</h2>
+<table>
+<tr><th>Subcategoría</th><th>Estado</th><th>Observación</th></tr>
+<tr><td>Organizadores de nevera (acero)</td><td><span class="green">VIABLE [2]</span></td><td>Genéricos 0-18 reviews. Marcas premium saturadas.</td></tr>
+<tr><td>Especieros y estantes magnéticos</td><td><span class="green">VIABLE [2]</span></td><td>Marcas pequeñas 0-27 reviews. Sin líder claro.</td></tr>
+<tr><td>Ganchos magnéticos</td><td><span class="red">SATURADO</span></td><td>Marca líder con +700 reviews.</td></tr>
+</table>
+
+<h2>2.4 Juguetes Educativos (STEM)</h2>
+<table>
+<tr><th>Subcategoría</th><th>Estado</th><th>Observación</th></tr>
+<tr><td>Kits de ciencia (marcas económicas)</td><td><span class="green">VIABLE [1]</span></td><td>34-97 reviews. Marcas premium con +17,000 reviews son otro segmento.</td></tr>
+<tr><td>Microscopios infantiles</td><td><span class="green">VIABLE [2]</span></td><td>Marcas pequeñas 0-17 reviews. Oportunidad clara.</td></tr>
+<tr><td>Bloques magnéticos (gama media)</td><td><span class="green">VIABLE [2]</span></td><td>11-49 reviews por marca. Gama alta saturada.</td></tr>
+</table>
+
+<h2>2.5 Otras categorías con oportunidades</h2>
+<table>
+<tr><th>Subcategoría</th><th>Estado</th><th>Observación</th></tr>
+<tr><td>Termómetros infrarrojos (Industrial)</td><td><span class="green">VIABLE [2]</span></td><td>79 reviews totales en la categoría. Baja competencia.</td></tr>
+<tr><td>Reposamuñecas ergonómicos (Oficina)</td><td><span class="green">VIABLE [2]</span></td><td>1-8 reviews. Mercado casi inexistente.</td></tr>
+<tr><td>Organizadores de cajuela (Automotriz)</td><td><span class="green">VIABLE [1]</span></td><td>22 reviews. Sin marca dominante.</td></tr>
+</table>
+
+<h2>2.6 Resumen de la auditoría</h2>
+<table>
+<tr><th>Confianza</th><th>Viable</th><th>Ajustado</th><th>Descartado</th></tr>
+<tr><td>2+ fuentes independientes</td><td>8</td><td>0</td><td>4</td></tr>
+<tr><td>1 fuente</td><td>4</td><td>4</td><td>5</td></tr>
+<tr><td><strong>Total subcategorías</strong></td><td><strong>12</strong></td><td><strong>4</strong></td><td><strong>9</strong></td></tr>
+</table>
+
+<!-- ═══ 3. CANALES DE VENTA ═══ -->
+<div class="page-break"></div>
+<h1>3. Canales de Venta y Estrategia</h1>
+
+<h2>3.1 TikTok Shop — Canal principal</h2>
+<p>TikTok Shop es el eje de la estrategia de venta. Permite transacciones nativas sin que el usuario salga de la aplicación, lo que reduce drásticamente la fricción de compra. El contenido orgánico (videos demostrativos, lives) se convierte directamente en ventas atribuibles.</p>
+<ul>
+  <li><strong>Formato:</strong> Videos shoppable + lives de venta + showcase en perfil</li>
+  <li><strong>Pagos:</strong> Pasarela nativa de TikTok (tarjetas, Oxxo, transferencias)</li>
+  <li><strong>Logística:</strong> Envío gestionado por el vendedor o por TikTok (FBT opcional)</li>
+</ul>
+
+<h2>3.2 Tienda Web Propia</h2>
+<p>Plataforma independiente que funciona como hub central del catálogo y destino para tráfico de anuncios (Meta Ads). Construida con tecnología moderna para maximizar velocidad de carga y conversión.</p>
+<ul>
+  <li><strong>Pagos:</strong> Mercado Pago (tarjetas, Oxxo, SPEI, meses sin intereses)</li>
+  <li><strong>Función:</strong> Catálogo completo, SEO, remarketing, email marketing</li>
+</ul>
+
+<h2>3.3 Redes Sociales (Instagram, Facebook)</h2>
+<ul>
+  <li><strong>Instagram Shopping:</strong> Catálogo sincronizado con la tienda. Etiquetas de producto en posts y reels.</li>
+  <li><strong>Facebook Shop:</strong> Tienda integrada en la página de Facebook.</li>
+  <li><strong>Meta Ads:</strong> Tráfico pagado segmentado hacia la tienda web y TikTok.</li>
+</ul>
+
+<h2>3.4 Sincronización de contenido</h2>
+<ol>
+  <li>Video para TikTok → mismo video como Reel en Instagram/Facebook</li>
+  <li>Fotos de producto → catálogo web + Instagram Shopping + TikTok Showcase</li>
+  <li>Testimonios de clientes → contenido para todas las plataformas</li>
+  <li>Lives de TikTok → clips destacados para ads y orgánico</li>
+</ol>
+
+<!-- ═══ 4. ESTRUCTURA DE COSTOS POR CANAL ═══ -->
+<div class="page-break"></div>
+<h1>4. Estructura de Costos por Canal</h1>
+
+<h2>4.1 TikTok Shop — Desglose de tarifas</h2>
+<p>TikTok Shop México tiene la siguiente estructura de costos para vendedores:</p>
+
+<table>
+<tr><th>Concepto</th><th>Tarifa</th><th>Notas</th></tr>
+<tr><td><strong>Comisión de plataforma</strong></td><td>5% – 8%</td><td>Varía por categoría. Belleza ~6%. La más baja entre plataformas.</td></tr>
+<tr><td><strong>Tarifa fija por transacción</strong></td><td>$6.00 MXN</td><td>Se cobra por cada orden, sin importar el monto. Equivale a ~$0.30 USD.</td></tr>
+<tr><td><strong>Procesamiento de pago</strong></td><td>Incluido en comisión</td><td>TikTok procesa el pago con su propia pasarela; no hay % adicional.</td></tr>
+<tr><td><strong>Envío (FBT)</strong></td><td>Variable</td><td>Si se usa Fulfillment by TikTok. Opcional. Rango ~$40-$80 MXN.</td></tr>
+<tr><td><strong>Afiliados/creadores</strong></td><td>1% – 20%</td><td>Opcional. Comisión que se ofrece a creadores por promover productos.</td></tr>
+</table>
+
+<div class="note">
+<strong>Ejemplo:</strong> Venta de $500 MXN en categoría Belleza (6%) → comisión $30 + $6 fijo = <strong>$36 MXN (7.2%)</strong>. Venta de $2,000 MXN → comisión $120 + $6 fijo = <strong>$126 MXN (6.3%)</strong>. A mayor ticket, menor impacto del costo fijo.
+</div>
+
+<div class="warning">
+<strong>Ruta recomendada:</strong> TikTok Shop es el canal prioritario por tener la comisión más baja (~6% + $6 MXN) y la mayor capacidad de conversión con contenido orgánico. A diferencia de Mercado Libre (~14.5%), el margen neto es significativamente mayor, especialmente en tickets arriba de $500 MXN donde el costo fijo se diluye.
+</div>
+
+<h2>4.2 Tienda Web — Mercado Pago</h2>
+<table>
+<tr><th>Concepto</th><th>Tarifa</th></tr>
+<tr><td>Tarjetas de crédito/débito</td><td>2.99% + IVA</td></tr>
+<tr><td>Pago en Oxxo y efectivo</td><td>~3.5% + IVA</td></tr>
+<tr><td>Meses sin intereses</td><td>Varía por plan (5-12%)</td></tr>
+<tr><td>Transferencias SPEI</td><td>Sin costo</td></tr>
+</table>
+
+<div class="note">
+<strong>Costo total por canal (venta de $1,000 MXN):</strong><br>
+TikTok Shop: ~$66 MXN (6% + $6) — <strong>6.6%</strong><br>
+Tienda web (Mercado Pago): ~$35 MXN (2.99% + IVA) — <strong>3.5%</strong><br>
+Mercado Libre: ~$145 MXN (14.5%) — <strong>14.5%</strong>
+</div>
+
+<h2>4.3 Comparativa de canales</h2>
+<table>
+<tr><th>Canal</th><th>Costo por venta</th><th>Tráfico</th><th>Rol</th></tr>
+<tr><td>TikTok Shop</td><td>~6-7%</td><td>Orgánico + pagado</td><td>Conversión principal</td></tr>
+<tr><td>Tienda Web + Mercado Pago</td><td>~3.5%</td><td>Pagado (Meta Ads)</td><td>Hub + remarketing</td></tr>
+<tr><td>Mercado Libre</td><td>~14.5%</td><td>Orgánico (búsqueda)</td><td>Complementario</td></tr>
+<tr><td>Instagram/Facebook Shop</td><td>~3.5% (vía web)</td><td>Orgánico + pagado</td><td>Tráfico a web</td></tr>
+</table>
+
+<!-- ═══ 5. INTEGRACIÓN TIKTOK SHOP ═══ -->
+<div class="page-break"></div>
+<h1>5. Integración con TikTok Shop</h1>
+
+<h2>5.1 ¿Cómo funciona?</h2>
+<p>TikTok Shop es una funcionalidad nativa de TikTok que permite vender productos directamente dentro de la aplicación. No requiere redirección a un sitio externo: el usuario ve un video, toca el producto, y completa la compra sin salir de TikTok.</p>
+
+<h2>5.2 Formatos de venta</h2>
+<ul>
+  <li><strong>Video shoppable:</strong> Videos normales de TikTok con productos etiquetados. El ícono de bolsa aparece en el video y lleva al checkout.</li>
+  <li><strong>LIVE de venta:</strong> Transmisión en vivo donde el vendedor muestra productos y los espectadores compran en tiempo real. Es el formato de mayor conversión.</li>
+  <li><strong>Showcase:</strong> Pestaña de "Tienda" en el perfil con el catálogo completo.</li>
+</ul>
+
+<h2>5.3 Requisitos para operar en México</h2>
+<ul>
+  <li>Cuenta de TikTok Business (no personal)</li>
+  <li>Registro en TikTok Shop Seller Center</li>
+  <li>RFC y datos fiscales mexicanos</li>
+  <li>Cuenta bancaria para recibir pagos</li>
+  <li>Productos que cumplan con las políticas de TikTok Shop</li>
+</ul>
+
+<h2>5.4 Ruta recomendada de implementación</h2>
+<ol>
+  <li>Crear cuenta TikTok Business y solicitar acceso a TikTok Shop</li>
+  <li>Subir catálogo al Seller Center (manual o vía integración)</li>
+  <li>Crear contenido orgánico diario (2-3 videos) con productos etiquetados</li>
+  <li>Programar 2-3 lives semanales de venta</li>
+  <li>Cuando el orgánico valide demanda → escalar con TikTok Ads (Spark Ads sobre videos ganadores)</li>
+  <li>Activar programa de afiliados para que creadores promocionen por comisión</li>
+</ol>
+
+<!-- ═══ 6. PLATAFORMA TECNOLÓGICA ═══ -->
+<div class="page-break"></div>
+<h1>6. Plataforma Tecnológica</h1>
+
+<h2>6.1 Tienda Web</h2>
+<p>La tienda web está construida como una aplicación de una sola página (SPA) con renderizado ultrarrápido. La arquitectura se diseñó bajo tres principios: <strong>velocidad de carga</strong> (crítica para conversión en México donde predomina el tráfico móvil en redes 4G), <strong>experiencia visual envolvente</strong> (animaciones fluidas, scroll narrativo), y <strong>despliegue serverless</strong> (sin costo de servidor fijo, escala automático con el tráfico).</p>
+
+<table>
+<tr><th>Capa</th><th>Tecnología</th><th>Justificación</th></tr>
+<tr><td>Interfaz de usuario</td><td>React 19</td><td>Framework más usado, enorme ecosistema de librerías, renderizado eficiente</td></tr>
+<tr><td>Empaquetado</td><td>Vite 6</td><td>Dev server instantáneo, builds optimizados, HMR en milisegundos</td></tr>
+<tr><td>Estilos</td><td>Tailwind CSS</td><td>Utilidades atómicas que no generan CSS muerto, personalizable por diseño</td></tr>
+<tr><td>Animaciones</td><td>Framer Motion + GSAP</td><td>Animaciones declarativas en React + control preciso de timeline para scroll</td></tr>
+<tr><td>Base de datos</td><td>Supabase (PostgreSQL)</td><td>PostgreSQL administrado con API REST/WebSocket, auth incluido, gratuito para arranque</td></tr>
+<tr><td>Pagos</td><td>Mercado Pago</td><td>Checkout integrado con todos los medios de pago mexicanos</td></tr>
+<tr><td>Despliegue</td><td>Vercel</td><td>CDN global, deploy desde git, serverless functions, dominio personalizado</td></tr>
+</table>
+
+<h2>6.2 Flujo de compra</h2>
+<ol>
+  <li>Usuario llega por TikTok, Instagram, Google o directo</li>
+  <li>Explora catálogo con filtros por categoría y precio</li>
+  <li>Agrega al carrito (persiste en localStorage + Supabase si está autenticado)</li>
+  <li>Checkout: redirige a Mercado Pago para completar el pago</li>
+  <li>Post-pago: página de éxito + email de confirmación automático</li>
+  <li>Dashboard: el administrador ve órdenes, productos, analytics</li>
+</ol>
+
+<h2>6.3 Por qué este stack</h2>
+<ul>
+  <li><strong>Costo inicial $0:</strong> Vercel (plan gratuito), Supabase (plan gratuito), dominio único costo ($200 MXN/año)</li>
+  <li><strong>Escala automática:</strong> Sin administrar servidores. Si un video de TikTok se viraliza, la tienda aguanta el tráfico sin configuración adicional</li>
+  <li><strong>Iteración rápida:</strong> Cambios en minutos con deploy desde git. Ideal para probar productos, landing pages, y ofertas</li>
+  <li><strong>Independencia:</strong> La tienda no depende de ninguna plataforma de marketplace. Si TikTok Shop cambia políticas, la web propia sigue funcionando</li>
+</ul>
+
+<!-- ═══ 7. TIENDA WEB — FUNCIONAMIENTO ═══ -->
+<div class="page-break"></div>
+<h1>7. Tienda Web — Estructura y Diseño</h1>
+
+<p>La tienda fue diseñada bajo el concepto de <strong>"dopamina e-commerce"</strong>: una experiencia visual que mantiene al usuario explorando. En lugar de una cuadrícula estática de productos, la página narra un recorrido con animaciones al hacer scroll, secciones que revelan contenido progresivamente, y micro-interacciones que hacen sentir la navegación fluida y premium.</p>
+
+<h2>7.1 Página principal (Home)</h2>
+<img src="imagenes/homepage-hero.png" alt="KREID Homepage">
+<p>El home está compuesto por secciones narrativas en este orden:</p>
+<ol>
+  <li><strong>Hero:</strong> Mensaje principal y llamado a la acción inmediato</li>
+  <li><strong>Prueba social:</strong> Indicadores de confianza (clientes, reseñas, envíos)</li>
+  <li><strong>Productos destacados:</strong> Grid con hover effects, botón de compra rápida</li>
+  <li><strong>Colecciones:</strong> Navegación visual por categorías de producto</li>
+  <li><strong>Quiz interactivo:</strong> Recomendador de productos (aumenta tiempo en página + engagement)</li>
+</ol>
+
+<h2>7.2 Secciones inferiores</h2>
+<img src="imagenes/products-section.png" alt="KREID Products">
+<ol start="6">
+  <li><strong>Beneficios:</strong> Iconografía de ventajas competitivas (envío, garantía, soporte)</li>
+  <li><strong>Scroll narrativo:</strong> Efecto visual de "scrub" — el contenido avanza con el scroll del usuario</li>
+  <li><strong>Scroll horizontal:</strong> Galería de productos o categorías con desplazamiento lateral</li>
+  <li><strong>Testimonios:</strong> Reseñas de clientes con foto, nombre y ubicación (genera confianza)</li>
+</ol>
+
+<h2>7.3 Testimonios y cierre</h2>
+<img src="imagenes/testimonials.png" alt="KREID Testimonials">
+<ol start="10">
+  <li><strong>Newsletter:</strong> Captura de correos para remarketing</li>
+  <li><strong>FAQ:</strong> Preguntas frecuentes con acordeón expandible</li>
+</ol>
+
+<h2>7.4 Páginas funcionales</h2>
+<table>
+<tr><th>Ruta</th><th>Función</th></tr>
+<tr><td><code>/products</code></td><td>Catálogo completo con búsqueda en tiempo real, filtros por categoría y precio, ordenamiento</td></tr>
+<tr><td><code>/products/:id</code></td><td>Detalle de producto con galería de imágenes, especificaciones, reseñas y productos relacionados</td></tr>
+<tr><td><code>/cart</code></td><td>Carrito persistente que sobrevive recargas. Calcula envío gratis automático sobre cierto monto</td></tr>
+<tr><td><code>/checkout</code></td><td>Proceso de pago con integración a Mercado Pago</td></tr>
+<tr><td><code>/account</code></td><td>Panel del cliente: historial de órdenes expandibles, datos de envío, seguimiento</td></tr>
+<tr><td><code>/dashboard</code></td><td>Panel administrativo: analytics de ventas, gestión de productos, órdenes, alertas de stock</td></tr>
+</table>
+
+<h2>7.5 Principios de diseño aplicados</h2>
+<ul>
+  <li><strong>Mobile-first:</strong> Todo el diseño parte de la experiencia en celular (80%+ del tráfico en México)</li>
+  <li><strong>Velocidad:</strong> Puntaje Lighthouse >90 en performance. Imágenes lazy-loading, código dividido por ruta</li>
+  <li><strong>Persuasión visual:</strong> Efectos de partículas, contadores animados, confetti en acciones clave — todo sutil, no invasivo</li>
+  <li><strong>Persistencia:</strong> El carrito y preferencias sobreviven cierres de navegador con localStorage</li>
+  <li><strong>Independencia de backend:</strong> Si Supabase falla, la tienda sigue funcionando con datos locales en caché</li>
+</ul>
+
+<div class="footer">
+  <p>KREID — Documento del Proyecto · Generado el 5 de agosto de 2026</p>
+</div>
+
+</body>
+</html>"""
+
+# Escribir HTML
+with open(HTML_PATH, "w", encoding="utf-8") as f:
+    f.write(html)
+print(f"✅ HTML v2 generado: {HTML_PATH} ({os.path.getsize(HTML_PATH):,} bytes)")
+
+# Convertir a PDF
+print("\n🖨️ Convirtiendo a PDF...")
+with sync_playwright() as p:
+    browser = p.chromium.launch(headless=True, args=["--no-sandbox"])
+    page = browser.new_page()
+    page.goto(f"file://{HTML_PATH}", wait_until="networkidle", timeout=30000)
+    page.wait_for_timeout(1000)
+    page.pdf(
+        path=OUTPUT,
+        format="A4",
+        margin={"top": "2cm", "bottom": "2cm", "left": "2cm", "right": "2cm"},
+        print_background=True,
+    )
+    browser.close()
+
+size_kb = os.path.getsize(OUTPUT) / 1024
+print(f"✅ PDF v2 generado: {OUTPUT} ({size_kb:.0f} KB)")

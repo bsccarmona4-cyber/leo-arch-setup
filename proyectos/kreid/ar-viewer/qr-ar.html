@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KREID — Realidad Aumentada</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    body {
+      background: var(--gradient-bg);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 20px;
+    }
+    .qr-landing {
+      max-width: 600px;
+      width: 100%;
+    }
+    .qr-logo {
+      width: 200px;
+      margin: 0 auto var(--space-xl);
+      animation: scaleIn 0.6s var(--ease-out) forwards;
+    }
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin: var(--space-xl) 0;
+    }
+    .step {
+      padding: var(--space-lg) var(--space-md);
+    }
+    .step-num {
+      width: 40px; height: 40px;
+      margin: 0 auto var(--space-sm);
+      border-radius: 50%;
+      background: var(--gradient-brand);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 800;
+      font-size: 1.1rem;
+      font-family: var(--font-heading);
+    }
+    .step h4 {
+      font-size: 0.9rem;
+      margin-bottom: 4px;
+      color: var(--color-white);
+    }
+    .step p {
+      font-size: 0.78rem;
+      line-height: 1.5;
+    }
+    .marker-preview {
+      display: inline-block;
+      padding: 12px;
+      background: white;
+      border-radius: var(--radius-lg);
+      margin: var(--space-lg) 0;
+      box-shadow: var(--shadow-glow-violet);
+    }
+    .marker-preview canvas {
+      display: block;
+      width: 180px;
+      height: 180px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 12px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin-top: var(--space-lg);
+    }
+    .alert {
+      padding: 12px 18px;
+      border-radius: var(--radius-md);
+      background: rgba(0,212,255,0.1);
+      border: 1px solid rgba(0,212,255,0.2);
+      color: var(--color-accent);
+      font-size: 0.85rem;
+      margin-top: var(--space-lg);
+    }
+    @media (max-width: 600px) {
+      .steps { grid-template-columns: 1fr; }
+      .marker-preview canvas { width: 140px; height: 140px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="qr-landing">
+
+    <!-- Logo -->
+    <svg class="qr-logo" viewBox="0 0 520 180" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <linearGradient id="qlg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="50%" stop-color="#6d28d9"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient>
+      </defs>
+      <g transform="translate(15,15)">
+        <rect x="0" y="0" width="22" height="150" rx="3" fill="url(#qlg1)"/>
+        <polygon points="28,75 28,53 112,3 112,25" fill="url(#qlg1)"/>
+        <polygon points="28,75 112,125 112,147 28,97" fill="url(#qlg1)"/>
+        <circle cx="117" cy="8" r="6.5" fill="#00d4ff"/>
+      </g>
+      <text x="160" y="105" font-family="'Outfit','Helvetica Neue',Arial,sans-serif" font-size="72" font-weight="800" fill="#ffffff" letter-spacing="10">KREID</text>
+      <text x="164" y="146" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="400" fill="#00d4ff" letter-spacing="9">DESIGN STUDIO</text>
+    </svg>
+
+    <span class="badge">📱 Realidad Aumentada</span>
+    <h1 style="margin-top:12px;">Explora <span class="text-gradient">KREID en AR</span></h1>
+    <p style="color:var(--color-gray-300);margin:12px 0;">Apunta tu cámara al marcador y mira cómo nuestros servicios flotan en el mundo real.</p>
+
+    <!-- Steps -->
+    <div class="steps">
+      <div class="glass-card step">
+        <div class="step-num">1</div>
+        <h4>Marcador</h4>
+        <p>Abre el marcador en otra pantalla o imprímelo</p>
+      </div>
+      <div class="glass-card step">
+        <div class="step-num">2</div>
+        <h4>Apunta</h4>
+        <p>Enfoca la cámara de tu celular al marcador</p>
+      </div>
+      <div class="glass-card step">
+        <div class="step-num">3</div>
+        <h4>Explora</h4>
+        <p>Gira y haz zoom para ver los 6 servicios flotando</p>
+      </div>
+    </div>
+
+    <!-- Marker Preview -->
+    <p style="font-size:0.85rem;color:var(--color-gray-400);">📌 Este es el marcador (ábrelo grande o imprímelo):</p>
+    <div class="marker-preview" id="markerPreview">
+      <canvas id="hiroCanvas" width="360" height="360"></canvas>
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-accent" onclick="openMarkerFullscreen()">🖼️ Abrir Marcador Grande</button>
+      <button class="btn btn-secondary" onclick="downloadMarker()">⬇ Descargar Marcador</button>
+    </div>
+
+    <!-- Launch AR -->
+    <div style="margin-top:var(--space-xl);">
+      <a href="ar.html" class="btn btn-primary btn-lg">🚀 Iniciar Experiencia AR</a>
+    </div>
+
+    <p class="alert">💡 <strong>Consejo:</strong> Abre el marcador en tu computadora, luego apunta tu celular hacia la pantalla. ¡Los servicios aparecerán flotando!</p>
+
+    <p style="margin-top:24px;">
+      <a href="index.html" style="font-size:0.85rem;color:var(--color-gray-500);">← Volver al inicio</a>
+    </p>
+  </div>
+
+  <script>
+    /* ══════════════════════════════════════
+       Draw Hiro marker on canvas
+       (so users can see/print it)
+       ══════════════════════════════════════ */
+    (function drawHiroMarker() {
+      const canvas = document.getElementById('hiroCanvas');
+      const ctx = canvas.getContext('2d');
+      const size = 360;
+      const border = 40;
+
+      // White background
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(0, 0, size, size);
+
+      // Black border
+      ctx.fillStyle = '#000000';
+      ctx.fillRect(0, 0, size, border);
+      ctx.fillRect(0, size - border, size, border);
+      ctx.fillRect(0, 0, border, size);
+      ctx.fillRect(size - border, 0, border, size);
+
+      // Inner pattern (simplified Hiro-style)
+      const innerSize = size - border * 2;
+      const cx = size / 2;
+      const cy = size / 2;
+
+      // Central KREID "K" inspired shapes
+      ctx.fillStyle = '#000000';
+      
+      // Top-left block
+      ctx.fillRect(border + 20, border + 20, innerSize * 0.25, innerSize * 0.25);
+      // Top-right block
+      ctx.fillRect(size - border - innerSize * 0.25 - 20, border + 20, innerSize * 0.25, innerSize * 0.25);
+      // Bottom-left block
+      ctx.fillRect(border + 20, size - border - innerSize * 0.25 - 20, innerSize * 0.25, innerSize * 0.25);
+      // Bottom-right block
+      ctx.fillRect(size - border - innerSize * 0.25 - 20, size - border - innerSize * 0.25 - 20, innerSize * 0.25, innerSize * 0.25);
+
+      // Center diamond shape
+      ctx.beginPath();
+      ctx.moveTo(cx, border + innerSize * 0.15);
+      ctx.lineTo(size - border - innerSize * 0.15, cy);
+      ctx.lineTo(cx, size - border - innerSize * 0.15);
+      ctx.lineTo(border + innerSize * 0.15, cy);
+      ctx.closePath();
+      ctx.fill();
+
+      // Small center square
+      ctx.fillStyle = '#ffffff';
+      ctx.fillRect(cx - 20, cy - 20, 40, 40);
+      
+      // Logo text in center
+      ctx.fillStyle = '#7c3aed';
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText('KREID', cx, cy);
+
+      // Corner accents
+      ctx.fillStyle = '#00d4ff';
+      [
+        [border + 50, border + 50],
+        [size - border - 50, border + 50],
+        [border + 50, size - border - 50],
+        [size - border - 50, size - border - 50]
+      ].forEach(([x, y]) => {
+        ctx.fillRect(x - 8, y - 8, 16, 16);
+      });
+    })();
+
+    /* ── Open marker in new tab for fullscreen ── */
+    function openMarkerFullscreen() {
+      const canvas = document.getElementById('hiroCanvas');
+      const win = window.open('', '_blank', 'width=500,height=500');
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head><title>Marcador KREID AR</title>
+        <style>
+          body { margin: 0; display: flex; align-items: center; justify-content: center; min-height: 100vh; background: #333; }
+          img { max-width: 90vw; max-height: 90vh; border: 4px solid white; border-radius: 12px; }
+        </style></head>
+        <body><img src="${canvas.toDataURL('image/png')}" alt="Marcador KREID AR"></body>
+        </html>
+      `);
+      win.document.close();
+    }
+
+    /* ── Download marker as PNG ── */
+    function downloadMarker() {
+      const canvas = document.getElementById('hiroCanvas');
+      const link = document.createElement('a');
+      link.download = 'KREID_AR_Marcador.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+  </script>
+</body>
+</html>

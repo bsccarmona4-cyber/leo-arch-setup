@@ -1,0 +1,21 @@
+# Cafetería POS — Sistema de Punto de Venta Inteligente
+# Python 3.10+
+
+# Core
+python-dotenv>=1.0.0
+
+# UI Terminal
+rich>=13.0.0
+colorama>=0.4.6
+tabulate>=0.9.0
+
+# Bases de datos
+psycopg[binary]>=3.0.0
+pymysql>=1.1.0
+redis>=5.0.0
+
+# Opcional: asistente IA
+# httpx>=0.27.0
+
+# Dev
+pytest>=8.0.0

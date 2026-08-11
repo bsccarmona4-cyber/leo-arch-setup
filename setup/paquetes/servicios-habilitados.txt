@@ -1,0 +1,16 @@
+bluetooth.service
+docker.service
+getty@.service
+mariadb.service
+NetworkManager-dispatcher.service
+NetworkManager-wait-online.service
+NetworkManager.service
+postgresql.service
+proton.VPN.service
+sddm.service
+swayosd-libinput-backend.service
+systemd-timesyncd.service
+valkey.service
+systemd-userdbd.socket
+remote-fs.target
+fstrim.timer

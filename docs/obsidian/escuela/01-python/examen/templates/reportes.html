@@ -1,0 +1,107 @@
+{% extends "base.html" %}
+{% block titulo %}Reportes{% endblock %}
+{% block contenido %}
+<h1>📈 Reportes y Estadísticas</h1>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-value">{{ resumen.hoy.ventas }}</div>
+        <div class="kpi-label">Ventas Hoy</div>
+    </div>
+    <div class="kpi-card accent">
+        <div class="kpi-value">${{ "%.0f"|format(resumen.hoy.ingresos) }}</div>
+        <div class="kpi-label">Ingresos Hoy</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-value">{{ resumen.mes.ventas }}</div>
+        <div class="kpi-label">Ventas Mes</div>
+    </div>
+    <div class="kpi-card accent">
+        <div class="kpi-value">${{ "%.0f"|format(resumen.mes.ingresos) }}</div>
+        <div class="kpi-label">Ingresos Mes</div>
+    </div>
+</div>
+
+<!-- Gráfica: productos más vendidos -->
+<div class="card">
+    <h3>🔥 Productos Más Vendidos</h3>
+    <canvas id="chart-top" height="100"></canvas>
+</div>
+
+<!-- Gráfica: categorías -->
+<div class="grid-2">
+    <div class="card">
+        <h3>📂 Ventas por Categoría</h3>
+        <canvas id="chart-categorias" height="200"></canvas>
+    </div>
+    <div class="card">
+        <h3>🏆 Ranking de Clientes</h3>
+        <table>
+            <thead><tr><th>#</th><th>Cliente</th><th>Compras</th><th>Total</th></tr></thead>
+            <tbody>
+            {% for c in ranking[:10] %}
+            <tr><td>{{ loop.index }}</td><td>{{ c.nombre }}</td>
+                <td>{{ c.total_compras }}</td>
+                <td>${{ "%.0f"|format(c.total_gastado|float) }}</td></tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Alertas de stock -->
+{% if resumen.stock_bajo %}
+<div class="card alert-warning">
+    <h3>⚠️ Stock Bajo</h3>
+    <div class="stock-grid">
+    {% for p in resumen.stock_bajo %}
+        <span class="stock-item">{{ p.nombre }}: <b>{{ p.stock }}</b></span>
+    {% endfor %}
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block scripts %}
+<script>
+// Gráfica: Top productos
+const topLabels = {{ top|map(attribute='nombre')|list|tojson }};
+const topData = {{ top|map(attribute='total_vendido')|list|tojson }};
+new Chart(document.getElementById('chart-top'), {
+    type: 'bar',
+    data: {
+        labels: topLabels,
+        datasets: [{
+            label: 'Unidades vendidas',
+            data: topData,
+            backgroundColor: '#c8a27a',
+            borderRadius: 4
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { display: false } },
+        scales: { y: { beginAtZero: true, ticks: { color: '#aaa' } }, x: { ticks: { color: '#aaa' } } }
+    }
+});
+
+// Gráfica: Categorías (dona)
+const catLabels = {{ categorias|map(attribute='categoria')|list|tojson }};
+const catData = {{ categorias|map(attribute='ingresos')|list|tojson }};
+new Chart(document.getElementById('chart-categorias'), {
+    type: 'doughnut',
+    data: {
+        labels: catLabels,
+        datasets: [{
+            data: catData,
+            backgroundColor: ['#c8a27a','#a67c52','#8b5e3c','#6b3a2a','#d4a574','#e8c9a0'],
+            borderColor: '#1a1210'
+        }]
+    },
+    options: {
+        responsive: true,
+        plugins: { legend: { position: 'bottom', labels: { color: '#ddd' } } }
+    }
+});
+</script>
+{% endblock %}

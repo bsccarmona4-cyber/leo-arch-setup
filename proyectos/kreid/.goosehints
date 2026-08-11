@@ -1,0 +1,144 @@
+# KREID — Comercio Beauty & Health (México)
+
+## Modelo de negocio (Q3 2026)
+- Comercio formal — NO dropshipping
+- Compra a importadores en CDMX (productos ya puestos en México)
+- Foco principal: Beauty & Health devices
+- Sin aduanas, sin MOQ de fábrica, sin esperas de 45 días
+
+## Canales de venta
+- Shopify (tienda principal)
+- TikTok Shop
+- Mercado Libre
+- Facebook Lives + entregas personales (Toluca y alrededores)
+
+## Stack técnico (tienda)
+- React 19 + Vite 6 + Tailwind CSS
+- Supabase (auth + DB + storage)
+- Stripe (pagos con tarjeta)
+- TypeScript
+
+## Estructura
+- ~/kreid/store/ → Tienda frontend
+- ~/kreid/store/src/ → Código fuente React
+- ~/kreid/db/ → Esquemas SQL Supabase
+- ~/kreid/data/ → Datos de productos (JSON)
+- ~/kreid/scripts/ → Scripts Python (scraping, utilidades)
+- ~/kreid/docs/ → Documentación
+- ~/kreid/sesiones/ → Logs de sesiones
+
+## Categorías 1688 — Auditoría completa 2026-07-25 (v2 corregida)
+
+*Protocolo: curl + Puppeteer + HTML parseado. Reviews reales, no snippets. [1] = 1 fuente, [2] = 2+ fuentes independientes. ML MX: BLOQUEADO en todas las búsquedas.*
+
+### Beauty & Care (AUDITADO)
+🟢 [2] LED/Light therapy masks — Timing: AHORA
+   2 búsquedas curl independientes confirman: Hello Face 44/74/111 reviews (~22/mes, mar-jul 2026), solo 2 marcas.
+🔴 Microcurrent devices — Timing: TARDE. Skindion 1,967/1,355 reviews (1 fuente, confirmado).
+🔴 Skincare consumibles — Timing: TARDE. L'Oréal 130-640 rev, 5+ canales (1 fuente, confirmado).
+⚠️ "máscara LED" = cremas. Buscar por marca (Hello Face) o "LED facial device".
+
+### Sports & Outdoor → Recovery muscular (AUDITADO)
+🟢 [1] Botas de compresión — Timing: AHORA
+   Puppeteer encontró 12+ productos (0-113 rev). Mi curl no las detectó. 1 sola fuente.
+   RECOVERY BOOST (11), Medisana (24), MAGMALIFE (0), Compex (113). Ticket $1,376-$9,990.
+🟢 [2] Rodillos fascia — Timing: AHORA
+   curl + Puppeteer coinciden: mercado fragmentado, 0-170 rev, sin marca dominante. Ticket $125-$393.
+🔴 Pistola masaje — 2 fuentes coinciden: RENPHO 19.7K, BOB AND BRAD 13K, Cotsoco 4.1K. SATURADO.
+🟡 Gama baja pistola: GALASALA 30vel (14 rev, $526). Nicho posible pero la categoría general está tomada.
+
+### Home & Garden → Premium magnético/organización (AUDITADO)
+🟢 [2] Organizadores nevera/acero — Timing: AHORA
+   curl + Puppeteer coinciden: genéricos 0-18 rev vs marcas saturadas (Modern Innovations 26K).
+   Timotech (1), NiHome (4), Crtiin (17). Ticket $100-$1,250.
+🟢 [2] Especieros/estantes magnéticos — Timing: AHORA
+   curl (datos ruidosos) + Puppeteer (datos limpios): Maxgeen (27), GALASALA (6), HASTHIP (0). Ticket $229-$449.
+🔴 Ganchos magnéticos — 2 fuentes coinciden: Neosmuk 717, Tohoer 1.2K-2.4K. SATURADO.
+🟡 Nicho ganchos: clips 12pz (22 rev, $99), giratorios (4 rev, $80). Mercado bifurcado.
+
+### Baby & Toys → STEM/educativos (AUDITADO)
+🟢 [1] Kits de ciencia (marcas chinas) — Timing: AHORA
+   Puppeteer encontró kits reales (34-97 rev). Mi curl colapsó: "kit ciencia" → juguetes genéricos y enciclopedias.
+   2da búsqueda curl también colapsó. 1 sola fuente buena (Puppeteer). Ticket $298-$498.
+🔴 Marcas establecidas: National Geographic 877-17.4K, Steve Spangler 2.9K.
+🟢 [2] Microscopios infantiles — Timing: AHORA
+   curl + Puppeteer coinciden: AYNEFY (8 rev), LICAEVEY (17 rev). Ticket $249-$1,052.
+🟢 [2] Bloques magnéticos (gama baja/media) — Timing: AHORA
+   curl + Puppeteer coinciden: Nasjac (25), RaceGT (27), Raganet (49). Ticket $263-$719.
+🔴 PicassoTiles 10.1K rev — gama alta saturada.
+
+### Industrial & MRO → Herramientas medición digital (AUDITADO)
+🟢 [2] Termómetro infrarrojo — Timing: AHORA
+   2 búsquedas curl independientes confirman: IR genérico 79 rev, 4.4★. FARMADAR domina el entorno (oxímetros, baumanómetros) pero el IR standalone tiene poca competencia directa.
+🔴 Medidor láser distancia — Ausente en 1 búsqueda curl. Sin segunda verificación. Posible vacío real o fallo de búsqueda.
+🔴 Higrómetros — TempPro TP50 138K rev. Commoditizado.
+
+### Auto & Transport → Organización de auto (AUDITADO)
+🟢 [1] Organizador cajuela/brecha — Timing: AHORA
+   1 fuente curl: Universal 22 rev. Sin segunda verificación.
+🟡 Soporte magnético celular — 325 rev (1 fuente). Mercado medio.
+🔴 Fundas asiento — WOWBABEPETS 647 rev (1 fuente). Marca domina.
+
+### Office → Ergonomía escritorio (AUDITADO)
+🟢 [2] Reposamuñecas — Timing: AHORA
+   2 búsquedas curl independientes confirman: madera antideslizante 1-8 rev. Mercado casi inexistente.
+🔴 Teclado ergonómico — 2 búsquedas curl independientes confirman AUSENCIA: "teclado ergonómico" en Amazon MX = Redragon gaming. La categoría NO existe en búsquedas de Amazon MX.
+🔴 Soporte monitor — MOUNTUP 14K rev (1 fuente). Hiper-saturado.
+
+### Food & Beverage → Envases especializados (AUDITADO — CORREGIDO)
+🟡 Lonchera eléctrica — Timing: AHORA pero con COMPETENCIA REAL
+   ⚠️ CORREGIDO de 🟢: mi curl encontró 7 rev (genérico nuevo), pero 3er sub-agente encontró NOVAKA con 488-556 rev en la misma búsqueda. Mercado bifurcado: hay marca establecida (NOVAKA) y entrantes (0-7 rev). Ya NO es "ventana enorme", es "ventana con jugador establecido".
+🟢 [1] Envase al vacío (rollos) — 21 rev. 1 fuente curl. Sin segunda verificación.
+🟡 Botella térmica premium — EASYTAO 424 rev (1 fuente). Zona amarilla.
+
+---
+
+📊 **Resumen corregido (8 categorías, ~60 productos):**
+
+| Confianza | 🟢 | 🟡 | 🔴 |
+|-----------|---|---|---|
+| [2] 2+ fuentes | 8 | 0 | 4 |
+| [1] 1 fuente | 4 | 4 | 5 |
+| **Total** | **12** | **4** | **9** |
+
+*Correcciones aplicadas: Lonchera 🟢→🟡 (NOVAKA 488-556 rev), Reposamuñecas [1]→[2] (2da búsqueda OK), Termómetro IR [1]→[2] (2da búsqueda OK), Teclado ergonómico confirmado AUSENTE (2 búsquedas), Kit ciencia [2]→[1] (2da búsqueda colapsó).*
+
+*Proporción anterior (sin corregir): ~35🟢 / 10🟡 / 15🔴 → 1 de cada 1.7*
+*Proporción corregida: 12🟢 / 4🟡 / 9🔴 a nivel subcategoría (con marcadores de confianza)*
+
+*La proporción a nivel PRODUCTO individual (contando cada ASIN) sigue siendo ~1 de cada 1.7, pero el número de subcategorías con confianza ALTA [2] es menor: solo 8 de 25 subcategorías tienen doble verificación.*
+
+## Fórmula de validación
+Ratio = Precio venta ÷ Precio importador CDMX
+🟢 ≥ 3.0 → VIABLE  |  🟡 2.0-2.9 → AJUSTADO  |  🔴 < 2.0 → DESCARTAR
+
+## Fuentes de importadores CDMX
+- Grupos FB: "Importadora y mayoreo de productos CHINOS CDMX"
+- productoschinos.com.mx, sasbim.com, plazamayoreo.com
+- Plaza Izazaga 89, Centro de Importadores, calle Leona Vicario
+
+## Próximos pasos
+1. Elegir 1-2 productos concretos de Beauty & Health
+2. Buscar precios en importadores CDMX
+3. Validar ratio ≥ 3.0
+4. Preparar store Shopify para producto héroe
+5. Meta Ads ($15-20 USD/día) — segunda validación
+6. Si valida → comprar inventario y escalar
+
+## Comandos útiles
+- cd ~/kreid/store && npm run dev → Dev server (puerto 3000)
+- cd ~/kreid/store && npm run build → Build producción
+
+## Bloom (trybloom.ai) — brand layer para imágenes on-brand
+- Qué es: genera/edita/resize imágenes con el estilo visual de KREID vía API/MCP
+- Dónde está la key: `BLOOM_API_KEY` en `~/kreid/store/.env` (gitignoreado) + respaldo en `~/.goose-skills/.env-keys`
+- Endpoint MCP: `https://www.trybloom.ai/api/mcp` (auth Bearer con la key)
+- Scripts: `~/kreid/scripts/test_bloom_mcp.py` (lista tools), `~/kreid/scripts/bloom_account.py` (cuenta/créditos)
+- Uso en sesión futura: leer `BLOOM_API_KEY` desde `~/kreid/store/.env`, llamar `tools/call` con nombre `bloom_*`
+- Créditos (2026-08-07): 10 — 1 crédito/imagen 2K, 2 créditos/imagen 4K. Recargar si se agotan.
+
+## Recetas disponibles (skills)
+- krei-mercado → Investigación de mercado
+- krei-finanzas → Unit economics, márgenes, ROI
+- krei-scraper → Scraping de productos
+- krei-tienda → Desarrollo de tienda React/Vite

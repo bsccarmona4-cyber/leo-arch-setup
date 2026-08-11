@@ -1,0 +1,83 @@
+# ============================================================
+#  .gitignore — Proyecto Python (Ejercicios POO)
+#  Ignorar archivos generados por el intérprete e IDEs.
+# ============================================================
+
+# ----- Bytecode de Python -----
+__pycache__/
+*.py[cod]
+*$py.class
+*.pyc
+*.pyo
+*.pyd
+
+# ----- Distribuciones / Empaquetado -----
+build/
+dist/
+*.egg-info/
+*.egg
+MANIFEST
+
+# ----- Entornos virtuales -----
+.venv/
+venv/
+env/
+ENV/
+.env
+.env.local
+
+# ----- IDEs y Editores -----
+# VS Code
+.vscode/
+*.code-workspace
+
+# PyCharm / IntelliJ IDEA
+.idea/
+*.iml
+*.ipr
+*.iws
+
+# Sublime Text
+*.sublime-project
+*.sublime-workspace
+
+# Vim / Neovim
+*.swp
+*.swo
+*~
+
+# ----- Sistema Operativo -----
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.Trash-*/
+
+# ----- Logs y bases de datos temporales -----
+*.log
+*.sqlite
+*.db
+
+# ----- Cobertura de tests -----
+.coverage
+.coverage.*
+coverage.xml
+htmlcov/
+.pytest_cache/
+
+# ----- Archivos de tipo y linting -----
+.mypy_cache/
+.ruff_cache/
+.dmypy.json
+dmypy.json
+
+# ----- Jupyter Notebooks (checkpoints) -----
+.ipynb_checkpoints/

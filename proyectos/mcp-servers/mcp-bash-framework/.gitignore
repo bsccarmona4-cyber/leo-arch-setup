@@ -1,0 +1,19 @@
+# Spec §3 repository contract: registry/ contains runtime-generated indexes excluded from VCS.
+registry/
+docs/internal/
+.cursor/
+# MCP registry caches
+**/.registry/
+AGENTS.md
+docs/.DS_Store
+.DS_Store
+**/.DS_Store
+# Generated MCPB bundles
+*.mcpb
+test-results/
+# npm dependencies (bats helpers)
+node_modules/
+docs/proposals/
+# Claude Code local settings
+.claude/settings.json
+CLAUDE.md

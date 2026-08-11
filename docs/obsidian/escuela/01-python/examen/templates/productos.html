@@ -1,0 +1,82 @@
+{% extends "base.html" %}
+{% block titulo %}Productos{% endblock %}
+{% block contenido %}
+<h1>📦 Catálogo de Productos</h1>
+
+<div style="display:flex; gap:10px; margin-bottom:15px;">
+    <form style="flex:1;">
+        <input type="text" name="q" placeholder="🔍 Buscar producto..." class="search-input"
+               value="{{ query }}" style="width:100%;">
+    </form>
+    <button class="btn" onclick="toggleForm('add-form')">+ Agregar</button>
+</div>
+
+<!-- Form Agregar -->
+<div id="add-form" class="card" style="display:none;">
+    <h3>Agregar Producto</h3>
+    <form method="POST" action="/productos/agregar" style="display:flex; gap:10px; flex-wrap:wrap;">
+        <input type="text" name="nombre" placeholder="Nombre" required>
+        <input type="text" name="categoria" placeholder="Categoría" required>
+        <input type="number" name="precio" placeholder="Precio" step="0.01" required>
+        <input type="number" name="stock" placeholder="Stock" value="0">
+        <button type="submit" class="btn btn-success">Guardar</button>
+    </form>
+</div>
+
+<table>
+    <thead><tr><th>ID</th><th>Nombre</th><th>Categoría</th><th>Precio</th><th>Stock</th><th></th></tr></thead>
+    <tbody>
+    {% for p in productos %}
+    <tr>
+        <td>{{ p.id }}</td>
+        <td>{{ p.nombre }}</td>
+        <td><span class="chip">{{ p.categoria }}</span></td>
+        <td>${{ "%.2f"|format(p.precio) }}</td>
+        <td>{{ p.stock }}</td>
+        <td>
+            <button class="btn-sm" onclick="editarModal({{ p.id }}, '{{ p.nombre|e }}', '{{ p.categoria|e }}', {{ p.precio }}, {{ p.stock }})">✏️</button>
+            {% if session.rol == 'admin' %}
+            <form method="POST" action="/productos/desactivar/{{ p.id }}" style="display:inline;">
+                <button type="submit" class="btn-sm btn-danger" onclick="return confirm('¿Desactivar?')">🗑️</button>
+            </form>
+            {% endif %}
+        </td>
+    </tr>
+    {% endfor %}
+    </tbody>
+</table>
+
+<!-- Modal Editar -->
+<div id="edit-modal" class="modal" style="display:none;">
+    <div class="modal-content">
+        <h3>Editar Producto</h3>
+        <form id="edit-form" method="POST" style="display:flex; flex-direction:column; gap:8px;">
+            <input type="text" name="nombre" id="ed-nombre" placeholder="Nombre">
+            <input type="text" name="categoria" id="ed-cat" placeholder="Categoría">
+            <input type="number" name="precio" id="ed-precio" placeholder="Precio" step="0.01">
+            <input type="number" name="stock" id="ed-stock" placeholder="Stock">
+            <div style="display:flex; gap:8px;">
+                <button type="submit" class="btn btn-success">Guardar</button>
+                <button type="button" class="btn" onclick="document.getElementById('edit-modal').style.display='none'">Cancelar</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function toggleForm(id) {
+    const el = document.getElementById(id);
+    el.style.display = el.style.display === 'none' ? '' : 'none';
+}
+function editarModal(id, nombre, cat, precio, stock) {
+    document.getElementById('edit-form').action = '/productos/editar/' + id;
+    document.getElementById('ed-nombre').value = nombre;
+    document.getElementById('ed-cat').value = cat;
+    document.getElementById('ed-precio').value = precio;
+    document.getElementById('ed-stock').value = stock;
+    document.getElementById('edit-modal').style.display = 'flex';
+}
+</script>
+{% endblock %}

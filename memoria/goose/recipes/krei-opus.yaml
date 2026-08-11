@@ -1,0 +1,79 @@
+# krei-opus — Recipe maestro
+# Eleva goose a nivel Opus: árbol pensante + subagentes + auto-review
+
+name: krei-opus
+description: "Recipe Opus-level: árbol pensante, tree-of-thought, auto-verificación, subagentes especializados"
+author: krei
+version: "1.0"
+
+# Skills que carga automáticamente
+skills:
+  - krei-arbol-pensante  # skill principal de razonamiento
+
+# Extensiones necesarias
+extensions:
+  - developer    # shell + file I/O
+  - analyze       # tree-sitter AST
+  - summon        # delegación a subagentes
+  - todo          # checklist tracking
+  - chatrecall    # memoria conversacional
+
+# Flujo de trabajo
+steps:
+  - name: parse
+    description: "Fase 0-1: Detenerse y comprender objetivo"
+    skills: [krei-arbol-pensante]
+    prompt: "Ejecuta FASE 0 (STOP) y FASE 1 (SEARCH-FIRST) de krei-arbol-pensante. Parse objetivo, identifica riesgos, ambigüedades."
+    validate:
+      - "Objetivo definido en 1 frase"
+      - "Riesgos identificados"
+      - "Ambigüedades resueltas o preguntadas"
+
+  - name: scan
+    description: "Fase 2: Escanear estado actual del proyecto"
+    tools: [tree, cat, shell, analyze]
+    skills: [krei-arbol-pensante]
+    prompt: "Ejecuta búsqueda de estado actual. Usa tree, git status, revisa archivos clave. Reporta errores pre-existentes."
+    validate:
+      - "Tree del directorio relevante"
+      - "Estado git conocido"
+      - "Errores pre-existentes documentados"
+
+  - name: think
+    description: "Fase 3: Tree-of-thought — generar y evaluar ramas"
+    skills: [krei-arbol-pensante]
+    prompt: "Genera ≥3 approaches distintos. Evalúa cada uno por correctitud, simplicidad, riesgo, mantenibilidad, costo. Decide cuál."
+    validate:
+      - "Mínimo 3 ramas"
+      - "Decisión con justificación"
+      - "Riesgo evaluado"
+
+  - name: plan
+    description: "Fase 4: Plan de ejecución atómico"
+    skills: [krei-arbol-pensante]
+    prompt: "Desglosa solución en pasos atómicos verificables. Cada paso tiene verificación. Incluye rollback."
+    validate:
+      - "Pasos atómicos"
+      - "Cada paso tiene verificación"
+      - "Rollback planeado"
+
+  - name: execute
+    description: "Ejecutar plan paso a paso, verificando cada uno"
+    tools: [shell, write, edit]
+    skills: [krei-arbol-pensante]
+    prompt: "Ejecuta plan paso a paso. Verifica cada paso antes del siguiente."
+
+  - name: review
+    description: "Fase 5: Auto-review post-ejecución"
+    skills: [krei-arbol-pensante]
+    prompt: "Ejecuta auto-review. Integridad, regresiones, calidad. Reporta honestamente."
+    validate:
+      - "Todo ejecutado"
+      - "Sin regresiones"
+      - "Resultado verificado"
+
+# Para tareas complejas que requieren subagentes
+agent:
+  delegation: auto
+  max_subagents: 3
+  strategy: parallel  # para tareas independientes, deps estrictas → sequential

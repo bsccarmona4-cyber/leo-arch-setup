@@ -1,0 +1,29 @@
+# Cybersec Skill - Goose
+
+## NAME
+cybersec
+
+## DESCRIPTION
+Modo aprendizaje ciberseguridad. Laboratorio local Arch + BlackArch. Protocolo estricto herramientas.
+
+## IDENTITY
+- Usuario: leo, Arch Linux
+- Enfoque: práctico, atacante real, lab local
+- Proyecto: ~/secure/
+- Separado: ~/kreid/ (dropshipping) y ~/guardian/ (ignorar siempre)
+
+## STATE CURRENT (29 Jun 2026)
+- BlackArch: blackarch-strap.sh en /tmp, SHA1 verificado, necesita sudo
+- Docker: instalado. Lab vulnerable: NO montado
+- tools_vuln/: existe vacío
+- nmap: instalado
+
+## PROTOCOL HERRAMIENTAS (fijo, no negociable)
+1. Verificar checksum/firma oficial SIEMPRE
+2. Source original, no mirrors random
+3. Preferir pacman oficial > AUR > pip/gem
+4. AUR: aur-check antes de yay
+5. Si duda: contenedor primero
+
+## NEXT STEP
+Ejecutar: sudo ./blackarch-strap.sh (pendiente de reinicio lap)

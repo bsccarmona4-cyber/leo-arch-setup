@@ -1,0 +1,185 @@
+================================================================================
+        DOCUMENTACION EXTERNA - SISTEMA DE INSCRIPCIONES
+================================================================================
+
+1. DATOS GENERALES
+--------------------------------------------------------------------------------
+Nombre del programa : Sistema de Inscripciones
+Archivo             : inscripciones_bd.py
+Lenguaje            : Python 3
+Base de datos       : SQLite (inscripciones.db)
+Interfaz grafica    : tkinter / ttk
+Autor               : Leo
+Fecha               : 30 de junio de 2026
+
+
+2. DESCRIPCION DEL SISTEMA
+--------------------------------------------------------------------------------
+Aplicacion de escritorio que permite gestionar el registro de alumnos, cursos
+e inscripciones. Utiliza SQLite como motor de base de datos embebido y tkinter
+para la interfaz grafica. El sistema implementa operaciones CRUD (Crear, Leer,
+Actualizar, Eliminar) sobre las tres tablas.
+
+
+3. MODELO ENTIDAD-RELACION
+--------------------------------------------------------------------------------
+
+    +------------------+         +-------------------+
+    |     ALUMNO       |         |      CURSO        |
+    |  (Entidad fuerte)|         |  (Entidad fuerte) |
+    +------------------+         +-------------------+
+    | IDAlumno (PK)    |         | IDCurso (PK)      |
+    | Nombre           |         | Nombre            |
+    | ApellidoPaterno  |         | Duracion          |
+    | ApellidoMaterno  |         | Costo             |
+    | CURP (UNIQUE)    |         +-------------------+
+    | Celular          |                  |
+    +------------------+                  |
+             |                            |
+             |     +------------------+   |
+             +---->|   INSCRIPCION    |<--+
+                   | (Entidad debil)  |
+                   +------------------+
+                   | Folio (PK)       |
+                   | IDAlumno (FK)    |
+                   | IDCurso (FK)     |
+                   | Costo            |
+                   | Duracion         |
+                   +------------------+
+
+Relaciones:
+    - Un alumno puede tener muchas inscripciones (1:N)
+    - Un curso puede tener muchas inscripciones (1:N)
+    - Una inscripcion pertenece a un alumno y a un curso
+    - Eliminacion en cascada: al borrar un alumno o curso, se eliminan
+      automaticamente todas sus inscripciones asociadas
+
+
+4. ESTRUCTURA DE LAS TABLAS
+--------------------------------------------------------------------------------
+
+4.1 Tabla ALUMNO
+    Campo            | Tipo     | Restricciones
+    -----------------+----------+---------------------------
+    IDAlumno         | INTEGER  | PRIMARY KEY AUTOINCREMENT
+    Nombre           | TEXT     | NOT NULL
+    ApellidoPaterno  | TEXT     | NOT NULL
+    ApellidoMaterno  | TEXT     | NOT NULL
+    CURP             | TEXT     | NOT NULL, UNIQUE
+    Celular          | TEXT     | NOT NULL
+
+4.2 Tabla CURSO
+    Campo            | Tipo     | Restricciones
+    -----------------+----------+---------------------------
+    IDCurso          | INTEGER  | PRIMARY KEY AUTOINCREMENT
+    Nombre           | TEXT     | NOT NULL
+    Duracion         | TEXT     | NOT NULL
+    Costo            | REAL     | NOT NULL
+
+4.3 Tabla INSCRIPCION
+    Campo            | Tipo     | Restricciones
+    -----------------+----------+---------------------------
+    Folio            | INTEGER  | PRIMARY KEY AUTOINCREMENT
+    IDAlumno         | INTEGER  | NOT NULL, FOREIGN KEY -> Alumno(IDAlumno)
+    IDCurso          | INTEGER  | NOT NULL, FOREIGN KEY -> Curso(IDCurso)
+    Costo            | REAL     | NOT NULL
+    Duracion         | TEXT     | NOT NULL
+
+
+5. REQUISITOS DEL SISTEMA
+--------------------------------------------------------------------------------
+    - Python 3.6 o superior
+    - Modulo tkinter (incluido en la instalacion estandar de Python)
+    - Modulo sqlite3 (incluido en la instalacion estandar de Python)
+    - No requiere instalacion de paquetes externos
+
+
+6. INSTALACION Y EJECUCION
+--------------------------------------------------------------------------------
+    1. Guardar el archivo inscripciones_bd.py en cualquier directorio.
+    2. Abrir una terminal en ese directorio.
+    3. Ejecutar:
+           python3 inscripciones_bd.py
+    4. La base de datos inscripciones.db se crea automaticamente en el mismo
+       directorio del script al ejecutar por primera vez.
+
+
+7. MANUAL DE USO
+--------------------------------------------------------------------------------
+
+7.1 Pestana Alumnos
+    - AGREGAR: Llenar los campos Nombre, Apellido Paterno, Apellido Materno,
+      CURP y Celular. Presionar "Agregar". El IDAlumno se genera
+      automaticamente.
+    - ACTUALIZAR: Seleccionar un alumno de la tabla (los datos se cargan en
+      el formulario). Modificar los campos deseados y presionar "Actualizar".
+    - ELIMINAR: Seleccionar un alumno de la tabla y presionar "Eliminar".
+      Confirmar la eliminacion. Se eliminaran tambien sus inscripciones.
+    - LIMPIAR: Presionar "Limpiar" para vaciar el formulario.
+
+7.2 Pestana Cursos
+    - Funciona de la misma manera que la pestana de Alumnos.
+    - El campo Costo debe ser un valor numerico.
+    - Al eliminar un curso, se eliminan sus inscripciones asociadas.
+
+7.3 Pestana Inscripciones
+    - AGREGAR: Seleccionar un alumno y un curso de las listas desplegables.
+      Al seleccionar un curso, el costo y la duracion se autocompletan con
+      los datos del curso. Se pueden modificar antes de guardar. Presionar
+      "Agregar".
+    - ACTUALIZAR: Seleccionar una inscripcion de la tabla, modificar los
+      campos deseados y presionar "Actualizar".
+    - ELIMINAR: Seleccionar una inscripcion y presionar "Eliminar".
+    - LIMPIAR: Presionar "Limpiar" para vaciar el formulario.
+
+
+8. ESTRUCTURA DEL CODIGO
+--------------------------------------------------------------------------------
+
+    Seccion                  | Lineas aprox. | Descripcion
+    -------------------------+---------------+--------------------------------
+    Docstring general        | 1-15          | Descripcion del programa
+    Imports                  | 17-20         | Librerias utilizadas
+    DB_PATH                  | 22-23         | Ruta de la base de datos
+    conectar()               | 28-31         | Conexion a SQLite
+    crear_tablas()           | 34-75         | Creacion de las 3 tablas
+    CRUD Alumno              | 80-113        | insertar, obtener, actualizar, eliminar
+    CRUD Curso               | 118-149       | insertar, obtener, actualizar, eliminar
+    CRUD Inscripcion         | 154-190       | insertar, obtener, actualizar, eliminar
+    Clase App                | 195-fin       | Interfaz grafica completa
+      _configurar_estilo()   |               | Tema oscuro visual
+      _crear_tab_alumno()    |               | Pestana de alumnos
+      _crear_tab_curso()     |               | Pestana de cursos
+      _crear_tab_inscripcion()|              | Pestana de inscripciones
+    Punto de entrada         | ultimas       | Ejecuta crear_tablas() y App()
+
+
+9. FUNCIONES PRINCIPALES
+--------------------------------------------------------------------------------
+
+    Funcion                      | Parametros                          | Retorno
+    -----------------------------+-------------------------------------+--------
+    conectar()                   | Ninguno                             | Connection
+    crear_tablas()               | Ninguno                             | None
+    insertar_alumno()            | nombre, ap_pat, ap_mat, curp, cel   | None
+    obtener_alumnos()            | Ninguno                             | list
+    actualizar_alumno()          | id, nombre, ap_pat, ap_mat, curp, cel| None
+    eliminar_alumno()            | id_alumno                           | None
+    insertar_curso()             | nombre, duracion, costo             | None
+    obtener_cursos()             | Ninguno                             | list
+    actualizar_curso()           | id, nombre, duracion, costo         | None
+    eliminar_curso()             | id_curso                            | None
+    insertar_inscripcion()       | id_alumno, id_curso, costo, duracion| None
+    obtener_inscripciones()      | Ninguno                             | list
+    actualizar_inscripcion()     | folio, id_alumno, id_curso, costo, dur| None
+    eliminar_inscripcion()       | folio                               | None
+
+
+10. VALIDACIONES
+--------------------------------------------------------------------------------
+    - Todos los campos son obligatorios (no se permiten campos vacios).
+    - El CURP debe ser unico; si se repite, SQLite rechaza el registro.
+    - El campo Costo debe ser numerico; si no lo es, se muestra un error.
+    - No se puede agregar una inscripcion sin un alumno y un curso validos.
+    - Antes de eliminar, se solicita confirmacion al usuario.
+    - Las llaves foraneas estan activas (PRAGMA foreign_keys = ON).

@@ -1,0 +1,3308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FearEngine & 3D Zones Showcase</title>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=JetBrains+Mono:wght@400;700&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-dark: #0a0c10;
+      --bg-card: rgba(18, 22, 30, 0.75);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --accent-color: #ff5252;
+      --accent-glow: rgba(255, 82, 82, 0.35);
+      --text-main: #f0f2f5;
+      --text-muted: #8a94a6;
+      --glass-blur: blur(16px);
+      --font-sans: 'Outfit', sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      user-select: none;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      font-family: var(--font-sans);
+      overflow: hidden;
+      width: 100vw;
+      height: 100vh;
+    }
+
+    /* Contenedor 3D */
+    #canvas-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 1;
+    }
+
+    /* Interfaz de Usuario Overlay */
+    .overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none;
+      display: grid;
+      grid-template-columns: 340px 1fr 340px;
+      grid-template-rows: 80px 1fr;
+      padding: 24px;
+      gap: 24px;
+    }
+
+    .interactive {
+      pointer-events: auto;
+    }
+
+    /* Glass Panel Base */
+    .glass-panel {
+      background: var(--bg-card);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.5);
+      transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .glass-panel:hover {
+      border-color: rgba(255, 82, 82, 0.2);
+    }
+
+    /* Cabecera / Header */
+    header {
+      grid-column: 1 / -1;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      height: 100%;
+    }
+
+    header h1 {
+      font-size: 24px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #fff 30%, var(--accent-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header h1::before {
+      content: '';
+      display: inline-block;
+      width: 12px;
+      height: 12px;
+      background-color: var(--accent-color);
+      border-radius: 50%;
+      box-shadow: 0 0 12px var(--accent-color);
+      animation: pulse 1.5s infinite;
+    }
+
+    .badge {
+      background: rgba(255, 255, 255, 0.05);
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      border: 1px solid var(--border-color);
+      color: var(--text-muted);
+    }
+
+    /* Panel Izquierdo: Controles de Zonas */
+    .left-panel {
+      grid-column: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .section-title {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      font-weight: 600;
+      border-left: 3px solid var(--accent-color);
+      padding-left: 8px;
+    }
+
+    .zone-selector {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .btn {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      color: var(--text-main);
+      padding: 12px 16px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-family: var(--font-sans);
+      font-weight: 600;
+      text-align: left;
+      transition: all 0.2s ease;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn:hover {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    .btn.active {
+      background: var(--accent-color);
+      color: #000;
+      border-color: var(--accent-color);
+      box-shadow: 0 0 15px var(--accent-glow);
+    }
+
+    .btn.active .btn-sub {
+      color: rgba(0, 0, 0, 0.7);
+    }
+
+    .btn-sub {
+      font-size: 11px;
+      font-family: var(--font-mono);
+      color: var(--text-muted);
+    }
+
+    /* Panel de Estado / Consola */
+    .console-panel {
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    .console-logs {
+      font-family: var(--font-mono);
+      font-size: 11px;
+      color: #a3be8c;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 8px;
+      padding: 12px;
+      flex-grow: 1;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      border: 1px solid rgba(0, 0, 0, 0.2);
+    }
+
+    /* Panel Derecho: FearEngine Monitor */
+    .right-panel {
+      grid-column: 3;
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+      max-height: calc(100vh - 48px);
+      overflow-y: auto;
+      padding-right: 8px;
+    }
+
+    .right-panel::-webkit-scrollbar {
+      width: 4px;
+    }
+    .right-panel::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.01);
+    }
+    .right-panel::-webkit-scrollbar-thumb {
+      background: rgba(255,82,82,0.2);
+      border-radius: 2px;
+    }
+    .right-panel::-webkit-scrollbar-thumb:hover {
+      background: rgba(255,82,82,0.4);
+    }
+
+    .fear-meter-container {
+      position: relative;
+      width: 100%;
+      height: 120px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      border: 1px solid var(--border-color);
+      overflow: hidden;
+    }
+
+    /* Pulso visual detrás del HUD de miedo */
+    .fear-heart-glow {
+      position: absolute;
+      width: 80px;
+      height: 80px;
+      background: var(--accent-color);
+      filter: blur(40px);
+      border-radius: 50%;
+      opacity: 0.1;
+      transition: all 0.1s ease;
+      pointer-events: none;
+    }
+
+    .fear-value {
+      font-size: 48px;
+      font-weight: 800;
+      font-family: var(--font-mono);
+      color: var(--accent-color);
+      text-shadow: 0 0 10px var(--accent-glow);
+      z-index: 2;
+    }
+
+    .fear-label {
+      font-size: 12px;
+      letter-spacing: 2px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      z-index: 2;
+    }
+
+    .progress-bar-bg {
+      width: 100%;
+      height: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-top: 10px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, #ff7b7b, var(--accent-color));
+      box-shadow: 0 0 8px var(--accent-glow);
+      transition: width 0.1s linear;
+    }
+
+    /* Controladores de Simulación */
+    .sim-controls {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .switch-container {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.03);
+    }
+
+    .switch-label {
+      font-size: 14px;
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+    }
+
+    .switch-label span {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Custom Checkbox/Toggle Switch */
+    .switch {
+      position: relative;
+      display: inline-block;
+      width: 44px;
+      height: 22px;
+    }
+
+    .switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+
+    .slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: .3s;
+      border-radius: 34px;
+      border: 1px solid var(--border-color);
+    }
+
+    .slider:before {
+      position: absolute;
+      content: "";
+      height: 14px;
+      width: 14px;
+      left: 3px;
+      bottom: 3px;
+      background-color: white;
+      transition: .3s;
+      border-radius: 50%;
+    }
+
+    input:checked + .slider {
+      background-color: var(--accent-color);
+    }
+
+    input:checked + .slider:before {
+      transform: translateX(22px);
+    }
+
+    /* Premium Range Input */
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: rgba(255, 255, 255, 0.05);
+      height: 6px;
+      border-radius: 3px;
+      outline: none;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 10px 0;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--accent-color);
+      cursor: pointer;
+      border: 2px solid #fff;
+      box-shadow: 0 0 8px var(--accent-color);
+      transition: transform 0.1s ease;
+    }
+    input[type="range"]::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    /* Multipliers */
+    .multipliers {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .mult-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 10px;
+      text-align: center;
+    }
+
+    .mult-card.active {
+      border-color: var(--accent-color);
+      background: rgba(255, 82, 82, 0.05);
+    }
+
+    .mult-val {
+      font-family: var(--font-mono);
+      font-size: 14px;
+      font-weight: bold;
+    }
+
+    .mult-val.up { color: #ff7b7b; }
+    .mult-val.down { color: #a3be8c; }
+
+    .mult-lbl {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 4px;
+      text-transform: uppercase;
+    }
+
+    /* Sub-controles para manipulación específica de zonas */
+    .zone-manipulation {
+      margin-top: 10px;
+      padding: 12px;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      border: 1px solid var(--border-color);
+    }
+
+    .manip-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .manip-row span {
+      font-size: 12px;
+      color: var(--text-muted);
+    }
+
+    .btn-small {
+      padding: 6px 12px;
+      font-size: 11px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      color: var(--text-main);
+      cursor: pointer;
+    }
+
+    .btn-small:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+
+    /* Instrucciones flotantes abajo */
+    .instructions {
+      grid-column: 2;
+      grid-row: 2;
+      align-self: end;
+      justify-self: center;
+      margin-bottom: 24px;
+      text-align: center;
+      background: rgba(10, 12, 16, 0.8);
+      padding: 10px 20px;
+      border-radius: 30px;
+      border: 1px solid var(--border-color);
+      font-size: 13px;
+      color: var(--text-muted);
+      backdrop-filter: var(--glass-blur);
+    }
+
+    .instructions strong {
+      color: var(--text-main);
+    }
+
+    /* Efecto de viñeta roja por miedo extremo */
+    #fear-vignette {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 5;
+      pointer-events: none;
+      box-shadow: inset 0 0 100px rgba(255, 82, 82, 0);
+      transition: box-shadow 0.3s ease;
+    }
+
+    @keyframes pulse {
+      0% { transform: scale(1); box-shadow: 0 0 8px var(--accent-color); }
+      50% { transform: scale(1.2); box-shadow: 0 0 18px var(--accent-color); }
+      100% { transform: scale(1); box-shadow: 0 0 8px var(--accent-color); }
+    }
+
+    /* Responsive */
+    @media (max-width: 1000px) {
+      .overlay {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto auto;
+        overflow-y: auto;
+        pointer-events: auto;
+      }
+      .interactive {
+        pointer-events: auto;
+      }
+      body {
+        overflow-y: auto;
+      }
+      .instructions {
+        display: none;
+      }
+    }
+
+    /* Calibration overlay */
+    #calibration-screen {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0a0c10;
+      z-index: 1000;
+      display: none;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Outfit', sans-serif;
+    }
+    
+    #calibration-bar {
+      width: 0%;
+      height: 100%;
+      background: #ff5252;
+      box-shadow: 0 0 10px #ff5252;
+      transition: width 0.5s ease;
+    }
+
+    /* Warning for mobile portrait orientation */
+    #orientation-warning {
+      display: none;
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: #0a0c10;
+      z-index: 2000;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      font-family: 'Outfit', sans-serif;
+      text-align: center;
+      padding: 20px;
+    }
+    
+    /* FPS pause instructions */
+    #instructions-fps {
+      display: none;
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background: rgba(0,0,0,0.85);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 24px;
+      text-align: center;
+      pointer-events: none;
+      z-index: 100;
+      font-family: 'Outfit', sans-serif;
+      backdrop-filter: var(--glass-blur);
+      width: 320px;
+      box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.7);
+    }
+    
+    /* Mobile controls overlay */
+    #mobile-ui {
+      display: none;
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 50;
+      pointer-events: none;
+    }
+    
+    .mobile-action-btn {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      background: rgba(18, 22, 30, 0.75);
+      border: 2px solid var(--border-color);
+      color: #fff;
+      font-family: 'Outfit', sans-serif;
+      font-weight: 800;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      backdrop-filter: var(--glass-blur);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+      pointer-events: auto;
+      transition: all 0.2s ease;
+    }
+    
+    .mobile-action-btn:active {
+      background: #ff5252 !important;
+      color: #000 !important;
+      border-color: #ff5252 !important;
+      box-shadow: 0 0 15px rgba(255, 82, 82, 0.6);
+      transform: scale(0.92);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Calibración y Carga -->
+  <div id="calibration-screen">
+    <div style="font-size: 24px; font-weight: 800; text-transform: uppercase; letter-spacing: 2px; margin-bottom: 20px; background: linear-gradient(135deg, #fff, #ff5252); -webkit-background-clip: text; -webkit-text-fill-color: transparent;">Calibrando Hardware</div>
+    <div style="width: 240px; height: 6px; background: rgba(255, 255, 255, 0.1); border-radius: 3px; overflow: hidden; margin-bottom: 15px;">
+      <div id="calibration-bar"></div>
+    </div>
+    <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono);" id="calibration-text">Analizando rendimiento gráfico...</div>
+  </div>
+
+  <!-- Advertencia de Orientación Horizontal -->
+  <div id="orientation-warning">
+    <div style="font-size: 48px; margin-bottom: 20px; animation: pulse 1.5s infinite;">🔄</div>
+    <div style="font-size: 20px; font-weight: 800; text-transform: uppercase; color: #fff; margin-bottom: 10px; letter-spacing: 1px;">Gira tu dispositivo</div>
+    <div style="font-size: 13px; color: var(--text-muted); max-width: 280px; line-height: 1.5;">Esta experiencia requiere modo horizontal (Landscape) en dispositivos móviles.</div>
+  </div>
+
+  <!-- Instrucciones de pausa para FPS en escritorio -->
+  <div id="instructions-fps">
+    <div style="font-size: 16px; font-weight: 800; margin-bottom: 12px; color: var(--accent-color); letter-spacing: 1px; text-transform: uppercase;">Modo Juego Activo</div>
+    <div style="font-size: 13px; color: #fff; line-height: 1.4; margin-bottom: 16px;">Haz clic en la pantalla para capturar el cursor y explorar en primera persona.</div>
+    <div style="font-size: 11px; color: var(--text-muted); background: rgba(0,0,0,0.3); padding: 8px; border-radius: 8px; font-family: var(--font-mono); text-align: left; line-height: 1.6;">
+      W,A,S,D &rarr; Moverse<br>
+      SHIFT &rarr; Agacharse<br>
+      ESPACIO &rarr; Saltar<br>
+      TAB &rarr; Linterna<br>
+      E &rarr; Interactuar
+    </div>
+  </div>
+
+  <!-- Controles Táctiles para Móvil -->
+  <div id="mobile-ui">
+    <canvas id="joystick-canvas" style="position: absolute; bottom: 30px; left: 30px; width: 140px; height: 140px; pointer-events: auto;"></canvas>
+    <div id="swipe-area" style="position: absolute; top: 80px; right: 0; width: 50%; height: calc(100% - 80px); pointer-events: auto;"></div>
+    <div style="position: absolute; bottom: 30px; right: 30px; display: flex; gap: 12px; pointer-events: auto;">
+      <button class="mobile-action-btn" id="btn-mobile-crouch">SHF</button>
+      <button class="mobile-action-btn" id="btn-mobile-flashlight">💡</button>
+      <button class="mobile-action-btn" id="btn-mobile-interact">E</button>
+    </div>
+  </div>
+
+  <!-- Subtítulos de la Historia -->
+  <div id="subtitles" style="position: absolute; bottom: 80px; left: 50%; transform: translateX(-50%); text-align: center; color: #fff; font-family: var(--font-sans); font-size: 18px; font-weight: 600; text-shadow: 0 2px 5px rgba(0,0,0,0.95); z-index: 100; pointer-events: none; max-width: 600px; line-height: 1.5; background: rgba(10,12,16,0.85); padding: 12px 24px; border-radius: 8px; border: 1px solid var(--border-color); display: none; backdrop-filter: var(--glass-blur);"></div>
+
+  <div id="fear-vignette"></div>
+  <div id="canvas-container"></div>
+
+  <div class="overlay" style="display: none !important;">
+    <!-- Header -->
+    <header class="glass-panel interactive" style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+      <h1>FearEngine</h1>
+      <div style="display: flex; align-items: center; gap: 16px;">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <span style="font-size: 11px; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); font-weight: bold;">Modo FPS</span>
+          <label class="switch">
+            <input type="checkbox" id="chk-game-mode" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+        <span class="badge" id="hud-tier-badge">CALIBRANDO GPU...</span>
+      </div>
+    </header>
+
+    <!-- Panel Izquierdo: Zonas & Controles de Entorno -->
+    <div class="left-panel glass-panel interactive">
+      <div class="section-title">Visualización de Zonas</div>
+      <div class="zone-selector">
+        <button class="btn active" id="btn-z1">
+          <span>Zona 1: Torre Octogonal</span>
+          <span class="btn-sub">Cilindro & Cono</span>
+        </button>
+        <button class="btn" id="btn-z2">
+          <span>Zona 2: Pasillo</span>
+          <span class="btn-sub">10 Puertas</span>
+        </button>
+        <button class="btn" id="btn-z3">
+          <span>Zona 3: Laberinto Grid</span>
+          <span class="btn-sub">4x4 Habitaciones</span>
+        </button>
+        <button class="btn" id="btn-visitor">
+          <span>TheVisitor</span>
+          <span class="btn-sub">Humanoide 1.85m</span>
+        </button>
+      </div>
+
+      <!-- Controles dinámicos según zona -->
+      <div class="section-title" style="margin-top: 10px;">Acciones de Zona</div>
+      
+      <!-- Zona 2 manipuladores -->
+      <div class="zone-manipulation" id="manip-z2" style="display: none;">
+        <div class="manip-row">
+          <span>Puertas Izquierdas</span>
+          <div>
+            <button class="btn-small" onclick="toggleSideDoors('Left', true)">Abrir</button>
+            <button class="btn-small" onclick="toggleSideDoors('Left', false)">Cerrar</button>
+          </div>
+        </div>
+        <div class="manip-row">
+          <span>Puertas Derechas</span>
+          <div>
+            <button class="btn-small" onclick="toggleSideDoors('Right', true)">Abrir</button>
+            <button class="btn-small" onclick="toggleSideDoors('Right', false)">Cerrar</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Zona 3 manipuladores -->
+      <div class="zone-manipulation" id="manip-z3" style="display: none;">
+        <div class="manip-row">
+          <span>Paredes Removibles</span>
+          <button class="btn-small" id="btn-toggle-passages">Crear Pasillos</button>
+        </div>
+        <div class="manip-row">
+          <span>Reiniciar Paredes</span>
+          <button class="btn-small" id="btn-reset-walls">Cerrar Todo</button>
+        </div>
+      </div>
+
+      <div class="console-panel">
+        <div class="section-title">Registro de Eventos</div>
+        <div class="console-logs" id="console-logs">
+          <div>[System] FearEngine iniciado.</div>
+          <div>[System] Esperando interacciones...</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Instrucciones -->
+    <div class="instructions">
+      Arrastra para <strong>Rotar Vista</strong> · Rueda para <strong>Zoom</strong> · Modifica los <strong>Estados de Miedo</strong> a la derecha.
+    </div>
+
+    <!-- Panel Derecho: Parámetros del Motor de Miedo -->
+    <div class="right-panel glass-panel interactive">
+      <div class="section-title">Monitor de Miedo</div>
+      
+      <div class="fear-meter-container">
+        <div class="fear-heart-glow" id="heart-glow"></div>
+        <div class="fear-value" id="hud-fear-val">0.00</div>
+        <div class="fear-label" id="hud-fear-label">Calma</div>
+        <div class="progress-bar-bg">
+          <div class="progress-bar-fill" id="hud-fear-bar"></div>
+        </div>
+      </div>
+
+      <div class="section-title">Estado del Jugador (Simulado)</div>
+      
+      <div class="sim-controls">
+        <div class="switch-container">
+          <div class="switch-label">
+            Movimiento
+            <span>Baja miedo (-0.01/s)</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-moving">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="switch-container">
+          <div class="switch-label">
+            Zona Sin Luz (Oscuridad)
+            <span>Sube miedo (+0.01/s)</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-dark">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="switch-container">
+          <div class="switch-label">
+            Cerca de Luz
+            <span>Baja miedo (-0.03/s)</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-near-light">
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="switch-container">
+          <div class="switch-label">
+            Mirando al Monstruo
+            <span>Sube miedo (+0.05/s)</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-monster">
+            <span class="slider"></span>
+          </label>
+        </div>
+      </div>
+
+      <div class="section-title">Sistema de Ojos (EyeSystem)</div>
+      <div class="sim-controls">
+        <div class="switch-container">
+          <div class="switch-label">
+            Seguir al Jugador (lookAt)
+            <span>Iris sigue a la cámara (máx 15°)</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-eye-look" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div style="margin-top: 12px; padding: 4px 0;">
+          <div class="switch-label" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+            <span>Fase de Actuación (Act Phase)</span>
+            <span id="lbl-act-phase" style="font-family: monospace; font-size: 13px; color: var(--accent-color); background: rgba(255,0,0,0.15); padding: 1px 6px; border-radius: 4px; font-weight: bold;">0.00</span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px; margin-bottom: 4px;">
+            Interpolación de negro (0.0) a rgb(0.35, 0.20, 0.15) (3.0)
+          </div>
+          <input type="range" id="rng-act-phase" min="0" max="3" step="0.05" value="0">
+        </div>
+      </div>
+
+      <div class="section-title">Sistema de IA (VisitorAI)</div>
+      <div class="sim-controls">
+        <div class="switch-container">
+          <div class="switch-label">
+            Activar Inteligencia Artificial
+            <span>Moverse/Orbitar según pánico</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-ai-active" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div class="switch-container">
+          <div class="switch-label">
+            Foco de Órbita (Player Proxy)
+            <span>On = Foco Zona, Off = Cámara</span>
+          </div>
+          <label class="switch">
+            <input type="checkbox" id="chk-ai-target-focal" checked>
+            <span class="slider"></span>
+          </label>
+        </div>
+
+        <div style="margin-top: 12px; padding: 4px 0;">
+          <div class="switch-label" style="display: flex; flex-direction: row; justify-content: space-between; align-items: center;">
+            <span>Velocidad del Jugador</span>
+            <span id="lbl-player-speed" style="font-family: monospace; font-size: 13px; color: var(--accent-color); background: rgba(255,0,0,0.15); padding: 1px 6px; border-radius: 4px; font-weight: bold;">2.0 m/s</span>
+          </div>
+          <div style="font-size: 11px; color: var(--text-muted); margin-top: 2px; margin-bottom: 4px;">
+            IA se moverá a velocidad = speed × 1.12
+          </div>
+          <input type="range" id="rng-player-speed" min="0" max="6" step="0.2" value="2.0">
+        </div>
+
+        <div class="switch-container">
+          <div class="switch-label">
+            Estado de IA
+            <span>Modo activo del humanoide</span>
+          </div>
+          <span id="lbl-ai-state" style="font-family: var(--font-mono); font-size: 13px; color: #8a94a6; background: rgba(255,255,255,0.05); padding: 2px 8px; border-radius: 4px; font-weight: bold; text-transform: uppercase;">DORMANT</span>
+        </div>
+      </div>
+
+      <div class="section-title">Multiplicadores Activos</div>
+      <div class="multipliers">
+        <div class="mult-card" id="mult-idle">
+          <div class="mult-val up">+0.02</div>
+          <div class="mult-lbl">Quieto</div>
+        </div>
+        <div class="mult-card" id="mult-moving">
+          <div class="mult-val down">-0.01</div>
+          <div class="mult-lbl">Movimiento</div>
+        </div>
+        <div class="mult-card" id="mult-monster">
+          <div class="mult-val up">+0.05</div>
+          <div class="mult-lbl">Monstruo</div>
+        </div>
+        <div class="mult-card" id="mult-dark">
+          <div class="mult-val up">+0.01</div>
+          <div class="mult-lbl">Oscuridad</div>
+        </div>
+        <div class="mult-card" id="mult-light">
+          <div class="mult-val down">-0.03</div>
+          <div class="mult-lbl">Luz</div>
+        </div>
+        <button class="btn-small" style="grid-column: 1/-1; padding: 8px;" id="btn-reset-fear">Resetear Miedo</button>
+      </div>
+
+      <!-- Panel de Eventos Scripteados (Fase 7) -->
+      <div class="section-title" style="margin-top: 10px;">Eventos Scripteados</div>
+      <div class="sim-controls" style="background: rgba(0,0,0,0.2); padding: 12px; border-radius: 8px; border: 1px solid var(--border-color); display: flex; flex-direction: column; gap: 10px;">
+        
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px;">Cronómetro</span>
+          <span id="lbl-script-time" style="font-family: monospace; font-size: 13px; color: var(--accent-color); font-weight: bold;">00:00</span>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center;">
+          <span style="font-size: 13px;">Acto de Juego</span>
+          <select id="sel-script-act" style="background: #12161e; border: 1px solid var(--border-color); color: var(--text-main); font-family: var(--font-sans); font-size: 12px; padding: 4px 8px; border-radius: 4px; outline: none; cursor: pointer;">
+            <option value="0">Acto 0 (El Oso)</option>
+            <option value="1">Acto 1 (El Dibujo)</option>
+            <option value="2">Acto 2 (Los Pasos)</option>
+            <option value="3">Acto 3 (El Núcleo)</option>
+            <option value="4">Acto 4 (La Polaroid)</option>
+          </select>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; gap: 6px; margin-top: 4px;">
+          <button class="btn-small" style="text-align: left; padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;" id="btn-trigger-m1">
+            <span>🧸 1. El Oso (Acto 0)</span>
+            <span id="state-m1" style="font-family: monospace; font-size: 10px; color: #8a94a6;">DORMANT</span>
+          </button>
+          
+          <button class="btn-small" style="text-align: left; padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;" id="btn-trigger-m2">
+            <span>🎨 2. El Dibujo (Acto 1)</span>
+            <span id="state-m2" style="font-family: monospace; font-size: 10px; color: #8a94a6;">DORMANT</span>
+          </button>
+          
+          <button class="btn-small" style="text-align: left; padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;" id="btn-trigger-m3">
+            <span>👣 3. Los Pasos (Acto 2)</span>
+            <span id="state-m3" style="font-family: monospace; font-size: 10px; color: #8a94a6;">DORMANT</span>
+          </button>
+          
+          <button class="btn-small" style="text-align: left; padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;" id="btn-trigger-m4">
+            <span>💀 4. La Cabeza (Acto 3)</span>
+            <span id="state-m4" style="font-family: monospace; font-size: 10px; color: #8a94a6;">DORMANT</span>
+          </button>
+          
+          <button class="btn-small" style="text-align: left; padding: 8px 10px; font-size: 12px; display: flex; justify-content: space-between; align-items: center;" id="btn-trigger-m5">
+            <span>📸 5. La Foto (Acto 4)</span>
+            <span id="state-m5" style="font-family: monospace; font-size: 10px; color: #8a94a6;">DORMANT</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { PointerLockControls } from 'three/addons/controls/PointerLockControls.js';
+    import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
+    import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
+    import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
+    import FearEngine from './FearEngine.js';
+    import { createZone1, createZone2, createZone3, COLORS } from './Zones.js';
+    import TheVisitor from './TheVisitor.js';
+    import EyeSystem from './EyeSystem.js';
+    import VisitorAI from './VisitorAI.js';
+    import ScriptedEvents from './ScriptedEvents.js';
+    import HardwareDetector from './HardwareDetector.js';
+    import AudioLimiter from './AudioLimiter.js';
+
+    // ─────────────────────────────────────────────────────────────
+    //  VARIABLES DE CONTROL, RENDIMIENTO Y PORTAL CULLING
+    // ─────────────────────────────────────────────────────────────
+    let gameMode = true;
+    let isMobile = false;
+    let detectedTier = 'high';
+    const audioLimiter = new AudioLimiter();
+    let plControls = null;
+
+    // Story Mode State Manager
+    let storyState = {
+      initialized: false,
+      act: 0, // 0: Oso, 1: Dibujo, 2: Pasos, 3: Cabeza, 4: Polaroid, 5: Fin
+      introSubtitleShown: false,
+      z2HintShown: false,
+      z3HintShown: false
+    };
+
+    function showSubtitle(text, duration = 4000) {
+      const el = document.getElementById('subtitles');
+      if (!el) return;
+      el.textContent = text;
+      el.style.display = 'block';
+      
+      if (window.subtitleTimeout) clearTimeout(window.subtitleTimeout);
+      
+      window.subtitleTimeout = setTimeout(() => {
+        el.style.display = 'none';
+      }, duration);
+    }
+
+    function triggerEndGame() {
+      const screen = document.getElementById('calibration-screen');
+      if (screen) {
+        screen.innerHTML = `
+          <div style="font-size: 48px; font-weight: 800; text-transform: uppercase; letter-spacing: 6px; margin-bottom: 20px; color: #ff5252; text-shadow: 0 0 20px rgba(255, 82, 82, 0.6); animation: pulse 2s infinite;">FIN</div>
+          <div style="font-size: 14px; color: #fff; opacity: 0.8; letter-spacing: 2px;">Siempre estuvo allí...</div>
+        `;
+        screen.style.display = 'flex';
+        screen.style.flexDirection = 'column';
+        screen.style.justifyContent = 'center';
+        screen.style.alignItems = 'center';
+        screen.style.opacity = '0';
+        screen.style.transition = 'opacity 3.0s ease';
+        
+        screen.offsetHeight;
+        screen.style.opacity = '1';
+        
+        gameMode = false;
+        controls.enabled = false;
+        if (plControls && plControls.isLocked) {
+          plControls.unlock();
+        }
+        
+        document.getElementById('instructions-fps').style.display = 'none';
+        document.getElementById('mobile-ui').style.display = 'none';
+        document.getElementById('subtitles').style.display = 'none';
+      }
+    }
+    
+    // FPS Monitor Variables
+    let fpsHistory = [];
+    let fpsTimer2s = 0.0;
+    
+    // Joystick and swipe control state
+    let joystickX = 0;
+    let joystickY = 0;
+    let isCrouching = false;
+    let currentEyeHeight = 1.6;
+    let yVelocity = 0;
+    let isGrounded = true;
+    const gravity = 25.0; // m/s^2
+    const jumpForce = 8.5; // m/s
+    
+    // Key listeners state
+    const keys = { w: false, a: false, s: false, d: false, shift: false, space: false };
+
+    // ─────────────────────────────────────────────────────────────
+    //  VARIABLES DE AUDIO GLOBAL Y SINTETIZADORES
+    // ─────────────────────────────────────────────────────────────
+    let audioCtx = null;
+    let listener = null;
+    let monsterPanner = null;
+    let breathingNoiseSource = null;
+    let noiseBuffer = null;
+    let footstepTimeAccumulator = 0.55; // Para que el primer paso sea instantáneo
+    let scriptedEvents = null; // Gestor de coreografías de terror
+
+    // ─────────────────────────────────────────────────────────────
+    //  INICIALIZACIÓN DE SCENE & RENDERER
+    // ─────────────────────────────────────────────────────────────
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x07080a);
+    scene.fog = new THREE.FogExp2(0x07080a, 0.015);
+
+    const camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+    camera.rotation.order = 'YXZ'; // Yaw-pitch rotation order for FPS controls
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(container.clientWidth, container.clientHeight);
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.05;
+    controls.maxPolarAngle = Math.PI / 2 - 0.05; // No ir por debajo del suelo
+
+    // PointerLockControls setup
+    plControls = new PointerLockControls(camera, document.body);
+    scene.add(plControls.getObject());
+
+    // ─────────────────────────────────────────────────────────────
+    //  VHS SHADER PASS & EFFECT COMPOSER SETUP
+    // ─────────────────────────────────────────────────────────────
+    const vhsShader = {
+      name: 'VHSShader',
+      uniforms: {
+        tDiffuse: { value: null },
+        uTime: { value: 0.0 },
+        fearLevel: { value: 0.0 },
+        trackingGlitch: { value: 0.0 }
+      },
+      vertexShader: `
+        varying vec2 vUv;
+        void main() {
+          vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec2 vUv;
+        uniform sampler2D tDiffuse;
+        uniform float uTime;
+        uniform float fearLevel;
+        uniform float trackingGlitch;
+
+        // Ruido simple 3D
+        float hash(vec3 p) {
+          p = fract(p * vec3(443.8975, 397.2973, 491.1871));
+          p += dot(p.xyz, p.yzx + 19.19);
+          return fract(p.x * p.y * p.z);
+        }
+        float noise(vec3 p) {
+          vec3 i = floor(p);
+          vec3 f = fract(p);
+          vec3 u = f * f * (3.0 - 2.0 * f);
+          return mix(mix(mix(hash(i + vec3(0.0,0.0,0.0)), hash(i + vec3(1.0,0.0,0.0)), u.x),
+                         mix(hash(i + vec3(0.0,1.0,0.0)), hash(i + vec3(1.0,1.0,0.0)), u.x), u.y),
+                     mix(mix(hash(i + vec3(0.0,0.0,1.0)), hash(i + vec3(1.0,0.0,1.0)), u.x),
+                         mix(hash(i + vec3(0.0,1.0,1.0)), hash(i + vec3(1.0,1.0,1.0)), u.x), u.y), u.z);
+        }
+
+        void main() {
+          vec2 uv = vUv;
+          
+          // 1. Tracking Error: desplaza X por 0.04 en el 30% superior del frame
+          if (trackingGlitch > 0.5 && uv.y > 0.7) {
+            uv.x += 0.04;
+          }
+
+          // 2. Aberración Cromática Radial
+          vec2 uvCenter = uv - 0.5;
+          float dist = length(uvCenter);
+          
+          // Centro: 0.001 * fearLevel. Esquinas: 0.008 * fearLevel.
+          float shift = (0.001 + 0.014 * dist * dist) * fearLevel;
+
+          float r = texture2D(tDiffuse, uv - vec2(shift, 0.0)).r;
+          float g = texture2D(tDiffuse, uv).g;
+          float b = texture2D(tDiffuse, uv + vec2(shift, 0.0)).b;
+          vec4 color = vec4(r, g, b, 1.0);
+
+          // 3. Scanlines de grosor variable por noise
+          float scanlineIntensity = (fearLevel > 0.7) ? 0.08 : 0.03;
+          float scanlineNoise = noise(vec3(0.0, uv.y * 12.0, uTime * 3.0));
+          float frequency = 650.0 + 120.0 * scanlineNoise;
+          float scanPattern = sin(uv.y * frequency);
+          float scanlineFactor = 1.0 - (0.5 + 0.5 * scanPattern) * scanlineIntensity;
+          color.rgb *= scanlineFactor;
+
+          // 4. Color Grading: Lift shadows hacia #1a0f08 y desaturar highlights
+          vec3 shadowColor = vec3(0.062, 0.059, 0.031);
+          color.rgb = mix(shadowColor, vec3(1.0), color.rgb);
+
+          float luma = dot(color.rgb, vec3(0.299, 0.587, 0.114));
+          float highlightThreshold = smoothstep(0.45, 0.9, luma);
+          vec3 grayscale = vec3(luma);
+          color.rgb = mix(color.rgb, grayscale, highlightThreshold * 0.25);
+
+          gl_FragColor = color;
+        }
+      `
+    };
+
+    const composer = new EffectComposer(renderer);
+    const renderPass = new RenderPass(scene, camera);
+    composer.addPass(renderPass);
+
+    const vhsPass = new ShaderPass(vhsShader);
+    composer.addPass(vhsPass);
+
+    // Inicialización del audio en la primera interacción
+    function initVisitorAudio() {
+      if (audioCtx) return;
+      try {
+        const AudioContextClass = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContextClass) return;
+        
+        audioCtx = new AudioContextClass();
+        listener = audioCtx.listener;
+        
+        // Crear buffer de ruido blanco
+        const bufferSize = audioCtx.sampleRate * 2;
+        noiseBuffer = audioCtx.createBuffer(1, bufferSize, audioCtx.sampleRate);
+        const output = noiseBuffer.getChannelData(0);
+        for (let i = 0; i < bufferSize; i++) {
+          output[i] = Math.random() * 2 - 1;
+        }
+        
+        // Iniciar sonido procedimental de respiración de The Visitor
+        startMonsterBreathing();
+        
+        logEvent("🔊 Sistema de Audio Web Audio API inicializado.");
+      } catch (e) {
+        console.error("Error al inicializar AudioContext:", e);
+      }
+    }
+
+    // Vincular a los eventos del usuario
+    window.addEventListener('click', initVisitorAudio, { once: true });
+    window.addEventListener('keydown', initVisitorAudio, { once: true });
+
+    // Sintetizador procedimental de respiración para The Visitor
+    function startMonsterBreathing() {
+      if (!audioCtx) return;
+      
+      breathingNoiseSource = audioCtx.createBufferSource();
+      breathingNoiseSource.buffer = noiseBuffer;
+      breathingNoiseSource.loop = true;
+      
+      const breathingFilter = audioCtx.createBiquadFilter();
+      breathingFilter.type = 'bandpass';
+      breathingFilter.Q.value = 3.0;
+      breathingFilter.frequency.value = 220; // frecuencia base
+      
+      const breathingGain = audioCtx.createGain();
+      breathingGain.gain.value = 0.2; // nivel base de volumen
+      audioLimiter.register('breathing', 1, breathingGain, 0.2);
+      
+      monsterPanner = audioCtx.createPanner();
+      monsterPanner.panningModel = 'HRTF';
+      monsterPanner.distanceModel = 'inverse';
+      monsterPanner.refDistance = 4.0;
+      monsterPanner.maxDistance = 60.0;
+      monsterPanner.rolloffFactor = 1.0;
+      
+      breathingNoiseSource.connect(breathingFilter);
+      breathingFilter.connect(breathingGain);
+      breathingGain.connect(monsterPanner);
+      monsterPanner.connect(audioCtx.destination);
+      
+      // Moduladores LFO
+      const lfo1 = audioCtx.createOscillator();
+      lfo1.frequency.value = 0.2; // LFO de respiración a 0.2Hz (5 segundos por ciclo)
+      
+      const lfo2 = audioCtx.createOscillator();
+      lfo2.frequency.value = 0.07; // Variación lenta del timbre
+      
+      const lfo3 = audioCtx.createOscillator();
+      lfo3.frequency.value = 0.03; // Drift lento del ritmo del LFO principal
+      
+      const lfo1ToFreq = audioCtx.createGain();
+      lfo1ToFreq.gain.value = 80; // oscila +/- 80Hz
+      
+      const lfo2ToFreq = audioCtx.createGain();
+      lfo2ToFreq.gain.value = 30;
+      
+      const lfo3ToLfo1Freq = audioCtx.createGain();
+      lfo3ToLfo1Freq.gain.value = 0.05;
+      
+      const lfo1ToGain = audioCtx.createGain();
+      lfo1ToGain.gain.value = 0.15; // oscila volumen +/- 0.15 (rango 0.05 a 0.35)
+      
+      lfo3.connect(lfo3ToLfo1Freq);
+      lfo3ToLfo1Freq.connect(lfo1.frequency);
+      
+      lfo1.connect(lfo1ToFreq);
+      lfo1ToFreq.connect(breathingFilter.frequency);
+      
+      lfo2.connect(lfo2ToFreq);
+      lfo2ToFreq.connect(breathingFilter.frequency);
+      
+      lfo1.connect(lfo1ToGain);
+      lfo1ToGain.connect(breathingGain.gain);
+      
+      lfo1.start();
+      lfo2.start();
+      lfo3.start();
+      breathingNoiseSource.start();
+    }
+
+    // Reproducir un único impacto de paso del jugador
+    function playSingleFootstep(time, material, volume, detuneCents) {
+      if (!audioCtx || !noiseBuffer) return;
+      
+      try {
+        const noiseNode = audioCtx.createBufferSource();
+        noiseNode.buffer = noiseBuffer;
+        
+        const noiseFilter = audioCtx.createBiquadFilter();
+        const osc = audioCtx.createOscillator();
+        
+        const noiseGain = audioCtx.createGain();
+        const oscGain = audioCtx.createGain();
+        const masterFootstepGain = audioCtx.createGain();
+        
+        noiseNode.connect(noiseFilter);
+        noiseFilter.connect(noiseGain);
+        noiseGain.connect(masterFootstepGain);
+        
+        osc.connect(oscGain);
+        oscGain.connect(masterFootstepGain);
+        
+        masterFootstepGain.connect(audioCtx.destination);
+        
+        if (detuneCents) {
+          osc.detune.setValueAtTime(detuneCents, time);
+        }
+        
+        let duration = 0.12;
+        
+        if (material === 'stone') {
+          noiseFilter.type = 'lowpass';
+          noiseFilter.frequency.setValueAtTime(180, time);
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(70, time);
+          
+          noiseGain.gain.setValueAtTime(0.3 * volume, time);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+          
+          oscGain.gain.setValueAtTime(0.5 * volume, time);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.10);
+          
+          duration = 0.10;
+        } else if (material === 'wood') {
+          noiseFilter.type = 'bandpass';
+          noiseFilter.Q.setValueAtTime(5.0, time);
+          noiseFilter.frequency.setValueAtTime(150, time);
+          
+          osc.type = 'triangle';
+          osc.frequency.setValueAtTime(90, time);
+          
+          noiseGain.gain.setValueAtTime(0.2 * volume, time);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+          
+          oscGain.gain.setValueAtTime(0.4 * volume, time);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.15);
+          
+          duration = 0.15;
+        } else { // carpet
+          noiseFilter.type = 'lowpass';
+          noiseFilter.frequency.setValueAtTime(80, time);
+          
+          osc.type = 'sine';
+          osc.frequency.setValueAtTime(50, time);
+          
+          noiseGain.gain.setValueAtTime(0.15 * volume, time);
+          noiseGain.gain.exponentialRampToValueAtTime(0.001, time + 0.08);
+          
+          oscGain.gain.setValueAtTime(0.6 * volume, time);
+          oscGain.gain.exponentialRampToValueAtTime(0.001, time + 0.12);
+          
+          duration = 0.12;
+        }
+        
+        noiseNode.start(time);
+        noiseNode.stop(time + duration);
+        osc.start(time);
+        osc.stop(time + duration);
+
+        const stepId = `footstep_${Math.random()}`;
+        audioLimiter.register(stepId, 2, masterFootstepGain, 1.0);
+        setTimeout(() => {
+          audioLimiter.unregister(stepId);
+        }, duration * 1000 + 50);
+      } catch (e) {
+        console.warn("Error al reproducir paso:", e);
+      }
+    }
+
+    // Función pública para reproducir paso con opcional eco acechante
+    function playerFootstep(material) {
+      if (!audioCtx) return;
+      const now = audioCtx.currentTime;
+      
+      // Reproducir paso principal
+      playSingleFootstep(now, material, 1.0, 0);
+      
+      // Si el nivel de miedo es > 0.45, reproducir eco duplicado
+      const fearVal = fearEngine.getFear();
+      if (fearVal > 0.45) {
+        playSingleFootstep(now + 0.080, material, 0.4, -8);
+      }
+    }
+
+    // Sistema de sonido Web Audio API para el glitch (reutilizando context global)
+    function playVHSClickSound() {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gainNode = audioCtx.createGain();
+        
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(80, audioCtx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(10, audioCtx.currentTime + 0.05);
+        
+        gainNode.gain.setValueAtTime(0.12, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + 0.05);
+        
+        osc.connect(gainNode);
+        gainNode.connect(audioCtx.destination);
+
+        const clickId = `vhs_click_${Math.random()}`;
+        audioLimiter.register(clickId, 4, gainNode, 0.12);
+        setTimeout(() => {
+          audioLimiter.unregister(clickId);
+        }, 100);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + 0.06);
+      } catch (e) {
+        console.warn("Error al reproducir sonido de click de VHS:", e);
+      }
+    }
+
+    // VHS Glitch State Variables
+    let nextGlitchTime = Date.now() + (8000 + Math.random() * 7000);
+    let glitchActive = false;
+    let glitchFramesLeft = 0;
+
+    // ─────────────────────────────────────────────────────────────
+    //  ILUMINACIÓN ATMOSFÉRICA GLOBAL
+    // ─────────────────────────────────────────────────────────────
+    const ambientLight = new THREE.AmbientLight(0x8B6914, 0.3); // Inicialmente ajustada para Zona 1
+    scene.add(ambientLight);
+
+    const sunLight = new THREE.DirectionalLight(0xd9e2ec, 0.15); // Inicialmente ajustada para Zona 1
+    sunLight.position.set(30, 40, 20);
+    sunLight.castShadow = false;
+    scene.add(sunLight);
+
+    // ─────────────────────────────────────────────────────────────
+    //  CREACIÓN DE ZONAS Y LUCES ESPECÍFICAS
+    // ─────────────────────────────────────────────────────────────
+    const z1 = createZone1();
+    const z2 = createZone2();
+    const z3 = createZone3();
+
+    // 1. Configurar Luces de Zona 1: Carpa (12 PointLights colgando con parpadeo asincrónico)
+    const z1Lights = [];
+    const warmColors = [0xffaa44, 0xffbb55, 0xff9933];
+    
+    // Instanciar bombillas usando InstancedMesh para optimizar rendimiento
+    const bulbGeo = new THREE.SphereGeometry(0.12, 8, 8);
+    const bulbMat = new THREE.MeshBasicMaterial();
+    const bulbInstancedMesh = new THREE.InstancedMesh(bulbGeo, bulbMat, 12);
+    bulbInstancedMesh.castShadow = false;
+    bulbInstancedMesh.receiveShadow = false;
+    z1.add(bulbInstancedMesh);
+
+    for (let i = 0; i < 12; i++) {
+      const angle = (i / 12) * Math.PI * 2;
+      const radius = i % 2 === 0 ? 10 : 5;
+      const color = warmColors[i % warmColors.length];
+      
+      const pLight = new THREE.PointLight(color, 0.8, 18);
+      // Colgar a altura 4.5m inside la torre octogonal
+      pLight.position.set(Math.cos(angle) * radius, 4.5, Math.sin(angle) * radius);
+      pLight.castShadow = false;
+      
+      // Frecuencia de parpadeo (fórmulas asimétricas/primos)
+      pLight.flickerFreq = 0.5 + (i * 0.13) % 0.8;
+      
+      // Establecer posición e color inicial en InstancedMesh
+      const matrix = new THREE.Matrix4().makeTranslation(pLight.position.x, pLight.position.y, pLight.position.z);
+      bulbInstancedMesh.setMatrixAt(i, matrix);
+      bulbInstancedMesh.setColorAt(i, new THREE.Color(color));
+      
+      z1.add(pLight);
+      z1Lights.push(pLight);
+    }
+    bulbInstancedMesh.instanceMatrix.needsUpdate = true;
+    bulbInstancedMesh.instanceColor.needsUpdate = true;
+
+    // 2. Configurar Luces de Zona 2: Pasillo (Luz puntual cada 4m)
+    const z2Lights = [];
+    // Pasillo mide 30m (-15 a 15), colocamos cada 4m
+    for (let x = -14; x <= 14; x += 4) {
+      const pLight = new THREE.PointLight(0xd0e0ff, 0.4, 10);
+      // En el techo, centrado (y=3.7, z=0)
+      pLight.position.set(x, 3.7, 0);
+      pLight.castShadow = false;
+      
+      // Bombilla
+      const bulbGeo = new THREE.SphereGeometry(0.1, 8, 8);
+      const bulbMat = new THREE.MeshBasicMaterial({ color: 0xd0e0ff });
+      const bulb = new THREE.Mesh(bulbGeo, bulbMat);
+      pLight.add(bulb);
+      
+      z2.add(pLight);
+      z2Lights.push(pLight);
+    }
+
+    // 3. Configurar Luces de Zona 3: Backrooms (Fluorescentes en rejilla 4x4)
+    const z3Lights = [];
+    // Cada una de las 16 habitaciones mide 6x6m
+    for (let row = 0; row < 4; row++) {
+      const zPos = -9 + row * 6;
+      for (let col = 0; col < 4; col++) {
+        const xPos = -9 + col * 6;
+        
+        // PointLight fría
+        const fLight = new THREE.PointLight(0xffffff, 0.7, 12);
+        fLight.position.set(xPos, 2.9, zPos);
+        fLight.castShadow = false;
+        
+        // Tubo fluorescente mesh
+        const tubeGeo = new THREE.BoxGeometry(1.2, 0.04, 0.15);
+        const tubeMat = new THREE.MeshBasicMaterial({ color: 0xffffff });
+        const tube = new THREE.Mesh(tubeGeo, tubeMat);
+        tube.position.set(0, 0.05, 0);
+        fLight.add(tube);
+        
+        // Frecuencia para el zumbido/parpadeo Backrooms
+        fLight.flickerFreq = 0.8 + ((row * 4 + col) * 0.17) % 1.2;
+        
+        z3.add(fLight);
+        z3Lights.push(fLight);
+      }
+    }
+
+    // 4. Linterna del jugador (SpotLight de cono estrecho 18°, penumbra 0.4)
+    const flashlight = new THREE.SpotLight(0xffffff, 2.5, 45, Math.PI * (18 / 180), 0.4, 0.5);
+    flashlight.castShadow = true;
+    flashlight.shadow.mapSize.width = 512;
+    flashlight.shadow.mapSize.height = 512;
+    flashlight.shadow.bias = -0.002;
+    scene.add(flashlight);
+    scene.add(flashlight.target);
+
+    // ─────────────────────────────────────────────────────────────
+    //  CREACIÓN DE ZONAS
+    // ─────────────────────────────────────────────────────────────
+    // Utilizando las zonas creadas arriba con sus luces configuradas
+
+    // Posicionamos las zonas de forma adyacente para poder verlas
+    z1.position.set(-45, 0, 0);
+    z2.position.set(0, 0, 0);
+    z3.position.set(45, 0, 0);
+
+    scene.add(z1);
+    scene.add(z2);
+    scene.add(z3);
+
+    // Guardar referencia global de las puertas para que la función global onclick pueda verlas
+    window.z2Group = z2;
+
+    // ─────────────────────────────────────────────────────────────
+    //  THE VISITOR — Humanoide Procedural
+    // ─────────────────────────────────────────────────────────────
+    const visitor = new TheVisitor();
+    visitor.position.set(0, 0, -5); // En la entrada del pasillo (Zona 2)
+    visitor.rotation.y = Math.PI;    // Mirando hacia la cámara
+    scene.add(visitor);
+
+    // Luz siniestra que emana del visitante
+    const visitorLight = new THREE.PointLight(0xff2222, 1.5, 8);
+    visitorLight.position.set(0, 1.6, -5);
+    visitorLight.castShadow = false;
+    scene.add(visitorLight);
+
+    // Ojos avanzados — instanciar el EyeSystem
+    const eyeSystem = new EyeSystem(visitor);
+    const headPart = visitor.getPart('head');
+
+    // Instanciar VisitorAI
+    const visitorAI = new VisitorAI(visitor, {
+      orbitRadius: 4.5,
+      minOrbitRadius: 2.2,
+      playerSpeed: 2.0,
+      stillThreshold: 5.0,
+      headTurnDuration: 0.8
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    //  SISTEMA DE NIEBLA VOLUMÉTRICA (Raymarching en GPU)
+    // ─────────────────────────────────────────────────────────────
+    const fogGeo = new THREE.BoxGeometry(1, 1, 1);
+    
+    const fogMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        varying vec3 vLocalPos;
+        varying vec3 vWorldPos;
+        varying vec3 vLocalCameraPos;
+
+        void main() {
+          vLocalPos = position;
+          vWorldPos = (modelMatrix * vec4(position, 1.0)).xyz;
+          vLocalCameraPos = (inverse(modelMatrix) * vec4(cameraPosition, 1.0)).xyz;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec3 vLocalPos;
+        varying vec3 vWorldPos;
+        varying vec3 vLocalCameraPos;
+
+        uniform float uTime;
+        uniform float uDensity;
+        uniform float uZoneBlend;
+
+        float hash(vec3 p) {
+          p = fract(p * vec3(443.8975, 397.2973, 491.1871));
+          p += dot(p.xyz, p.yzx + 19.19);
+          return fract(p.x * p.y * p.z);
+        }
+
+        float noise(vec3 p) {
+          vec3 i = floor(p);
+          vec3 f = fract(p);
+          vec3 u = f * f * (3.0 - 2.0 * f);
+          return mix(mix(mix(hash(i + vec3(0.0,0.0,0.0)), hash(i + vec3(1.0,0.0,0.0)), u.x),
+                         mix(hash(i + vec3(0.0,1.0,0.0)), hash(i + vec3(1.0,1.0,0.0)), u.x), u.y),
+                     mix(mix(hash(i + vec3(0.0,0.0,1.0)), hash(i + vec3(1.0,0.0,1.0)), u.x),
+                         mix(hash(i + vec3(0.0,1.0,1.0)), hash(i + vec3(1.0,1.0,1.0)), u.x), u.y), u.z);
+        }
+
+        vec2 rayBoxIntersection(vec3 ro, vec3 rd, vec3 boxMin, vec3 boxMax) {
+          vec3 t0 = (boxMin - ro) / rd;
+          vec3 t1 = (boxMax - ro) / rd;
+          vec3 tmin = min(t0, t1);
+          vec3 tmax = max(t0, t1);
+          float t_near = max(max(tmin.x, tmin.y), tmin.z);
+          float t_far = min(min(tmax.x, tmax.y), tmax.z);
+          return vec2(t_near, t_far);
+        }
+
+        void main() {
+          vec3 ro = vLocalCameraPos;
+          vec3 rd = normalize(vLocalPos - ro);
+          
+          vec3 boxMin = vec3(-0.5);
+          vec3 boxMax = vec3(0.5);
+          
+          vec2 t = rayBoxIntersection(ro, rd, boxMin, boxMax);
+          
+          if (t.y < 0.0 || t.x > t.y) {
+            discard;
+          }
+          
+          float tStart = max(0.0, t.x);
+          float tEnd = t.y;
+          
+          const int STEPS = 24;
+          float stepSize = (tEnd - tStart) / float(STEPS);
+          
+          float accumOpacity = 0.0;
+          vec3 accumColor = vec3(0.0);
+          
+          // Colores de niebla: cálido #4a3520 (Zone 1) y frío #0a0a1a (Zone 3)
+          vec3 colorZone1 = vec3(0.29, 0.21, 0.13); 
+          vec3 colorZone3 = vec3(0.04, 0.04, 0.10); 
+          vec3 baseFogColor = mix(colorZone1, colorZone3, uZoneBlend);
+          
+          float t_curr = tStart;
+          for (int i = 0; i < STEPS; i++) {
+            if (t_curr >= tEnd || accumOpacity >= 0.98) break;
+            
+            vec3 p = ro + rd * t_curr;
+            
+            vec3 noiseCoord = p * 3.0 + vec3(0.0, uTime * 0.15, 0.0);
+            float n = noise(noiseCoord) * 0.7 + noise(noiseCoord * 2.3) * 0.3;
+            
+            float localDensity = uDensity * 4.5 * max(0.0, 0.15 + 0.85 * n);
+            
+            float optDepth = localDensity * stepSize;
+            float alpha = 1.0 - exp(-optDepth);
+            
+            vec3 scatterColor = baseFogColor * (1.0 + 0.25 * sin(p.y * 8.0 + uTime * 0.5));
+            accumColor += (1.0 - accumOpacity) * scatterColor * alpha;
+            accumOpacity += (1.0 - accumOpacity) * alpha;
+            
+            t_curr += stepSize;
+          }
+          
+          gl_FragColor = vec4(accumColor, accumOpacity);
+        }
+      `,
+      uniforms: {
+        uTime: { value: 0.0 },
+        uDensity: { value: 0.0 },
+        uZoneBlend: { value: 0.0 }
+      },
+      transparent: true,
+      depthWrite: false,
+      side: THREE.BackSide
+    });
+
+    const fogMesh = new THREE.Mesh(fogGeo, fogMat);
+    scene.add(fogMesh);
+
+    // ─────────────────────────────────────────────────────────────
+    //  SISTEMA DE PARTÍCULAS DE POLVO (InstancedMesh en GPU)
+    // ─────────────────────────────────────────────────────────────
+    const pCanvas = document.createElement('canvas');
+    pCanvas.width = 32;
+    pCanvas.height = 32;
+    const pCtx = pCanvas.getContext('2d');
+    const pGrad = pCtx.createRadialGradient(16, 16, 0, 16, 16, 16);
+    pGrad.addColorStop(0, 'rgba(255, 245, 220, 1.0)');
+    pGrad.addColorStop(0.3, 'rgba(255, 235, 190, 0.5)');
+    pGrad.addColorStop(1, 'rgba(255, 235, 190, 0.0)');
+    pCtx.fillStyle = pGrad;
+    pCtx.fillRect(0, 0, 32, 32);
+    const dustTexture = new THREE.CanvasTexture(pCanvas);
+
+    const dustMat = new THREE.ShaderMaterial({
+      vertexShader: `
+        uniform float uTime;
+        varying vec2 vUv;
+        varying float vAlpha;
+
+        vec3 getBrownianOffset(vec3 pos, float time) {
+          float t = time * 0.25;
+          vec3 offset;
+          offset.x = sin(t + pos.z * 5.0) * cos(t * 0.7 + pos.y * 3.0) * 0.6;
+          offset.y = cos(t * 1.1 + pos.x * 4.0) * 0.4;
+          offset.z = sin(t * 0.6 + pos.x * 2.0) * sin(t * 1.3 + pos.y * 6.0) * 0.6;
+          return offset;
+        }
+
+        void main() {
+          vUv = uv;
+          vec3 instancePos = vec3(modelMatrix[3][0], modelMatrix[3][1], modelMatrix[3][2]);
+          vec3 offset = getBrownianOffset(instancePos, uTime);
+          vec3 centerWorld = instancePos + offset * 1.8;
+          
+          vec3 cameraRight = vec3(viewMatrix[0][0], viewMatrix[1][0], viewMatrix[2][0]);
+          vec3 cameraUp    = vec3(viewMatrix[0][1], viewMatrix[1][1], viewMatrix[2][1]);
+          vec3 billboardPos = centerWorld + (cameraRight * position.x) + (cameraUp * position.y);
+          
+          vAlpha = 0.25 + 0.2 * sin(uTime * 1.2 + instancePos.x * 45.0 + instancePos.z * 23.0);
+          gl_Position = projectionMatrix * viewMatrix * vec4(billboardPos, 1.0);
+        }
+      `,
+      fragmentShader: `
+        varying vec2 vUv;
+        varying float vAlpha;
+        uniform sampler2D uTexture;
+
+        void main() {
+          vec4 texColor = texture2D(uTexture, vUv);
+          gl_FragColor = vec4(texColor.rgb, texColor.a * vAlpha);
+        }
+      `,
+      uniforms: {
+        uTime: { value: 0.0 },
+        uTexture: { value: dustTexture }
+      },
+      transparent: true,
+      depthWrite: false,
+      blending: THREE.AdditiveBlending
+    });
+
+    const particleCount = 500;
+    const dustMesh = new THREE.InstancedMesh(new THREE.PlaneGeometry(0.12, 0.12), dustMat, particleCount);
+    scene.add(dustMesh);
+
+    // Variables globales para la interpolación de color de niebla
+    let zoneBlendTarget = 0.0;
+    let currentZoneBlend = 0.0;
+
+    // ─────────────────────────────────────────────────────────────
+    //  INTEGRACIÓN DEL FEAR ENGINE
+    // ─────────────────────────────────────────────────────────────
+    const fearEngine = new FearEngine({
+      initialFear: 0.0,
+      lookAngleThreshold: Math.PI / 4 // 45 grados de ángulo visual para el monstruo
+    });
+
+    // Registrar logs en consola de interfaz
+    const logConsole = document.getElementById('console-logs');
+    function logEvent(msg) {
+      const el = document.createElement('div');
+      el.textContent = `[${new Date().toLocaleTimeString()}] ${msg}`;
+      logConsole.appendChild(el);
+      logConsole.scrollTop = logConsole.scrollHeight;
+    }
+
+    // Configurar callbacks de umbrales
+    fearEngine.onFearThreshold(0.25, (f) => logEvent("⚠️ PÁNICO BAJO: El pulso se acelera (Fear > 0.25)"));
+    fearEngine.onFearThreshold(0.50, (f) => logEvent("⚠️ PÁNICO MEDIO: Respiración agitada (Fear > 0.50)"));
+    fearEngine.onFearThreshold(0.75, (f) => logEvent("🚨 PÁNICO ALTO: Visión borrosa y distorsionada (Fear > 0.75)"));
+    fearEngine.on('maxFear', () => logEvent("💀 TERROR TOTAL: El jugador ha colapsado del susto."));
+    fearEngine.on('noFear', () => logEvent("😊 Calma absoluta recuperada."));
+
+    // ─────────────────────────────────────────────────────────────
+    //  INTERACCIONES DE LA INTERFAZ
+    // ─────────────────────────────────────────────────────────────
+    
+    // Checkboxes del Estado del Jugador
+    const chkMoving = document.getElementById('chk-moving');
+    const chkDark = document.getElementById('chk-dark');
+    const chkNearLight = document.getElementById('chk-near-light');
+    const chkMonster = document.getElementById('chk-monster');
+
+    // Cambios de estado
+    chkMoving.addEventListener('change', (e) => {
+      const isMoving = e.target.checked;
+      fearEngine.setMoving(isMoving);
+      
+      // Momento 3: Pasos extra al detenerse en Acto 2
+      if (!isMoving && scriptedEvents && scriptedEvents.activeAct === 2 && scriptedEvents.momentStates.m3 === 'DORMANT') {
+        scriptedEvents.momentStates.m3 = 'TRIGGERED';
+        logEvent("👣 EVENTO: Te detienes en el pasillo... Pero escuchas pasos adicionales detrás.");
+        setTimeout(() => {
+          playerFootstep('wood');
+          logEvent("👣 PASO GHOST 1 (atrás)");
+        }, 550);
+        setTimeout(() => {
+          playerFootstep('wood');
+          logEvent("👣 PASO GHOST 2 (atrás)");
+        }, 1100);
+      }
+    });
+    chkDark.addEventListener('change', (e) => fearEngine.setInDarkZone(e.target.checked));
+    chkNearLight.addEventListener('change', (e) => fearEngine.setNearLight(e.target.checked));
+    chkMonster.addEventListener('change', (e) => {
+      // Si el check está activo, simulamos ángulo 0 (mirando de frente), sino null
+      fearEngine.setLookAngle(e.target.checked ? 0.0 : null);
+    });
+
+    // Controles de EyeSystem
+    const chkEyeLook = document.getElementById('chk-eye-look');
+    const rngActPhase = document.getElementById('rng-act-phase');
+    const lblActPhase = document.getElementById('lbl-act-phase');
+
+    rngActPhase.addEventListener('input', (e) => {
+      const phase = parseFloat(e.target.value);
+      lblActPhase.textContent = phase.toFixed(2);
+      eyeSystem.setActPhase(phase);
+    });
+
+    // Controles de VisitorAI
+    const chkAIActive = document.getElementById('chk-ai-active');
+    const chkTargetFocal = document.getElementById('chk-ai-target-focal');
+    const rngPlayerSpeed = document.getElementById('rng-player-speed');
+    const lblPlayerSpeed = document.getElementById('lbl-player-speed');
+    const lblAIState = document.getElementById('lbl-ai-state');
+
+    rngPlayerSpeed.addEventListener('input', (e) => {
+      const speed = parseFloat(e.target.value);
+      lblPlayerSpeed.textContent = `${speed.toFixed(1)} m/s`;
+      visitorAI.setPlayerSpeed(speed);
+    });
+
+    // Conectar eventos del VisitorAI al HUD log
+    visitorAI.on('stateChanged', (evt) => {
+      const colors = {
+        DORMANT: '#8a94a6',
+        AWARE: '#ffdd67',
+        FOLLOWING: '#ff9800',
+        HUNTING: '#ff5252'
+      };
+      const color = colors[evt.to] || '#fff';
+      logEvent(`🤖 IA: Cambio de estado ${evt.from} ➔ <span style="color: ${color}; font-weight: bold;">${evt.to}</span>`);
+      
+      // Auto-actualizar la fase de actuación ocular con el estado de la IA
+      let phase = 0.0;
+      if (evt.to === 'HUNTING') phase = 3.0;
+      else if (evt.to === 'FOLLOWING') phase = 2.0;
+      else if (evt.to === 'AWARE') phase = 1.0;
+      
+      eyeSystem.setActPhase(phase);
+      rngActPhase.value = phase;
+      lblActPhase.textContent = phase.toFixed(2);
+    });
+
+    visitorAI.on('headTurn', (evt) => {
+      logEvent(`💀 IA: ¡Giro de cabeza repentino! Ángulo: ${(evt.angle * 180 / Math.PI).toFixed(0)}°`);
+    });
+
+    visitorAI.on('orbitStarted', () => {
+      logEvent(`👣 IA: El visitante ha comenzado a orbitar.`);
+    });
+
+    visitorAI.on('orbitStopped', () => {
+      logEvent(`🛑 IA: El visitante se ha detenido.`);
+    });
+
+    // Resetear miedo
+    document.getElementById('btn-reset-fear').addEventListener('click', () => {
+      fearEngine.reset();
+      footstepTimeAccumulator = 0.55;
+      // Reiniciar checkboxes
+      chkMoving.checked = false;
+      chkDark.checked = false;
+      chkNearLight.checked = false;
+      chkMonster.checked = false;
+
+      // Reiniciar EyeSystem
+      chkEyeLook.checked = true;
+      rngActPhase.value = 0;
+      lblActPhase.textContent = "0.00";
+      eyeSystem.setActPhase(0);
+
+      // Reiniciar VisitorAI a valores iniciales
+      if (chkAIActive) chkAIActive.checked = true;
+      if (chkTargetFocal) chkTargetFocal.checked = true;
+      if (rngPlayerSpeed) {
+        rngPlayerSpeed.value = 2.0;
+        lblPlayerSpeed.textContent = "2.0 m/s";
+        visitorAI.setPlayerSpeed(2.0);
+      }
+      visitorAI.setOrbitAngle(0);
+      visitor.position.set(0, 0, -5); // Devolver a posición inicial
+      visitor.rotation.set(0, Math.PI, 0); // Devolver orientación inicial
+      const neck = visitor.getPart('neckJoint');
+      if (neck) neck.rotation.y = 0;
+
+      // Resetear ScriptedEvents
+      if (scriptedEvents) {
+        scriptedEvents.currentTime = 0;
+        scriptedEvents.activeAct = 0;
+        selScriptAct.value = "0";
+        scriptedEvents.momentStates.m1 = 'DORMANT';
+        scriptedEvents.momentStates.m2 = 'DORMANT';
+        scriptedEvents.momentStates.m3 = 'DORMANT';
+        scriptedEvents.momentStates.m4 = 'DORMANT';
+        scriptedEvents.momentStates.m5 = 'DORMANT';
+        scriptedEvents.m2LookTime = 0.0;
+        scriptedEvents.m4LookTime = 0.0;
+        if (scriptedEvents.props.nuclearMonster) {
+          scriptedEvents.props.nuclearMonster.visible = true;
+          scriptedEvents.props.nuclearMonster.traverseMeshes((mesh) => {
+            mesh.material.transparent = false;
+            mesh.material.opacity = 1.0;
+          });
+        }
+        if (scriptedEvents.props.nuclearMouth) {
+          scriptedEvents.props.nuclearMouth.scale.y = 2.0;
+        }
+      }
+
+      logEvent("Miedo, IA y eventos scripteados reseteados a estado inicial.");
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    //  INSTANCIACIÓN DE EVENTOS SCRIPTED (Fase 7)
+    // ─────────────────────────────────────────────────────────────
+    const audioGlobals = {
+      get audioCtx() { return audioCtx; },
+      get audioLimiter() { return audioLimiter; }
+    };
+    
+    scriptedEvents = new ScriptedEvents(
+      scene,
+      camera,
+      visitor,
+      visitorAI,
+      eyeSystem,
+      fearEngine,
+      logEvent,
+      audioGlobals,
+      playerFootstep
+    );
+
+    // Helpers para formatear tiempo
+    function formatTime(sec) {
+      const m = Math.floor(sec / 60).toString().padStart(2, '0');
+      const s = Math.floor(sec % 60).toString().padStart(2, '0');
+      return `${m}:${s}`;
+    }
+
+    // Escuchar cambios de Acto
+    const selScriptAct = document.getElementById('sel-script-act');
+    selScriptAct.addEventListener('change', (e) => {
+      const act = parseInt(e.target.value);
+      scriptedEvents.activeAct = act;
+      logEvent(`🎭 CAMBIO DE ACTO: Iniciando Acto ${act}`);
+    });
+
+    // Enlazar botones de disparo manual
+    document.getElementById('btn-trigger-m1').addEventListener('click', () => {
+      scriptedEvents.triggerEventManually(1, cameraTargetPos, controlsTargetPos);
+      selScriptAct.value = "0";
+    });
+    document.getElementById('btn-trigger-m2').addEventListener('click', () => {
+      scriptedEvents.triggerEventManually(2, cameraTargetPos, controlsTargetPos);
+      selScriptAct.value = "1";
+    });
+    document.getElementById('btn-trigger-m3').addEventListener('click', () => {
+      scriptedEvents.triggerEventManually(3, cameraTargetPos, controlsTargetPos);
+      selScriptAct.value = "2";
+    });
+    document.getElementById('btn-trigger-m4').addEventListener('click', () => {
+      scriptedEvents.triggerEventManually(4, cameraTargetPos, controlsTargetPos);
+      selScriptAct.value = "3";
+    });
+    document.getElementById('btn-trigger-m5').addEventListener('click', () => {
+      scriptedEvents.triggerEventManually(5, cameraTargetPos, controlsTargetPos);
+      selScriptAct.value = "4";
+    });
+
+    // Configuración de vista/cámara a las Zonas y parámetros de niebla volumétrica
+    const targets = {
+      z1: { 
+        camera: new THREE.Vector3(-45, 18, 35), 
+        target: new THREE.Vector3(-45, 2.5, 0),
+        fogCenter: new THREE.Vector3(-45, 4.5, 0),
+        fogSize: new THREE.Vector3(28, 9, 28),
+        blend: 0.0
+      },
+      z2: { 
+        camera: new THREE.Vector3(0, 10, 22), 
+        target: new THREE.Vector3(0, 1.5, 0),
+        fogCenter: new THREE.Vector3(0, 2.0, 0),
+        fogSize: new THREE.Vector3(30, 4.0, 3.5),
+        blend: 0.5
+      },
+      z3: { 
+        camera: new THREE.Vector3(45, 20, 30), 
+        target: new THREE.Vector3(45, 1.5, 0),
+        fogCenter: new THREE.Vector3(45, 1.5, 0),
+        fogSize: new THREE.Vector3(24, 3.2, 24),
+        blend: 1.0
+      },
+      visitor: { 
+        camera: new THREE.Vector3(2.5, 1.8, -2.5), 
+        target: new THREE.Vector3(0, 0.9, -5),
+        fogCenter: new THREE.Vector3(0, 1.5, -5),
+        fogSize: new THREE.Vector3(12, 4.0, 12),
+        blend: 0.5
+      }
+    };
+
+    let activeZoneKey = 'z1';
+
+    // ─────────────────────────────────────────────────────────────
+    //  GIRO DE PANTALLA Y DETECCIÓN MÓVIL
+    // ─────────────────────────────────────────────────────────────
+    function checkOrientation() {
+      if (isMobile) {
+        const isPortrait = window.innerHeight > window.innerWidth;
+        const warning = document.getElementById('orientation-warning');
+        const overlay = document.querySelector('.overlay');
+        const mobileUi = document.getElementById('mobile-ui');
+        
+        if (isPortrait) {
+          warning.style.display = 'flex';
+          overlay.style.display = 'none';
+          mobileUi.style.display = 'none';
+          joystickX = 0;
+          joystickY = 0;
+        } else {
+          warning.style.display = 'none';
+          if (gameMode) {
+            overlay.style.display = 'none';
+            mobileUi.style.display = 'block';
+            drawJoystick();
+          } else {
+            overlay.style.display = 'none';
+            mobileUi.style.display = 'none';
+          }
+        }
+      }
+    }
+    window.addEventListener('resize', checkOrientation);
+    window.addEventListener('orientationchange', checkOrientation);
+
+    // ─────────────────────────────────────────────────────────────
+    //  CAMBIO DE MODO: SHOWCASE ORBITAL VS JUEGO FPS
+    // ─────────────────────────────────────────────────────────────
+    const chkGameMode = document.getElementById('chk-game-mode');
+    chkGameMode.addEventListener('change', (e) => {
+      gameMode = e.target.checked;
+      const overlay = document.querySelector('.overlay');
+      const instructionsFps = document.getElementById('instructions-fps');
+      const mobileUi = document.getElementById('mobile-ui');
+      
+      if (gameMode) {
+        // Desactivar controles orbitales
+        controls.enabled = false;
+        
+        // Posicionar jugador a la altura de los ojos en la zona actual
+        const startPos = controls.target.clone();
+        startPos.y = currentEyeHeight;
+        camera.position.copy(startPos);
+        
+        // Alinear cámara para mirar hacia adelante
+        const lookDir = new THREE.Vector3(0, 0, -5);
+        camera.lookAt(camera.position.clone().add(lookDir));
+        
+        if (isMobile) {
+          overlay.style.display = 'none';
+          mobileUi.style.display = 'block';
+          drawJoystick();
+        } else {
+          instructionsFps.style.display = 'block';
+          plControls.lock();
+        }
+        
+        logEvent("🎮 MODO JUEGO ACTIVO: Primera persona (WASD + Mouse).");
+      } else {
+        if (plControls && !isMobile) {
+          plControls.unlock();
+        }
+        controls.enabled = true;
+        
+        // Volver a alinear OrbitControls con la dirección de la cámara
+        const forward = new THREE.Vector3(0, 0, -5).applyQuaternion(camera.quaternion);
+        controls.target.copy(camera.position).add(forward);
+        
+        instructionsFps.style.display = 'none';
+        mobileUi.style.display = 'none';
+        overlay.style.display = 'none';
+        
+        // Limpiar controles de movimiento
+        keys.w = keys.a = keys.s = keys.d = keys.shift = keys.space = false;
+        joystickX = joystickY = 0;
+        fearEngine.setMoving(false);
+        chkMoving.checked = false;
+        
+        logEvent("🎥 MODO SHOWCASE ACTIVO: Cámara orbital libre.");
+      }
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    //  CONTROLES DE TECLADO Y MOUSE LOCK (ESCRITORIO)
+    // ─────────────────────────────────────────────────────────────
+    window.addEventListener('keydown', (e) => {
+      if (!gameMode) return;
+      
+      const key = e.key.toLowerCase();
+      if (key === 'w' || key === 'arrowup') keys.w = true;
+      if (key === 'a' || key === 'arrowleft') keys.a = true;
+      if (key === 's' || key === 'arrowdown') keys.s = true;
+      if (key === 'd' || key === 'arrowright') keys.d = true;
+      if (e.key === 'Shift') {
+        keys.shift = true;
+        isCrouching = true;
+      }
+      if (e.key === ' ') {
+        keys.space = true;
+        e.preventDefault();
+      }
+      
+      // Linterna con TAB
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        toggleFlashlight();
+      }
+      
+      // Interactuar con E
+      if (key === 'e') {
+        interactAction();
+      }
+    });
+
+    window.addEventListener('keyup', (e) => {
+      const key = e.key.toLowerCase();
+      if (key === 'w' || key === 'arrowup') keys.w = false;
+      if (key === 'a' || key === 'arrowleft') keys.a = false;
+      if (key === 's' || key === 'arrowdown') keys.s = false;
+      if (key === 'd' || key === 'arrowright') keys.d = false;
+      if (e.key === 'Shift') {
+        keys.shift = false;
+        isCrouching = false;
+      }
+      if (e.key === ' ') keys.space = false;
+    });
+
+    let isFlashlightOn = true;
+    function toggleFlashlight() {
+      isFlashlightOn = !isFlashlightOn;
+      flashlight.visible = isFlashlightOn;
+      logEvent(`💡 Linterna: ${isFlashlightOn ? 'ENCENDIDA' : 'APAGADA'}`);
+    }
+
+    renderer.domElement.addEventListener('click', () => {
+      if (gameMode && !isMobile) {
+        plControls.lock();
+      }
+    });
+
+    plControls.addEventListener('lock', () => {
+      document.getElementById('instructions-fps').style.display = 'none';
+    });
+
+    plControls.addEventListener('unlock', () => {
+      if (gameMode) {
+        document.getElementById('instructions-fps').style.display = 'block';
+      }
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    //  CONTROLES TÁCTILES MÓVILES (Virtual Joystick & Swipe Area)
+    // ─────────────────────────────────────────────────────────────
+    const joystickCanvas = document.getElementById('joystick-canvas');
+    const joystickCtx = joystickCanvas.getContext('2d');
+    
+    function resizeJoystickCanvas() {
+      const rect = joystickCanvas.getBoundingClientRect();
+      joystickCanvas.width = rect.width;
+      joystickCanvas.height = rect.height;
+    }
+    resizeJoystickCanvas();
+    window.addEventListener('resize', resizeJoystickCanvas);
+    
+    let joystickCenterX = 0;
+    let joystickCenterY = 0;
+    let joystickOuterRadius = 50;
+    let joystickInnerRadius = 22;
+    let stickX = 0;
+    let stickY = 0;
+    let joystickActive = false;
+    
+    function drawJoystick() {
+      joystickCtx.clearRect(0, 0, joystickCanvas.width, joystickCanvas.height);
+      
+      joystickCenterX = joystickCanvas.width / 2;
+      joystickCenterY = joystickCanvas.height / 2;
+      
+      if (!joystickActive) {
+        stickX = joystickCenterX;
+        stickY = joystickCenterY;
+      }
+      
+      // Base externa
+      joystickCtx.beginPath();
+      joystickCtx.arc(joystickCenterX, joystickCenterY, joystickOuterRadius, 0, Math.PI * 2);
+      joystickCtx.fillStyle = 'rgba(255, 255, 255, 0.04)';
+      joystickCtx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
+      joystickCtx.lineWidth = 3;
+      joystickCtx.fill();
+      joystickCtx.stroke();
+      
+      // Stick interno
+      joystickCtx.beginPath();
+      joystickCtx.arc(stickX, stickY, joystickInnerRadius, 0, Math.PI * 2);
+      joystickCtx.fillStyle = joystickActive ? '#ff5252' : 'rgba(255, 255, 255, 0.3)';
+      joystickCtx.shadowColor = joystickActive ? '#ff5252' : 'transparent';
+      joystickCtx.shadowBlur = joystickActive ? 12 : 0;
+      joystickCtx.fill();
+      joystickCtx.shadowBlur = 0;
+    }
+    
+    joystickCanvas.addEventListener('touchstart', (e) => {
+      joystickActive = true;
+      handleJoystickMove(e.touches[0]);
+    });
+    
+    joystickCanvas.addEventListener('touchmove', (e) => {
+      if (!joystickActive) return;
+      e.preventDefault();
+      handleJoystickMove(e.touches[0]);
+    });
+    
+    joystickCanvas.addEventListener('touchend', () => {
+      joystickActive = false;
+      joystickX = 0;
+      joystickY = 0;
+      drawJoystick();
+    });
+    
+    function handleJoystickMove(touch) {
+      const rect = joystickCanvas.getBoundingClientRect();
+      const touchX = touch.clientX - rect.left;
+      const touchY = touch.clientY - rect.top;
+      
+      const dx = touchX - joystickCenterX;
+      const dy = touchY - joystickCenterY;
+      const distance = Math.sqrt(dx * dx + dy * dy);
+      const limit = joystickOuterRadius - joystickInnerRadius;
+      
+      if (distance <= limit) {
+        stickX = touchX;
+        stickY = touchY;
+      } else {
+        const angle = Math.atan2(dy, dx);
+        stickX = joystickCenterX + Math.cos(angle) * limit;
+        stickY = joystickCenterY + Math.sin(angle) * limit;
+      }
+      
+      joystickX = (stickX - joystickCenterX) / limit;
+      joystickY = -(stickY - joystickCenterY) / limit;
+      
+      drawJoystick();
+    }
+    
+    // Swipe Area
+    const swipeArea = document.getElementById('swipe-area');
+    let lastTouchX = 0;
+    let lastTouchY = 0;
+    let swipeActive = false;
+    
+    swipeArea.addEventListener('touchstart', (e) => {
+      swipeActive = true;
+      lastTouchX = e.touches[0].clientX;
+      lastTouchY = e.touches[0].clientY;
+    });
+    
+    swipeArea.addEventListener('touchmove', (e) => {
+      if (!swipeActive) return;
+      const touch = e.touches[0];
+      const movementX = touch.clientX - lastTouchX;
+      const movementY = touch.clientY - lastTouchY;
+      
+      lastTouchX = touch.clientX;
+      lastTouchY = touch.clientY;
+      
+      const sens = 0.005;
+      camera.rotation.y -= movementX * sens;
+      camera.rotation.x -= movementY * sens;
+      
+      const maxLook = Math.PI / 2 - 0.05;
+      camera.rotation.x = Math.max(-maxLook, Math.min(maxLook, camera.rotation.x));
+    });
+    
+    swipeArea.addEventListener('touchend', () => {
+      swipeActive = false;
+    });
+    
+    // Botones táctiles móviles
+    const btnCrouch = document.getElementById('btn-mobile-crouch');
+    btnCrouch.addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      isCrouching = !isCrouching;
+      keys.shift = isCrouching;
+      btnCrouch.style.background = isCrouching ? '#ff5252' : 'rgba(18, 22, 30, 0.75)';
+      btnCrouch.style.borderColor = isCrouching ? '#ff5252' : 'var(--border-color)';
+    });
+    
+    document.getElementById('btn-mobile-flashlight').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      toggleFlashlight();
+    });
+    
+    document.getElementById('btn-mobile-interact').addEventListener('touchstart', (e) => {
+      e.preventDefault();
+      interactAction();
+    });
+
+    // ─────────────────────────────────────────────────────────────
+    //  CALIBRACIÓN INICIAL E HILOS DE TIERS GRÁFICOS
+    // ─────────────────────────────────────────────────────────────
+    document.getElementById('calibration-bar').style.width = '30%';
+    setTimeout(() => {
+      document.getElementById('calibration-bar').style.width = '70%';
+    }, 200);
+
+    HardwareDetector.run(renderer, THREE).then(result => {
+      detectedTier = result.tier;
+      isMobile = result.isMobile;
+      
+      document.getElementById('calibration-bar').style.width = '100%';
+      document.getElementById('calibration-text').textContent = `Completado: Tier ${detectedTier.toUpperCase()} (${result.estimatedFps} FPS)`;
+      
+      // Actualizar badges
+      const badge = document.getElementById('hud-tier-badge');
+      badge.textContent = `TIER ${detectedTier.toUpperCase()}`;
+      badge.style.borderColor = detectedTier === 'low' ? '#ff5252' : (detectedTier === 'medium' ? '#ffdd67' : '#a3be8c');
+      badge.style.color = detectedTier === 'low' ? '#ff5252' : (detectedTier === 'medium' ? '#ffdd67' : '#a3be8c');
+      
+      audioLimiter.setTier(detectedTier);
+      
+      if (detectedTier === 'low') {
+        renderer.shadowMap.enabled = false;
+        z1Lights.forEach(l => l.castShadow = false);
+        z2Lights.forEach(l => l.castShadow = false);
+        z3Lights.forEach(l => l.castShadow = false);
+        sunLight.castShadow = false;
+        flashlight.castShadow = false;
+        logEvent("⚙️ Rendimiento bajo detectado: Sombras en tiempo real desactivadas.");
+      } else if (detectedTier === 'medium') {
+        renderer.shadowMap.type = THREE.PCFShadowMap;
+        renderer.shadowMap.width = 1024;
+        renderer.shadowMap.height = 1024;
+        logEvent("⚙️ Rendimiento medio detectado: Sombras configuradas a resolución media.");
+      } else {
+        logEvent("⚙️ Rendimiento alto detectado: Post-procesamiento y sombras ultra activados.");
+      }
+      
+      setTimeout(() => {
+        const screen = document.getElementById('calibration-screen');
+        screen.style.transition = 'opacity 0.8s ease';
+        screen.style.opacity = '0';
+        setTimeout(() => {
+          screen.style.display = 'none';
+        }, 800);
+      }, 500);
+      
+      checkOrientation();
+    });
+
+    focusZone('z1');
+
+    // Configuración inicial inmediata de la interfaz según dispositivo (sin esperar benchmark)
+    const instantMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || 
+                         (navigator.maxTouchPoints > 0 && window.innerWidth < 1024);
+    if (instantMobile) {
+      document.getElementById('instructions-fps').style.display = 'none';
+      document.getElementById('mobile-ui').style.display = 'block';
+      document.querySelector('.overlay').style.display = 'none';
+    } else {
+      document.getElementById('instructions-fps').style.display = 'block';
+      document.getElementById('mobile-ui').style.display = 'none';
+      document.querySelector('.overlay').style.display = 'none';
+    }
+
+    function focusZone(key) {
+      activeZoneKey = key;
+      const data = targets[key];
+      
+      if (gameMode) {
+        // Desactivar controles orbitales inmediatamente
+        controls.enabled = false;
+        
+        // Teletransportar al jugador al centro de la zona
+        const targetCenter = data.target.clone();
+        targetCenter.y = currentEyeHeight;
+        camera.position.copy(targetCenter);
+        
+        // Alinear la rotación de la cámara para mirar hacia adelante
+        const lookDir = new THREE.Vector3(0, 0, -5);
+        camera.lookAt(camera.position.clone().add(lookDir));
+      } else {
+        // Transición suave de cámara (guardando destino final para update loop)
+        cameraTargetPos.copy(data.camera);
+        controlsTargetPos.copy(data.target);
+      }
+
+      // Activar menú de botones
+      document.querySelectorAll('.zone-selector .btn').forEach(btn => btn.classList.remove('active'));
+      const btnId = key === 'visitor' ? 'btn-visitor' : `btn-${key}`;
+      document.getElementById(btnId)?.classList.add('active');
+
+      // Mostrar/ocultar secciones específicas de manipulación
+      document.getElementById('manip-z2').style.display = key === 'z2' ? 'block' : 'none';
+      document.getElementById('manip-z3').style.display = key === 'z3' ? 'block' : 'none';
+
+      // Cambiar configuración de iluminación específica de la zona
+      if (key === 'z1') {
+        ambientLight.color.setStyle('#8B6914');
+        ambientLight.intensity = 0.3;
+        sunLight.intensity = 0.1;
+      } else if (key === 'z2') {
+        ambientLight.color.setStyle('#1a2a4a');
+        ambientLight.intensity = 0.15;
+        sunLight.intensity = 0.0;
+      } else if (key === 'z3') {
+        ambientLight.color.setStyle('#b8a040');
+        ambientLight.intensity = 0.6;
+        sunLight.intensity = 0.0;
+      } else if (key === 'visitor') {
+        ambientLight.color.setStyle('#ffffff');
+        ambientLight.intensity = 0.15;
+        sunLight.intensity = 0.8;
+      }
+
+      // Reposicionar caja de niebla volumétrica y regenerar motas de polvo
+      if (fogMesh && dustMesh) {
+        fogMesh.position.copy(data.fogCenter);
+        fogMesh.scale.copy(data.fogSize);
+        
+        zoneBlendTarget = data.blend;
+
+        // Reposicionar partículas
+        const tempMatrix = new THREE.Matrix4();
+        const tempPos = new THREE.Vector3();
+        const tempScale = new THREE.Vector3(1, 1, 1);
+        const tempRot = new THREE.Quaternion();
+
+        for (let i = 0; i < particleCount; i++) {
+          tempPos.set(
+            data.fogCenter.x + (Math.random() - 0.5) * data.fogSize.x,
+            data.fogCenter.y + (Math.random() - 0.5) * data.fogSize.y,
+            data.fogCenter.z + (Math.random() - 0.5) * data.fogSize.z
+          );
+          const sizeVal = 0.4 + Math.random() * 0.8;
+          tempScale.set(sizeVal, sizeVal, sizeVal);
+          tempMatrix.compose(tempPos, tempRot, tempScale);
+          dustMesh.setMatrixAt(i, tempMatrix);
+        }
+        dustMesh.instanceMatrix.needsUpdate = true;
+      }
+
+      const labels = { z1: '1 (Torre)', z2: '2 (Pasillo)', z3: '3 (Grid)', visitor: 'TheVisitor' };
+      logEvent(`Cámara enfocada en ${labels[key]}`);
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  COLISIONES Y LÍMITES FÍSICOS DE ZONAS
+    // ─────────────────────────────────────────────────────────────
+    function checkCollisions(targetPos, currentPos) {
+      // Zona 1 (Torre): Octágono centrado en (-45, 0)
+      if (activeZoneKey === 'z1') {
+        const dx = targetPos.x - (-45);
+        const dz = targetPos.z - 0;
+        const dist = Math.sqrt(dx * dx + dz * dz);
+        if (dist > 13.8) {
+          // Si está en la salida a Zona 2 (X > -32, Z ≈ 0)
+          if (targetPos.x > -32 && Math.abs(targetPos.z) < 1.5) {
+            // Permitir paso libre
+          } else {
+            // Colisionar con la pared cilíndrica
+            const angle = Math.atan2(dz, dx);
+            targetPos.x = -45 + Math.cos(angle) * 13.8;
+            targetPos.z = Math.sin(angle) * 13.8;
+          }
+        }
+      }
+      // Zona 2 (Pasillo): Canal Z de -1.75 a 1.75
+      else if (activeZoneKey === 'z2') {
+        if (targetPos.z < -1.6) targetPos.z = -1.6;
+        if (targetPos.z > 1.6) targetPos.z = 1.6;
+        
+        // Evitar salir por los extremos en X a menos que esté centrado en Z
+        if (targetPos.x < -14.8 && Math.abs(targetPos.z) > 1.5) {
+          targetPos.x = -14.8;
+        } else if (targetPos.x > 14.8 && Math.abs(targetPos.z) > 1.5) {
+          targetPos.x = 14.8;
+        }
+      }
+      // Zona 3 (Backrooms): Grid 4x4 centrado en X=45, Z=0. Rango X: [33, 57], Rango Z: [-12, 12]
+      else if (activeZoneKey === 'z3') {
+        if (targetPos.z < -11.6) targetPos.z = -11.6;
+        if (targetPos.z > 11.6) targetPos.z = 11.6;
+        if (targetPos.x > 56.6) targetPos.x = 56.6;
+        if (targetPos.x < 33.2 && Math.abs(targetPos.z) > 1.5) {
+          targetPos.x = 33.2;
+        }
+        
+        // Colisión con las paredes individuales del grid de Zone 3
+        const relX = targetPos.x - 33;
+        const relZ = targetPos.z + 12;
+        
+        // Bloquear paso a través de H walls (Horizontales, eje X)
+        for (let hz = 0; hz <= 4; hz++) {
+          const zVal = -12 + hz * 6;
+          if (Math.abs(targetPos.z - zVal) < 0.25) {
+            const colIdx = Math.max(0, Math.min(3, Math.floor((targetPos.x - 33) / 6)));
+            const wallId = `H_${colIdx}_${hz}`;
+            const wall = z3.userData.hWalls.get(wallId);
+            if (wall && z3.children.includes(wall)) {
+              targetPos.z = currentPos.z; // bloquear eje Z
+            }
+          }
+        }
+        
+        // Bloquear paso a través de V walls (Verticales, eje Z)
+        for (let vx = 0; vx <= 4; vx++) {
+          const xVal = 33 + vx * 6;
+          if (Math.abs(targetPos.x - xVal) < 0.25) {
+            const rowIdx = Math.max(0, Math.min(3, Math.floor((targetPos.z + 12) / 6)));
+            const wallId = `V_${vx}_${rowIdx}`;
+            const wall = z3.userData.vWalls.get(wallId);
+            if (wall && z3.children.includes(wall)) {
+              targetPos.x = currentPos.x; // bloquear eje X
+            }
+          }
+        }
+      }
+    }
+
+    // ─────────────────────────────────────────────────────────────
+    //  INTERACCIÓN CON ELEMENTOS DEL ESCENARIO
+    // ─────────────────────────────────────────────────────────────
+    function interactAction() {
+      if (activeZoneKey === 'z2') {
+        let closestDoor = null;
+        let closestDist = Infinity;
+        let closestIndex = -1;
+        
+        z2.userData.doors.forEach((door, index) => {
+          const doorWorldPos = new THREE.Vector3();
+          door.getWorldPosition(doorWorldPos);
+          const dist = camera.position.distanceTo(doorWorldPos);
+          if (dist < closestDist) {
+            closestDist = dist;
+            closestDoor = door;
+            closestIndex = index;
+          }
+        });
+        
+        if (closestDoor && closestDist < 3.0) {
+          const newStatus = !closestDoor.userData.isOpen;
+          z2.setDoorOpen(closestIndex, newStatus);
+          logEvent(`🚪 Interactuar: Puerta ${closestDoor.name} ${newStatus ? 'ABIERTA' : 'CERRADA'}`);
+        } else {
+          logEvent("Interactuar: No hay puertas de camerino cerca.");
+        }
+      } else {
+        logEvent("Interactuar: No hay nada con lo que puedas interactuar aquí.");
+      }
+    }
+
+    document.getElementById('btn-z1').addEventListener('click', () => focusZone('z1'));
+    document.getElementById('btn-z2').addEventListener('click', () => focusZone('z2'));
+    document.getElementById('btn-z3').addEventListener('click', () => focusZone('z3'));
+    document.getElementById('btn-visitor').addEventListener('click', () => focusZone('visitor'));
+
+    // Botones de Zona 3 (Paredes del Laberinto)
+    document.getElementById('btn-toggle-passages').addEventListener('click', () => {
+      z3.generateDefaultPassages();
+      logEvent("Laberinto generado: Se removieron paredes interiores para pasajes.");
+    });
+
+    document.getElementById('btn-reset-walls').addEventListener('click', () => {
+      // Reiniciar todas las paredes a visibles
+      z3.userData.hWalls.forEach((wall, id) => z3.add(wall));
+      z3.userData.vWalls.forEach((wall, id) => z3.add(wall));
+      logEvent("Rejilla restaurada: Todas las paredes vuelven a estar cerradas.");
+    });
+
+    // Control de Puertas de Zona 2 (Global a la ventana para el atributo inline onclick)
+    window.toggleSideDoors = function(side, openStatus) {
+      z2.userData.doors.forEach((door, index) => {
+        if (door.name.includes(side)) {
+          z2.setDoorOpen(index, openStatus);
+        }
+      });
+      logEvent(`Puertas del lado ${side === 'Left' ? 'Izquierdo' : 'Derecho'} ${openStatus ? 'abiertas' : 'cerradas'}`);
+    };
+
+    // ─────────────────────────────────────────────────────────────
+    //  LOOP DE ANIMACIÓN Y FEAR-UPDATE
+    // ─────────────────────────────────────────────────────────────
+    const cameraTargetPos = new THREE.Vector3(-45, 18, 35);
+    const controlsTargetPos = new THREE.Vector3(-45, 2.5, 0);
+
+    const clock = new THREE.Clock();
+
+    // Elementos del HUD
+    const hudFearVal = document.getElementById('hud-fear-val');
+    const hudFearBar = document.getElementById('hud-fear-bar');
+    const hudFearLabel = document.getElementById('hud-fear-label');
+    const heartGlow = document.getElementById('heart-glow');
+    const fearVignette = document.getElementById('fear-vignette');
+
+    // Elementos de Multiplicadores en UI
+    const cards = {
+      idle: document.getElementById('mult-idle'),
+      moving: document.getElementById('mult-moving'),
+      monster: document.getElementById('mult-monster'),
+      dark: document.getElementById('mult-dark'),
+      light: document.getElementById('mult-light')
+    };
+
+    function updateUIElements(fearValue, state) {
+      // 1. Mostrar valor y barra
+      hudFearVal.textContent = fearValue.toFixed(2);
+      hudFearBar.style.width = `${fearValue * 100}%`;
+
+      // 2. Cambiar etiquetas de miedo
+      if (fearValue < 0.25) {
+        hudFearLabel.textContent = "Calma";
+        hudFearLabel.style.color = "var(--text-muted)";
+      } else if (fearValue < 0.50) {
+        hudFearLabel.textContent = "Inquietud";
+        hudFearLabel.style.color = "#ffdd67";
+      } else if (fearValue < 0.75) {
+        hudFearLabel.textContent = "Angustia";
+        hudFearLabel.style.color = "#ff9800";
+      } else {
+        hudFearLabel.textContent = "PÁNICO TOTAL";
+        hudFearLabel.style.color = "var(--accent-color)";
+      }
+
+      // 3. Efectos Visuales (Glow de corazón y viñeta roja)
+      // La velocidad de latido aumenta con el miedo
+      const beatRate = 1 + fearValue * 4; // de 1 a 5 latidos por segundo
+      const time = Date.now() * 0.001 * beatRate * Math.PI * 2;
+      const pulseSize = 0.8 + Math.sin(time) * 0.2 * fearValue;
+      heartGlow.style.transform = `scale(${pulseSize})`;
+      heartGlow.style.opacity = `${0.05 + fearValue * 0.35}`;
+
+      // Viñeta roja de pánico en la pantalla
+      fearVignette.style.boxShadow = `inset 0 0 ${50 + fearValue * 80}px rgba(255, 82, 82, ${fearValue * 0.85})`;
+
+      // 4. Actualizar tarjetas de multiplicadores
+      cards.idle.className = `mult-card ${!state.isMoving ? 'active' : ''}`;
+      cards.moving.className = `mult-card ${state.isMoving ? 'active' : ''}`;
+      cards.monster.className = `mult-card ${state.isLookingAtMonster ? 'active' : ''}`;
+      cards.dark.className = `mult-card ${state.isInDarkZone ? 'active' : ''}`;
+      cards.light.className = `mult-card ${state.isNearLight ? 'active' : ''}`;
+    }
+
+    function animate() {
+      requestAnimationFrame(animate);
+
+      const dt = clock.getDelta();
+
+      // Monitor de FPS para fallback dinámico
+      const currentFps = 1.0 / Math.max(dt, 0.001);
+      fpsHistory.push(currentFps);
+      if (fpsHistory.length > 30) fpsHistory.shift();
+      const avgFps = fpsHistory.reduce((a, b) => a + b, 0) / fpsHistory.length;
+      
+      if (avgFps < 25.0) {
+        fpsTimer2s += dt;
+        if (fpsTimer2s >= 2.0 && vhsPass && vhsPass.enabled) {
+          vhsPass.enabled = false;
+          logEvent("⚠️ RENDIMIENTO: VHS Pass desactivado por caída de FPS (<25 por 2s).");
+        }
+      } else {
+        fpsTimer2s = 0.0;
+      }
+
+      // Calcular estados automáticos del motor de miedo en primera persona
+      if (gameMode) {
+        // 1. Calcular inDarkZone (activo si la linterna está apagada)
+        const inDark = !isFlashlightOn;
+        if (chkDark.checked !== inDark) {
+          chkDark.checked = inDark;
+          chkDark.dispatchEvent(new Event('change'));
+        }
+
+        // 2. Calcular nearLight (proximidad a las fuentes de luz de la zona actual)
+        let nearLight = false;
+        if (activeZoneKey === 'z1') {
+          z1Lights.forEach(light => {
+            if (camera.position.distanceTo(light.position.clone().add(z1.position)) < 6.0) {
+              nearLight = true;
+            }
+          });
+        } else if (activeZoneKey === 'z2') {
+          z2Lights.forEach(light => {
+            if (camera.position.distanceTo(light.position.clone().add(z2.position)) < 4.5) {
+              nearLight = true;
+            }
+          });
+        } else if (activeZoneKey === 'z3') {
+          z3Lights.forEach(light => {
+            if (light.visible && camera.position.distanceTo(light.position.clone().add(z3.position)) < 4.5) {
+              nearLight = true;
+            }
+          });
+        }
+        if (chkNearLight.checked !== nearLight) {
+          chkNearLight.checked = nearLight;
+          chkNearLight.dispatchEvent(new Event('change'));
+        }
+
+        // 3. Calcular isLookingAtMonster / lookAngle
+        let monsterPos = null;
+        if (activeZoneKey === 'visitor' && visitor && visitor.visible) {
+          monsterPos = new THREE.Vector3();
+          visitor.getWorldPosition(monsterPos);
+        } else if (activeZoneKey === 'z3' && scriptedEvents && scriptedEvents.props.nuclearMonster && scriptedEvents.props.nuclearMonster.visible) {
+          monsterPos = new THREE.Vector3();
+          scriptedEvents.props.nuclearMonster.getWorldPosition(monsterPos);
+        }
+
+        if (monsterPos) {
+          const dirToMonster = monsterPos.clone().sub(camera.position);
+          dirToMonster.normalize();
+          const targetDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion).normalize();
+          const dot = targetDir.dot(dirToMonster);
+          const angle = Math.acos(THREE.MathUtils.clamp(dot, -1, 1));
+          
+          fearEngine.setLookAngle(angle);
+          const isLookingAt = (angle <= fearEngine._lookAngleThreshold);
+          if (chkMonster.checked !== isLookingAt) {
+            chkMonster.checked = isLookingAt;
+            chkMonster.dispatchEvent(new Event('change'));
+          }
+        } else {
+          fearEngine.setLookAngle(null);
+          if (chkMonster.checked !== false) {
+            chkMonster.checked = false;
+            chkMonster.dispatchEvent(new Event('change'));
+          }
+        }
+      }
+
+      // 1. Actualizar motor de Miedo
+      fearEngine.update(dt);
+      const fearVal = fearEngine.getFear();
+      const currentState = fearEngine.getState();
+      updateUIElements(fearVal, currentState);
+
+      // 1.5 Actualizar Eventos Scripteados (Fase 7)
+      if (scriptedEvents) {
+        scriptedEvents.update(dt);
+        
+        // Actualizar UI del cronómetro
+        const lblScriptTime = document.getElementById('lbl-script-time');
+        if (lblScriptTime) {
+          lblScriptTime.textContent = formatTime(scriptedEvents.currentTime);
+        }
+        
+        // Actualizar UI de estados de momentos
+        const colorMap = {
+          DORMANT: '#8a94a6',
+          LOOKED_AT: '#ffdd67',
+          LOOKING: '#ff9800',
+          LOOKING_AT_FACE: '#ff9800',
+          CHANGED: '#a3be8c',
+          TRIGGERED: '#ff5252'
+        };
+        for (let i = 1; i <= 5; i++) {
+          const stateEl = document.getElementById(`state-m${i}`);
+          if (stateEl) {
+            const st = scriptedEvents.momentStates[`m${i}`];
+            stateEl.textContent = st;
+            stateEl.style.color = colorMap[st] || '#fff';
+          }
+        }
+
+        // ─────────────────────────────────────────────────────────────
+        //  MÁQUINA DE ESTADOS DEL MODO HISTORIA
+        // ─────────────────────────────────────────────────────────────
+        if (gameMode) {
+          if (!storyState.initialized) {
+            const calScreen = document.getElementById('calibration-screen');
+            if (calScreen && calScreen.style.display === 'none') {
+              showSubtitle("Un lugar familiar, pero desierto... Debo explorar la carpa.", 6000);
+              storyState.initialized = true;
+              storyState.act = 0;
+              scriptedEvents.activeAct = 0;
+              if (selScriptAct) selScriptAct.value = "0";
+              
+              storyState.bearHintTimeout = setTimeout(() => {
+                if (storyState.act === 0 && scriptedEvents.momentStates.m1 === 'DORMANT') {
+                  showSubtitle("Siento algo extraño... ¿Hay algo cerca de ese oso de peluche?", 5000);
+                }
+              }, 15000);
+            }
+          } else {
+            // Acto 0: Oso de peluche
+            if (storyState.act === 0) {
+              if (scriptedEvents.momentStates.m1 === 'LOOKED_AT' && !storyState.bearLookedSubtitle) {
+                showSubtitle("Un viejo oso de peluche... Está sucio. Me pregunto qué hace aquí.", 4000);
+                storyState.bearLookedSubtitle = true;
+              }
+              if (scriptedEvents.momentStates.m1 === 'TRIGGERED') {
+                showSubtitle("¡Una cajita de música! Sonó detrás de mí... Hay algo en la pared de madera al otro lado de la carpa.", 6000);
+                storyState.act = 1;
+                scriptedEvents.activeAct = 1;
+                if (selScriptAct) selScriptAct.value = "1";
+                if (storyState.bearHintTimeout) clearTimeout(storyState.bearHintTimeout);
+              }
+            }
+            // Acto 1: Dibujo infantil
+            else if (storyState.act === 1) {
+              if (scriptedEvents.momentStates.m2 === 'LOOKING' && !storyState.drawingLookingSubtitle) {
+                showSubtitle("Un dibujo de mí... y algo alto con brazos muy largos a mi lado.", 4000);
+                storyState.drawingLookingSubtitle = true;
+              }
+              if (scriptedEvents.momentStates.m2 === 'CHANGED') {
+                showSubtitle("¡Dios mío! ¡El dibujo se ha movido! La cabeza... se giró hacia mí... ¡Tengo que salir de aquí!", 6000);
+                storyState.act = 2;
+                scriptedEvents.activeAct = 2;
+                if (selScriptAct) selScriptAct.value = "2";
+              }
+            }
+            // Acto 2: Pasos en el pasillo
+            else if (storyState.act === 2) {
+              if (activeZoneKey === 'z2' && !storyState.z2HintShown) {
+                showSubtitle("Este pasillo... es frío y angosto. Siento que me vigilan.", 5000);
+                storyState.z2HintShown = true;
+              }
+              if (scriptedEvents.momentStates.m3 === 'TRIGGERED' && !storyState.stepsTriggeredSubtitle) {
+                showSubtitle("¡Esos no son mis pasos! ¡Hay alguien detrás de mí! ¡Debo huir a las Backrooms!", 6000);
+                storyState.stepsTriggeredSubtitle = true;
+                storyState.act = 3;
+                scriptedEvents.activeAct = 3;
+                if (selScriptAct) selScriptAct.value = "3";
+              }
+            }
+            // Acto 3: Cabeza / Encuentro en el núcleo
+            else if (storyState.act === 3) {
+              if (activeZoneKey === 'z3' && !storyState.z3HintShown) {
+                showSubtitle("Las paredes de color amarillo enfermizo... El zumbido constante... Esto es una pesadilla.", 6000);
+                storyState.z3HintShown = true;
+                
+                if (scriptedEvents.props.nuclearMonster) {
+                  scriptedEvents.props.nuclearMonster.visible = true;
+                  scriptedEvents.props.nuclearMonster.traverseMeshes((mesh) => {
+                    mesh.material.transparent = false;
+                    mesh.material.opacity = 1.0;
+                  });
+                }
+              }
+              
+              if (scriptedEvents.momentStates.m4 === 'LOOKING_AT_FACE' && !storyState.monsterLookingSubtitle) {
+                showSubtitle("Sus ojos... me están siguiendo...", 4000);
+                storyState.monsterLookingSubtitle = true;
+              }
+              
+              if (scriptedEvents.momentStates.m4 === 'TRIGGERED') {
+                showSubtitle("El monstruo se ha desvanecido en el aire... Pero siento que esto no ha terminado. Hay algo en el suelo.", 6000);
+                storyState.act = 4;
+                scriptedEvents.activeAct = 4;
+                if (selScriptAct) selScriptAct.value = "4";
+              }
+            }
+            // Acto 4: Foto Polaroid
+            else if (storyState.act === 4) {
+              if (scriptedEvents.momentStates.m5 === 'LOOKED_AT' && !storyState.polaroidLookedSubtitle) {
+                showSubtitle("Una Polaroid en el suelo... Soy yo de niño en la carpa, y al lado... esa figura alta.", 6000);
+                storyState.polaroidLookedSubtitle = true;
+                
+                setTimeout(() => {
+                  showSubtitle("Siempre estuvo allí...", 4000);
+                  setTimeout(() => {
+                    storyState.act = 5;
+                    triggerEndGame();
+                  }, 4000);
+                }, 7000);
+              }
+            }
+          }
+        }
+      }
+
+      // Actualizar variables de Audio en 3D
+      if (audioCtx && audioCtx.state === 'running') {
+        const time = audioCtx.currentTime;
+
+        // Actualizar posición del panner del monstruo
+        if (monsterPanner) {
+          if (monsterPanner.positionX) {
+            monsterPanner.positionX.setValueAtTime(visitor.position.x, time);
+            monsterPanner.positionY.setValueAtTime(visitor.position.y, time);
+            monsterPanner.positionZ.setValueAtTime(visitor.position.z, time);
+          } else {
+            monsterPanner.setPosition(visitor.position.x, visitor.position.y, visitor.position.z);
+          }
+        }
+
+        // Actualizar posición y orientación del listener (cámara)
+        const pos = new THREE.Vector3();
+        const quat = new THREE.Quaternion();
+        const scl = new THREE.Vector3();
+        camera.matrixWorld.decompose(pos, quat, scl);
+
+        const forward = new THREE.Vector3(0, 0, -1).applyQuaternion(quat).normalize();
+        const up = new THREE.Vector3(0, 1, 0).applyQuaternion(quat).normalize();
+
+        const listenerObj = audioCtx.listener;
+        if (listenerObj.positionX) {
+          listenerObj.positionX.setValueAtTime(pos.x, time);
+          listenerObj.positionY.setValueAtTime(pos.y, time);
+          listenerObj.positionZ.setValueAtTime(pos.z, time);
+          listenerObj.forwardX.setValueAtTime(forward.x, time);
+          listenerObj.forwardY.setValueAtTime(forward.y, time);
+          listenerObj.forwardZ.setValueAtTime(forward.z, time);
+          listenerObj.upX.setValueAtTime(up.x, time);
+          listenerObj.upY.setValueAtTime(up.y, time);
+          listenerObj.upZ.setValueAtTime(up.z, time);
+        } else {
+          listenerObj.setPosition(pos.x, pos.y, pos.z);
+          listenerObj.setOrientation(forward.x, forward.y, forward.z, up.x, up.y, up.z);
+        }
+      }
+
+      // ─────────────────────────────────────────────────────────────
+      //  MOVIMIENTO FPS & COLISIONES (Modo Juego)
+      // ─────────────────────────────────────────────────────────────
+      if (gameMode) {
+        const moveDirection = new THREE.Vector3(0, 0, 0);
+        const frontVector = new THREE.Vector3();
+        const sideVector = new THREE.Vector3();
+        
+        camera.getWorldDirection(frontVector);
+        frontVector.y = 0;
+        frontVector.normalize();
+        
+        sideVector.copy(frontVector).applyAxisAngle(new THREE.Vector3(0, 1, 0), -Math.PI / 2);
+        
+        if (isMobile) {
+          moveDirection.addScaledVector(frontVector, joystickY);
+          moveDirection.addScaledVector(sideVector, joystickX);
+        } else {
+          if (keys.w) moveDirection.add(frontVector);
+          if (keys.s) moveDirection.sub(frontVector);
+          if (keys.a) moveDirection.sub(sideVector);
+          if (keys.d) moveDirection.add(sideVector);
+        }
+        
+        const hasMovementInput = moveDirection.lengthSq() > 0.001;
+        
+        if (hasMovementInput) {
+          moveDirection.normalize();
+          
+          let speed = visitorAI.playerSpeed * 1.12;
+          if (keys.shift) {
+            speed *= 0.5; // Agachado
+          }
+          
+          const currentPos = camera.position.clone();
+          const targetPos = camera.position.clone().addScaledVector(moveDirection, speed * dt);
+          
+          checkCollisions(targetPos, currentPos);
+          
+          camera.position.copy(targetPos);
+          
+          if (!chkMoving.checked) {
+            chkMoving.checked = true;
+            chkMoving.dispatchEvent(new Event('change'));
+          }
+        } else {
+          if (chkMoving.checked) {
+            chkMoving.checked = false;
+            chkMoving.dispatchEvent(new Event('change'));
+          }
+        }
+        
+        // Gravedad y salto
+        const targetHeight = isCrouching ? 0.9 : 1.6;
+        currentEyeHeight += (targetHeight - currentEyeHeight) * 0.15;
+        const playerFloorY = currentEyeHeight;
+        
+        if (keys.space && isGrounded && !isMobile) {
+          yVelocity = jumpForce;
+          isGrounded = false;
+        }
+        
+        if (!isGrounded) {
+          yVelocity -= gravity * dt;
+          camera.position.y += yVelocity * dt;
+          if (camera.position.y <= playerFloorY) {
+            camera.position.y = playerFloorY;
+            yVelocity = 0;
+            isGrounded = true;
+          }
+        } else {
+          camera.position.y = playerFloorY;
+        }
+        
+        // Transición de Zonas Automática
+        if (activeZoneKey === 'z1' && camera.position.x > -31.5) {
+          focusZone('z2');
+          camera.position.set(-14.2, currentEyeHeight, 0);
+          logEvent("🚪 Transición: Cruzaste la entrada del pasillo (Zona 2).");
+        } else if (activeZoneKey === 'z2') {
+          if (camera.position.x < -14.8) {
+            focusZone('z1');
+            camera.position.set(-32.0, currentEyeHeight, 0);
+            logEvent("⛺ Transición: Volviste a la torre octogonal (Zona 1).");
+          } else if (camera.position.x > 14.8) {
+            focusZone('z3');
+            camera.position.set(33.2, currentEyeHeight, 0);
+            logEvent("🟨 Transición: Entraste al laberinto de las Backrooms (Zona 3).");
+          }
+        } else if (activeZoneKey === 'z3' && camera.position.x < 33.0) {
+          focusZone('z2');
+          camera.position.set(14.2, currentEyeHeight, 0);
+          logEvent("🚪 Transición: Regresaste al pasillo (Zona 2).");
+        }
+      }
+
+      // Sistema de temporización de pasos del jugador
+      if (currentState.isMoving) {
+        footstepTimeAccumulator += dt;
+        if (footstepTimeAccumulator >= 0.55) {
+          let material = 'stone';
+          if (activeZoneKey === 'z1') material = 'stone';
+          else if (activeZoneKey === 'z2') material = 'wood';
+          else if (activeZoneKey === 'z3') material = 'carpet';
+          else if (activeZoneKey === 'visitor') material = 'wood';
+          
+          playerFootstep(material);
+          footstepTimeAccumulator = 0;
+        }
+      } else {
+        footstepTimeAccumulator = 0.55; // Asegura paso instantáneo al reiniciar movimiento
+      }
+
+      // Interpolación del color de la niebla según la zona activa
+      currentZoneBlend += (zoneBlendTarget - currentZoneBlend) * 0.05;
+      if (fogMat) {
+        fogMat.uniforms.uZoneBlend.value = currentZoneBlend;
+        fogMat.uniforms.uDensity.value = 0.02 + fearVal * 0.78; 
+      }
+
+      // Actualizar uniforms de post-procesamiento VHS
+      if (vhsPass) {
+        vhsPass.uniforms.fearLevel.value = fearVal;
+      }
+
+      // Control de glitch de tracking analógico
+      const nowTime = Date.now();
+      if (!glitchActive && nowTime >= nextGlitchTime) {
+        glitchActive = true;
+        glitchFramesLeft = 3 + Math.floor(Math.random() * 2); // 3 o 4 frames
+        vhsPass.uniforms.trackingGlitch.value = 1.0;
+        playVHSClickSound();
+        logEvent("⚠️ VHS: Error de tracking de señal detectado.");
+      }
+
+      if (glitchActive) {
+        glitchFramesLeft--;
+        if (glitchFramesLeft <= 0) {
+          glitchActive = false;
+          vhsPass.uniforms.trackingGlitch.value = 0.0;
+          nextGlitchTime = nowTime + (8000 + Math.random() * 7000);
+        }
+      }
+
+      // 2. Actualizar VisitorAI (si está activo)
+      if (chkAIActive && chkAIActive.checked) {
+        const playerProxyPos = new THREE.Vector3();
+        if (chkTargetFocal && chkTargetFocal.checked) {
+          playerProxyPos.copy(controlsTargetPos);
+        } else {
+          playerProxyPos.copy(camera.position);
+        }
+
+        visitorAI.update(dt, fearVal, playerProxyPos);
+
+        // Actualizar etiqueta del HUD
+        const aiState = visitorAI.getState();
+        lblAIState.textContent = aiState;
+        const stateColors = {
+          DORMANT: '#8a94a6',
+          AWARE: '#ffdd67',
+          FOLLOWING: '#ff9800',
+          HUNTING: '#ff5252'
+        };
+        lblAIState.style.color = stateColors[aiState] || 'var(--accent-color)';
+      } else {
+        lblAIState.textContent = "DESACTIVADA";
+        lblAIState.style.color = 'var(--text-muted)';
+      }
+
+      // Luz del visitante sigue su posición
+      visitorLight.position.copy(visitor.position);
+      visitorLight.position.y += 1.6;
+
+      // 3. Transición suave de la cámara a su objetivo (sólo en Showcase)
+      if (!gameMode) {
+        camera.position.lerp(cameraTargetPos, 0.05);
+        controls.target.lerp(controlsTargetPos, 0.05);
+      }
+
+      // 3. Animar TheVisitor — respiración siniestra
+      const t = Date.now() * 0.001;
+
+      // Actualizar uniform de tiempo de niebla, partículas y VHS
+      if (fogMat) fogMat.uniforms.uTime.value = t;
+      if (dustMat) dustMat.uniforms.uTime.value = t;
+      if (vhsPass) vhsPass.uniforms.uTime.value = t;
+
+      // ── ANIMACIÓN DE LUCES POR ZONA ──
+      
+      // ─────────────────────────────────────────────────────────────
+      //  PORTAL OCCLUSION CULLING (Zona 3)
+      // ─────────────────────────────────────────────────────────────
+      if (gameMode && activeZoneKey === 'z3') {
+        const playerCol = Math.max(0, Math.min(3, Math.floor((camera.position.x - 33) / 6)));
+        const playerRow = Math.max(0, Math.min(3, Math.floor((camera.position.z + 12) / 6)));
+        
+        const visibleWalls = new Set();
+        const floors = z3.userData.floors;
+        
+        for (let rowIdx = 0; rowIdx < 4; rowIdx++) {
+          for (let colIdx = 0; colIdx < 4; colIdx++) {
+            const manhattanDist = Math.abs(colIdx - playerCol) + Math.abs(rowIdx - playerRow);
+            const isVisible = manhattanDist <= 2;
+            
+            const floorMesh = floors[rowIdx * 4 + colIdx];
+            if (floorMesh) floorMesh.visible = isVisible;
+            
+            const light = z3Lights[rowIdx * 4 + colIdx];
+            if (light) light.visible = isVisible;
+            
+            if (isVisible) {
+              visibleWalls.add(`H_${colIdx}_${rowIdx}`);
+              visibleWalls.add(`H_${colIdx}_${rowIdx + 1}`);
+              visibleWalls.add(`V_${colIdx}_${rowIdx}`);
+              visibleWalls.add(`V_${colIdx + 1}_${rowIdx}`);
+            }
+          }
+        }
+        
+        z3.userData.hWalls.forEach((wall, id) => {
+          wall.visible = visibleWalls.has(id);
+        });
+        z3.userData.vWalls.forEach((wall, id) => {
+          wall.visible = visibleWalls.has(id);
+        });
+      } else {
+        z3.userData.floors.forEach(f => f.visible = true);
+        z3Lights.forEach(l => l.visible = true);
+        z3.userData.hWalls.forEach(w => w.visible = true);
+        z3.userData.vWalls.forEach(w => w.visible = true);
+      }
+
+      // ── ANIMACIÓN DE LUCES POR ZONA ──
+      
+      // Zona 1 (Carpa): Parpadeo asincrónico con frecuencias asimétricas
+      z1Lights.forEach((light, i) => {
+        const noise = Math.sin(t * light.flickerFreq * 8) * Math.cos(t * light.flickerFreq * 5.4);
+        light.intensity = 0.5 + (noise > 0 ? noise * 0.6 : noise * 0.2);
+        // Ajustar color de la bombilla instanciada según la intensidad actual
+        const baseColor = new THREE.Color(warmColors[i % warmColors.length]);
+        baseColor.multiplyScalar(light.intensity / 0.8);
+        bulbInstancedMesh.setColorAt(i, baseColor);
+      });
+      bulbInstancedMesh.instanceColor.needsUpdate = true;
+
+      // Zona 3 (Backrooms): Fluorescentes luchando contra el amarillo (zumbido visual)
+      z3Lights.forEach((light) => {
+        const rand = Math.random();
+        if (rand > 0.985) {
+          // Bajón repentino de luz
+          light.intensity = 0.05;
+        } else if (rand > 0.96) {
+          // Zumbido rápido
+          light.intensity = 0.3 + Math.sin(t * light.flickerFreq * 40) * 0.3;
+        } else {
+          // Luz encendida constante
+          light.intensity = 0.7;
+        }
+        light.children[0].material.color.setHex(0xffffff).multiplyScalar(light.intensity / 0.7);
+      });
+
+      // Linterna del jugador: sigue a la cámara y apunta hacia donde mira
+      if (gameMode) {
+        flashlight.visible = isFlashlightOn;
+        flashlight.position.copy(camera.position);
+        const targetDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+        flashlight.target.position.copy(camera.position).add(targetDir);
+      } else {
+        // En modo showcase, sólo encendida en Zona 1
+        if (activeZoneKey === 'z1') {
+          flashlight.visible = true;
+          flashlight.position.copy(camera.position);
+          const targetDir = new THREE.Vector3(0, 0, -1).applyQuaternion(camera.quaternion);
+          flashlight.target.position.copy(camera.position).add(targetDir);
+        } else {
+          flashlight.visible = false;
+        }
+      }
+
+      // Respiración sutil en el torso (escala Y oscila ligeramente)
+      const torso = visitor.getPart('torso');
+      if (torso) torso.scale.y = 1.0 + Math.sin(t * 1.2) * 0.015;
+
+      // Balanceo corporal muy leve (pelvis oscila en Z)
+      const pelvis = visitor.getPart('pelvis');
+      if (pelvis) pelvis.rotation.z = Math.sin(t * 0.4) * 0.008;
+
+      // Brazos se balancean levemente (movimiento pendular inquietante)
+      const lShoulder = visitor.getPart('leftShoulder');
+      const rShoulder = visitor.getPart('rightShoulder');
+      if (lShoulder) lShoulder.rotation.x = Math.sin(t * 0.7) * 0.04;
+      if (rShoulder) rShoulder.rotation.x = Math.sin(t * 0.7 + Math.PI) * 0.04;
+
+      // Dedos/manos se contraen ligeramente
+      const lHand = visitor.getPart('leftHand');
+      const rHand = visitor.getPart('rightHand');
+      if (lHand) lHand.scale.y = 1.0 + Math.sin(t * 2.5) * 0.06;
+      if (rHand) rHand.scale.y = 1.0 + Math.sin(t * 2.5 + 1.0) * 0.06;
+
+      // lookAt de los ojos del visitante
+      if (chkEyeLook && chkEyeLook.checked) {
+        eyeSystem.lookAt(camera.position);
+      } else {
+        const forwardTarget = new THREE.Vector3(0, 0, -10);
+        headPart.localToWorld(forwardTarget);
+        eyeSystem.lookAt(forwardTarget);
+      }
+
+      // Ojos parpadean con la intensidad del miedo
+      const fearIntensity = fearEngine.getFear();
+      eyeSystem.irisMaterial.emissiveIntensity = 1.5 + Math.sin(t * 3) * 0.5 + fearIntensity * 2.0;
+
+      // Luz del visitante pulsa con el miedo
+      visitorLight.intensity = 1.0 + fearIntensity * 3.0 + Math.sin(t * 2) * 0.3;
+
+      if (!gameMode) {
+        controls.update();
+      }
+      composer.render();
+    }
+
+    // Ajustar resolución al redimensionar ventana
+    window.addEventListener('resize', () => {
+      camera.aspect = container.clientWidth / container.clientHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(container.clientWidth, container.clientHeight);
+      composer.setSize(container.clientWidth, container.clientHeight);
+    });
+
+    // Iniciar loop
+    animate();
+  </script>
+</body>
+</html>

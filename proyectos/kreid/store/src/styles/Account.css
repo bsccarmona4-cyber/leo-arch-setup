@@ -1,0 +1,781 @@
+/* ==========================================
+   👤 KREID — Account / Perfil del Cliente
+   Paleta Rose Gold + Blush + Champagne
+   Mercado: México (MXN, español)
+   ========================================== */
+
+/* ─── Page Wrapper ─── */
+.account-page {
+  min-height: 80vh;
+  padding: 48px 0 80px;
+  background: var(--cream);
+}
+
+/* ─── Auth Box (Login / Register) ─── */
+.account-auth-box {
+  max-width: 440px;
+  margin: 40px auto;
+  padding: 48px 40px;
+  background: var(--white);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+  text-align: center;
+  border: 2px solid var(--rose-light);
+}
+
+.account-auth-icon {
+  width: 72px;
+  height: 72px;
+  margin: 0 auto 24px;
+  background: linear-gradient(135deg, var(--rose), var(--berry));
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+}
+
+.account-auth-box h2 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 8px;
+}
+
+.account-auth-sub {
+  font-size: 0.9rem;
+  color: var(--gray-500);
+  margin-bottom: 28px;
+  line-height: 1.5;
+}
+
+.account-auth-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* ─── Auth Inputs ─── */
+.auth-input-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--gray-50);
+  transition: var(--transition);
+  color: var(--gray-500);
+}
+
+.auth-input-wrap:focus-within {
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px var(--rose-glow);
+  color: var(--rose);
+}
+
+.auth-input-wrap .form-input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 0.95rem;
+  color: var(--dark);
+}
+
+.auth-input-wrap .form-input::placeholder {
+  color: var(--gray-400);
+}
+
+.auth-error {
+  color: var(--error);
+  font-size: 0.85rem;
+  background: #FEF2F2;
+  padding: 10px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #FECACA;
+}
+
+[data-theme="dark"] .auth-error {
+  background: #2D1518;
+  border-color: #5C1A1A;
+}
+
+.auth-success {
+  color: var(--success);
+  font-size: 0.85rem;
+  background: #F0FDF4;
+  padding: 12px 14px;
+  border-radius: var(--radius-sm);
+  border: 1px solid #BBF7D0;
+  text-align: left;
+  line-height: 1.5;
+}
+
+[data-theme="dark"] .auth-success {
+  background: #152618;
+  border-color: #1A4A2A;
+}
+
+.auth-toggle {
+  margin-top: 20px;
+  font-size: 0.9rem;
+  color: var(--gray-500);
+}
+
+.auth-toggle button {
+  background: none;
+  border: none;
+  color: var(--rose);
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  padding: 0;
+}
+
+.auth-toggle button:hover {
+  color: var(--berry);
+  text-decoration: underline;
+}
+
+.auth-back-link {
+  display: inline-block;
+  margin-top: 16px;
+  font-size: 0.85rem;
+  color: var(--gray-400);
+  transition: var(--transition);
+}
+
+.auth-back-link:hover {
+  color: var(--rose);
+}
+
+/* ─── Authenticated Header ─── */
+.account-header {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 32px;
+  background: linear-gradient(135deg, var(--rose-light), var(--cream-dark));
+  border-radius: var(--radius-xl);
+  margin-bottom: 32px;
+  border: 1px solid var(--rose-light);
+  flex-wrap: wrap;
+}
+
+[data-theme="dark"] .account-header {
+  background: linear-gradient(135deg, #2D1A24, #1F191C);
+}
+
+.account-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--rose), var(--berry));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+  box-shadow: var(--shadow-rose);
+}
+
+.account-user-info {
+  flex: 1;
+  min-width: 200px;
+}
+
+.account-user-info h1 {
+  font-size: 1.3rem;
+  font-weight: 700;
+  color: var(--dark);
+  margin-bottom: 4px;
+}
+
+.account-user-info p {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+}
+
+/* ─── Account Grid ─── */
+.account-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+@media (max-width: 768px) {
+  .account-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .account-header {
+    padding: 24px;
+    gap: 16px;
+  }
+
+  .account-auth-box {
+    padding: 32px 24px;
+    margin: 20px 0;
+  }
+
+  .account-avatar {
+    width: 52px;
+    height: 52px;
+    font-size: 1.3rem;
+  }
+}
+
+/* ─── Account Cards ─── */
+.account-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  border: 2px solid var(--gray-300);
+  transition: var(--transition);
+  box-shadow: var(--shadow-sm);
+}
+
+.account-card:hover {
+  box-shadow: var(--shadow-md);
+}
+
+.account-card-full {
+  grid-column: 1 / -1;
+}
+
+.account-card-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 2px solid var(--rose-light);
+}
+
+.account-card-header h2 {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--dark);
+}
+
+.account-card-header svg,
+.account-card-header .header-icon {
+  color: var(--rose);
+}
+
+/* ─── Empty State ─── */
+.account-empty {
+  text-align: center;
+  padding: 24px 0;
+}
+
+.account-empty p {
+  color: var(--gray-400);
+  margin-bottom: 16px;
+  font-size: 0.95rem;
+}
+
+.account-muted {
+  color: var(--gray-400);
+  font-size: 0.9rem;
+  font-style: italic;
+  text-align: center;
+  padding: 16px 0;
+}
+
+/* ─── Account Detail Rows ─── */
+.account-detail-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--gray-100);
+  font-size: 0.9rem;
+}
+
+.account-detail-row:last-child {
+  border-bottom: none;
+}
+
+.account-detail-row span:first-child {
+  color: var(--gray-500);
+  font-weight: 500;
+}
+
+.account-detail-row span:last-child {
+  color: var(--dark);
+  font-weight: 600;
+  text-align: right;
+  max-width: 55%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ─── Orders ─── */
+.account-orders {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.account-order-item {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: var(--gray-50);
+  border-radius: var(--radius-md);
+  transition: var(--transition);
+  flex-wrap: wrap;
+}
+
+.account-order-item:hover {
+  background: var(--gray-100);
+}
+
+.order-id {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--rose);
+  font-family: monospace;
+  letter-spacing: 0.5px;
+}
+
+.order-date {
+  font-size: 0.78rem;
+  color: var(--gray-400);
+  margin-top: 2px;
+}
+
+.order-status {
+  display: inline-block;
+  padding: 4px 12px;
+  border-radius: 100px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+}
+
+.order-status.pending {
+  background: #FEF9C3;
+  color: #A16207;
+}
+.order-status.processing {
+  background: #DBEAFE;
+  color: #1E40AF;
+}
+.order-status.shipped {
+  background: #EDE9FE;
+  color: #6D28D9;
+}
+.order-status.delivered {
+  background: #DCFCE7;
+  color: #166534;
+}
+.order-status.cancelled {
+  background: #FEE2E2;
+  color: #991B1B;
+}
+
+[data-theme="dark"] .order-status.pending {
+  background: #2A2410;
+  color: #EAB308;
+}
+[data-theme="dark"] .order-status.processing {
+  background: #1A2340;
+  color: #3B82F6;
+}
+[data-theme="dark"] .order-status.shipped {
+  background: #201A36;
+  color: #8B5CF6;
+}
+[data-theme="dark"] .order-status.delivered {
+  background: #152618;
+  color: #22C55E;
+}
+[data-theme="dark"] .order-status.cancelled {
+  background: #2D1518;
+  color: #EF4444;
+}
+
+.order-total {
+  font-weight: 700;
+  color: var(--berry);
+  font-size: 0.95rem;
+  margin-left: auto;
+}
+
+/* ─── Profile Edit Form ─── */
+.profile-edit-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.profile-field {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.profile-field label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--gray-500);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.profile-field input,
+.profile-field textarea {
+  padding: 12px 14px;
+  border: 2px solid var(--gray-200);
+  border-radius: var(--radius-md);
+  background: var(--gray-50);
+  color: var(--dark);
+  font-size: 0.9rem;
+  transition: var(--transition);
+  resize: vertical;
+}
+
+.profile-field input:focus,
+.profile-field textarea:focus {
+  outline: none;
+  border-color: var(--rose);
+  box-shadow: 0 0 0 3px var(--rose-glow);
+}
+
+.profile-field textarea {
+  min-height: 80px;
+  font-family: inherit;
+}
+
+.profile-save-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+/* ─── Referral Card (Destacada) ─── */
+.referral-card {
+  background: linear-gradient(135deg, var(--gold-light), #FFFDF5);
+  border: 2px solid var(--gold);
+  border-radius: var(--radius-lg);
+  padding: 28px;
+  text-align: center;
+  position: relative;
+  overflow: hidden;
+}
+
+[data-theme="dark"] .referral-card {
+  background: linear-gradient(135deg, #262018, #1F1A12);
+  border-color: var(--gold-dark);
+}
+
+.referral-card::before {
+  content: '🎁';
+  position: absolute;
+  top: -20px;
+  right: -10px;
+  font-size: 4rem;
+  opacity: 0.15;
+  transform: rotate(15deg);
+  pointer-events: none;
+}
+
+.referral-card h2 {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--gold-dark);
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+[data-theme="dark"] .referral-card h2 {
+  color: var(--gold);
+}
+
+.referral-card .referral-sub {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.referral-code-display {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.referral-code-box {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: var(--white);
+  border: 2px dashed var(--gold);
+  border-radius: var(--radius-md);
+  font-family: 'Courier New', monospace;
+  font-size: 1.3rem;
+  font-weight: 800;
+  letter-spacing: 3px;
+  color: var(--berry);
+  user-select: all;
+}
+
+[data-theme="dark"] .referral-code-box {
+  background: #1D171A;
+  color: var(--gold);
+}
+
+.referral-copy-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 18px;
+  border-radius: var(--radius-md);
+  background: var(--gold);
+  color: var(--white);
+  border: none;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--transition);
+}
+
+.referral-copy-btn:hover {
+  background: var(--gold-dark);
+  transform: translateY(-1px);
+}
+
+.referral-copy-btn:active {
+  transform: translateY(0);
+}
+
+/* ─── Loyalty Card (Tarjeta de Fidelidad) ─── */
+.loyalty-card {
+  text-align: center;
+  padding: 8px 0;
+}
+
+.loyalty-card .loyalty-title {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--dark);
+  margin-bottom: 18px;
+  line-height: 1.5;
+}
+
+.loyalty-card .loyalty-title strong {
+  color: var(--berry);
+}
+
+.loyalty-circles {
+  display: flex;
+  justify-content: center;
+  gap: 14px;
+  margin-bottom: 20px;
+  flex-wrap: wrap;
+}
+
+.loyalty-circle {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+}
+
+.loyalty-circle.filled {
+  background: linear-gradient(135deg, var(--rose), var(--berry));
+  color: #fff;
+  box-shadow: 0 0 16px var(--rose-glow);
+  animation: circleFillPop 0.5s ease-out;
+}
+
+.loyalty-circle.empty {
+  background: var(--gray-200);
+  color: var(--gray-500);
+  border: 2px dashed var(--gray-400);
+}
+
+[data-theme="dark"] .loyalty-circle.empty {
+  background: #261F22;
+  border-color: #4A3F43;
+  color: #6E6065;
+}
+
+@keyframes circleFillPop {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+.loyalty-circle .circle-num {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+.loyalty-reward-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, var(--gold-light), #FFFDF5);
+  border: 1px solid var(--gold);
+  border-radius: 100px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--gold-dark);
+  margin-bottom: 12px;
+}
+
+[data-theme="dark"] .loyalty-reward-badge {
+  background: linear-gradient(135deg, #262018, #1F1A12);
+  color: var(--gold);
+}
+
+.loyalty-card .loyalty-reward-desc {
+  font-size: 0.8rem;
+  color: var(--gray-400);
+  margin-bottom: 16px;
+  line-height: 1.5;
+}
+
+.loyalty-card .btn-claim {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 14px 36px;
+  border-radius: 100px;
+  background: linear-gradient(135deg, var(--gold), var(--gold-dark));
+  color: #fff;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: var(--transition);
+  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.3);
+}
+
+.loyalty-card .btn-claim:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 24px rgba(212, 175, 55, 0.45);
+}
+
+.loyalty-card .btn-claim:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* ─── Promos / Discount Notification ─── */
+.promo-banner {
+  padding: 16px 20px;
+  background: linear-gradient(135deg, var(--berry-light), var(--cream-dark));
+  border-radius: var(--radius-md);
+  font-size: 0.9rem;
+  color: var(--berry);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 12px;
+}
+
+[data-theme="dark"] .promo-banner {
+  background: linear-gradient(135deg, #2A1520, #1F191C);
+  color: #D4A0B8;
+}
+
+.promo-banner .promo-amount {
+  font-weight: 800;
+  font-size: 1.1rem;
+}
+
+/* ─── Section divider ─── */
+.account-section-divider {
+  margin: 8px 0 20px;
+  border: none;
+  border-top: 2px solid var(--rose-light);
+  width: 60px;
+}
+
+/* ─── Toast / flash message dentro de la página ─── */
+.account-toast {
+  padding: 14px 20px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 20px;
+  animation: slideDown 0.3s ease-out;
+}
+
+.account-toast.success {
+  background: #DCFCE7;
+  color: #166534;
+  border: 1px solid #BBF7D0;
+}
+
+.account-toast.error {
+  background: #FEE2E2;
+  color: #991B1B;
+  border: 1px solid #FECACA;
+}
+
+[data-theme="dark"] .account-toast.success {
+  background: #152618;
+  color: #22C55E;
+  border-color: #1A4A2A;
+}
+
+[data-theme="dark"] .account-toast.error {
+  background: #2D1518;
+  color: #EF4444;
+  border-color: #5C1A1A;
+}
+
+@keyframes slideDown {
+  from { opacity: 0; transform: translateY(-8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Promo special card ─── */
+.promo-card {
+  padding: 20px;
+  background: linear-gradient(135deg, var(--rose-light), #FDF0F5);
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+[data-theme="dark"] .promo-card {
+  background: linear-gradient(135deg, #2D1A24, #1F191C);
+}
+
+.promo-card h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--berry);
+  margin-bottom: 6px;
+}
+
+.promo-card p {
+  font-size: 0.82rem;
+  color: var(--gray-500);
+  line-height: 1.5;
+}

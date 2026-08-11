@@ -1,0 +1,136 @@
+{
+  "foto_original.png": {
+    "bytes": 743229,
+    "kb": 725.8,
+    "w": 1920,
+    "h": 1080,
+    "nota": "PNG sin pérdida (referencia)"
+  },
+  "foto_jpeg_q80.jpg": {
+    "bytes": 290682,
+    "kb": 283.9,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_jpeg_q60.jpg": {
+    "bytes": 225590,
+    "kb": 220.3,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_jpeg_q30.jpg": {
+    "bytes": 152213,
+    "kb": 148.6,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_webp_q80.webp": {
+    "bytes": 42310,
+    "kb": 41.3,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_webp_q60.webp": {
+    "bytes": 28012,
+    "kb": 27.4,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_webp_lossless.webp": {
+    "bytes": 355638,
+    "kb": 347.3,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_png24.png": {
+    "bytes": 743229,
+    "kb": 725.8,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_png8.png": {
+    "bytes": 197850,
+    "kb": 193.2,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_tiff_lzw.tiff": {
+    "bytes": 821584,
+    "kb": 802.3,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_tiff_zip.tiff": {
+    "bytes": 522362,
+    "kb": 510.1,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_bmp.bmp": {
+    "bytes": 6220854,
+    "kb": 6075.1,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_gif.gif": {
+    "bytes": 344220,
+    "kb": 336.2,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_gif_animado.gif": {
+    "bytes": 1301957,
+    "kb": 1271.4,
+    "w": 1920,
+    "h": 1080
+  },
+  "foto_avif.avif": {
+    "bytes": 23551,
+    "kb": 23.0,
+    "w": 1920,
+    "h": 1080
+  },
+  "favicon.ico": {
+    "bytes": 43975,
+    "kb": 42.9,
+    "w": 256,
+    "h": 256
+  },
+  "icono_png24.png": {
+    "bytes": 2488,
+    "kb": 2.4,
+    "w": 256,
+    "h": 256
+  },
+  "icono_webp.webp": {
+    "bytes": 3452,
+    "kb": 3.4,
+    "w": 256,
+    "h": 256
+  },
+  "icono_png8.png": {
+    "bytes": 1354,
+    "kb": 1.3,
+    "w": 256,
+    "h": 256
+  },
+  "icono.svg": {
+    "bytes": 497,
+    "kb": 0.5,
+    "w": 256,
+    "h": 256,
+    "vectorial": true
+  },
+  "escena_png24.png": {
+    "bytes": 4684,
+    "kb": 4.6,
+    "w": 800,
+    "h": 600
+  },
+  "escena_webp.webp": {
+    "bytes": 5114,
+    "kb": 5.0,
+    "w": 800,
+    "h": 600
+  }
+}

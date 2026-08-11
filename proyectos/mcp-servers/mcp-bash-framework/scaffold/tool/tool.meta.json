@@ -1,0 +1,40 @@
+{
+  "name": "__NAME__",
+  "description": "One-line summary of what __NAME__ does.\n\nWhen to use: [Describe the use case]\nNot for: [Common misconception or wrong use case]\n\nExamples:\n- __NAME__ --arg value\n- __NAME__ --flag",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "exampleArg": {
+        "type": "string",
+        "description": "Clear description of what this parameter does and its format. Example: 'user-123'"
+      }
+    }
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["success", "result"],
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the operation succeeded"
+      },
+      "result": {
+        "type": "object",
+        "required": ["message"],
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Human-readable message produced by the tool"
+          }
+        }
+      }
+    }
+  },
+  "annotations": {
+    "readOnlyHint": true,
+    "destructiveHint": false,
+    "idempotentHint": true,
+    "openWorldHint": false
+  },
+  "_comment_ui": "To add UI: create tools/__NAME__/ui/ with index.html and ui.meta.json. The framework automatically links them - no _meta.ui needed. See docs/guides/ui-resources.md"
+}

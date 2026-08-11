@@ -1,0 +1,75 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+if [[ $# -lt 1 ]]; then
+	printf 'Usage: %s <example-id>\n' "$0" >&2
+	exit 1
+fi
+
+EXAMPLE_ID="$1"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+EXAMPLE_DIR="${SCRIPT_DIR}/${EXAMPLE_ID}"
+if [[ ! -d "${EXAMPLE_DIR}" ]]; then
+	printf 'Example %s not found\n' "${EXAMPLE_ID}" >&2
+	exit 1
+fi
+
+TMPDIR="$(mktemp -d)"
+mcp_examples_cleanup() {
+	rm -rf "${TMPDIR}"
+}
+trap mcp_examples_cleanup EXIT INT TERM
+
+# Reuse the framework in-place; only stage example content into a temp project.
+FRAMEWORK_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+export MCPBASH_HOME="${FRAMEWORK_ROOT}"
+
+# Create project directories
+mkdir -p "${TMPDIR}/tools"
+mkdir -p "${TMPDIR}/resources"
+mkdir -p "${TMPDIR}/prompts"
+mkdir -p "${TMPDIR}/server.d"
+
+# Copy example content into project directories (including dotfiles)
+cp -a "${EXAMPLE_DIR}/." "${TMPDIR}/" 2>/dev/null || true
+
+# Run per-example environment checks if provided
+if [[ -x "${TMPDIR}/check-env" ]]; then
+	if ! (cd "${TMPDIR}" && "${TMPDIR}/check-env"); then
+		printf 'Warning: check-env for %s failed; continuing.\n' "${EXAMPLE_ID}" >&2
+	fi
+fi
+
+# Ensure media roots exist for examples that declare them
+if [[ -f "${TMPDIR}/config/media_roots.json" ]]; then
+	json_bin="${MCPBASH_JSON_TOOL_BIN:-}"
+	if [[ -z "${json_bin}" ]]; then
+		if command -v gojq >/dev/null 2>&1; then
+			json_bin="gojq"
+		elif command -v jq >/dev/null 2>&1; then
+			json_bin="jq"
+		fi
+	elif ! command -v "${json_bin}" >/dev/null 2>&1; then
+		json_bin=""
+	fi
+
+	if [[ -n "${json_bin}" ]]; then
+		while IFS= read -r root; do
+			[[ -z "${root}" ]] && continue
+			case "${root}" in
+			/*) dir="${root}" ;;
+			./*) dir="${TMPDIR}/${root#./}" ;;
+			*) dir="${TMPDIR}/${root}" ;;
+			esac
+			mkdir -p "${dir}" 2>/dev/null || true
+		done < <("${json_bin}" -r '.roots[]?.path // empty' "${TMPDIR}/config/media_roots.json" 2>/dev/null)
+	else
+		mkdir -p "${TMPDIR}/media" 2>/dev/null || true
+	fi
+fi
+
+cd "${TMPDIR}" || exit 1
+export MCPBASH_PROJECT_ROOT="${TMPDIR}"
+
+# Run server in foreground (not exec) so EXIT trap can clean up TMPDIR
+"${FRAMEWORK_ROOT}/bin/mcp-bash"

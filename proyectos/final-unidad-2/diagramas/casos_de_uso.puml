@@ -1,0 +1,27 @@
+@startuml
+left to right direction
+skinparam actorStyle awesome
+title Casos de Uso - Gestion de Biblioteca
+
+actor "Bibliotecario" as B
+actor "Usuario" as U
+
+rectangle "Sistema de Gestion de Biblioteca" {
+  usecase "Registrar libro" as UC1
+  usecase "Registrar usuario" as UC2
+  usecase "Prestar libro" as UC3
+  usecase "Devolver libro" as UC4
+  usecase "Generar reporte de libros prestados" as UC5
+  usecase "Consultar catalogo" as UC6
+}
+
+B --> UC1
+B --> UC2
+B --> UC3
+B --> UC4
+B --> UC5
+B --> UC6
+U --> UC3
+U --> UC4
+U --> UC6
+@enduml

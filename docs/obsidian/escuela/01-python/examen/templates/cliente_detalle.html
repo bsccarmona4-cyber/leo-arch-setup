@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block titulo %}Cliente — {{ cliente.nombre }}{% endblock %}
+{% block contenido %}
+<h1>👤 {{ cliente.nombre }}</h1>
+
+<div class="kpi-grid">
+    <div class="kpi-card">
+        <div class="kpi-value">{{ cliente.puntos_acumulados or 0 }}</div>
+        <div class="kpi-label">Pts Acumulados</div>
+    </div>
+    <div class="kpi-card accent">
+        <div class="kpi-value">{{ cliente.puntos_disponibles or 0 }}</div>
+        <div class="kpi-label">Pts Disponibles</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-value">{{ cliente.puntos_canjeados or 0 }}</div>
+        <div class="kpi-label">Pts Canjeados</div>
+    </div>
+</div>
+
+<div class="card">
+    <p>📞 {{ cliente.telefono or 'Sin teléfono' }} | ✉️ {{ cliente.email or 'Sin email' }}
+        {% if cliente.fecha_nacimiento %} | 🎂 {{ cliente.fecha_nacimiento }}{% endif %}</p>
+</div>
+
+<div class="card">
+    <h3>📜 Historial de Compras</h3>
+    {% if compras %}
+    <table>
+        <thead><tr><th>#</th><th>Fecha</th><th>Total</th><th>Pts</th><th>Productos</th></tr></thead>
+        <tbody>
+        {% for c in compras %}
+        <tr>
+            <td>{{ c.id }}</td>
+            <td>{{ c.fecha[:19] }}</td>
+            <td>${{ "%.2f"|format(c.total) }}</td>
+            <td>+{{ c.puntos_otorgados }}</td>
+            <td>
+                {% for d in c.detalle %}
+                {{ d.cantidad }}x {{ d.nombre }}{% if not loop.last %}, {% endif %}
+                {% endfor %}
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <p style="color:var(--text-dim);">Sin compras registradas.</p>
+    {% endif %}
+</div>
+
+<a href="/clientes" class="btn">← Volver a Clientes</a>
+{% endblock %}

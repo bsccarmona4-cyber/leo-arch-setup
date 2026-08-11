@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard — Guardián</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #1C1917; color: #FAFAF9; line-height: 1.5;
+    }
+    .app { display: flex; min-height: 100vh; }
+
+    /* Sidebar */
+    .sidebar {
+      width: 240px; border-right: 1px solid #44403C; padding: 24px 16px;
+      display: flex; flex-direction: column; flex-shrink: 0;
+    }
+    .sidebar .logo {
+      display: flex; align-items: center; gap: 8px;
+      font-weight: 600; font-size: 16px; color: #FAFAF9; margin-bottom: 32px;
+    }
+    .sidebar .logo-mark {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: #6366F1; display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar .logo-mark svg { width: 16px; height: 16px; fill: none; stroke: white; stroke-width: 2; }
+    .sidebar nav { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .sidebar nav a {
+      text-decoration: none; padding: 10px 12px; border-radius: 8px;
+      font-size: 14px; color: #A8A29E; font-weight: 500;
+      display: flex; align-items: center; gap: 10px; transition: all 0.2s;
+    }
+    .sidebar nav a:hover { background: #292524; color: #FAFAF9; }
+    .sidebar nav a.active { background: #292524; color: #FAFAF9; }
+    .sidebar .user-section {
+      padding-top: 16px; border-top: 1px solid #44403C;
+      display: flex; align-items: center; gap: 10px;
+    }
+    .sidebar .avatar {
+      width: 32px; height: 32px; border-radius: 50%;
+      background: #44403C; display: flex; align-items: center; justify-content: center;
+      font-size: 12px; font-weight: 600; color: #A8A29E;
+    }
+
+    /* Main Content */
+    .main { flex: 1; padding: 32px; overflow-y: auto; }
+    .header {
+      display: flex; justify-content: space-between; align-items: flex-start;
+      margin-bottom: 32px;
+    }
+    .header h1 {
+      font-size: 24px; font-weight: 700; color: #FAFAF9;
+    }
+    .header h1 span { color: #6366F1; }
+    .header .subtitle { font-size: 14px; color: #A8A29E; margin-top: 4px; }
+    .header .status {
+      display: flex; align-items: center; gap: 8px;
+      padding: 6px 12px; border-radius: 100px; border: 1px solid #44403C;
+      font-size: 12px; color: #A8A29E;
+    }
+    .status-dot {
+      width: 8px; height: 8px; border-radius: 50%;
+    }
+    .status-dot.online { background: #16A34A; }
+    .status-dot.offline { background: #A8A29E; }
+    .time { font-size: 12px; color: #57534E; }
+
+    /* KPI Row */
+    .kpi-row {
+      display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: #292524; border: 1px solid #44403C; border-radius: 12px;
+      padding: 20px; position: relative; overflow: hidden;
+    }
+    .kpi-card .kpi-label {
+      font-size: 11px; font-weight: 500; color: #A8A29E;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
+    }
+    .kpi-card .kpi-value {
+      font-size: 28px; font-weight: 700;
+    }
+    .kpi-card .kpi-value.indigo { color: #6366F1; }
+    .kpi-card .kpi-value.green { color: #16A34A; }
+    .kpi-card .kpi-value.red { color: #DC2626; }
+    .kpi-card .kpi-value.amber { color: #D97706; }
+    .kpi-bottom {
+      position: absolute; bottom: 0; left: 0; right: 0; height: 3px;
+    }
+    .kpi-bottom.indigo { background: linear-gradient(90deg, #6366F1, #818CF8); }
+    .kpi-bottom.green { background: linear-gradient(90deg, #16A34A, #22C55E); }
+    .kpi-bottom.red { background: linear-gradient(90deg, #DC2626, #EF4444); }
+    .kpi-bottom.amber { background: linear-gradient(90deg, #D97706, #F59E0B); }
+
+    /* Charts Row */
+    .charts-row {
+      display: grid; grid-template-columns: 5fr 3fr 4fr; gap: 16px; margin-bottom: 24px;
+    }
+    .chart-card {
+      background: #292524; border: 1px solid #44403C; border-radius: 12px; padding: 24px;
+    }
+    .chart-card h3 {
+      font-size: 14px; font-weight: 600; color: #FAFAF9; margin-bottom: 16px;
+    }
+
+    /* Bar Chart */
+    .bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 120px; }
+    .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .bar-container { width: 100%; height: 100px; display: flex; align-items: flex-end; gap: 2px; }
+    .bar { flex: 1; border-radius: 3px 3px 0 0; min-height: 2px; }
+    .bar.total { background: #6366F1; opacity: 0.6; }
+    .bar.fraud { background: #DC2626; }
+    .bar-label { font-size: 9px; color: #57534E; }
+
+    /* Donut */
+    .donut-container { display: flex; flex-direction: column; align-items: center; }
+    .donut { width: 120px; height: 120px; position: relative; margin-bottom: 16px; }
+    .donut svg { width: 100%; height: 100%; transform: rotate(-90deg); }
+    .donut .center {
+      position: absolute; inset: 0; display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+    .donut .center .pct { font-size: 22px; font-weight: 700; color: #FAFAF9; }
+    .donut .center .sub { font-size: 11px; color: #A8A29E; }
+    .donut-legend { display: flex; gap: 16px; }
+    .legend-item { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #A8A29E; }
+    .legend-dot { width: 8px; height: 8px; border-radius: 50%; }
+
+    /* Channel Bars */
+    .channel-list { display: flex; flex-direction: column; gap: 12px; }
+    .channel-item { }
+    .channel-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .channel-name { font-size: 13px; color: #A8A29E; }
+    .channel-count { font-size: 13px; font-weight: 600; color: #FAFAF9; }
+    .channel-bar-track { height: 8px; background: #44403C; border-radius: 100px; overflow: hidden; }
+    .channel-bar-fill { height: 100%; border-radius: 100px; transition: width 0.6s; }
+    .channel-bar-fill.whatsapp { background: #6366F1; }
+    .channel-bar-fill.email { background: #D97706; }
+    .channel-bar-fill.web { background: #16A34A; }
+
+    /* Table */
+    .table-card {
+      background: #292524; border: 1px solid #44403C; border-radius: 12px; padding: 24px;
+    }
+    .table-header {
+      display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;
+    }
+    .table-header h3 { font-size: 14px; font-weight: 600; color: #FAFAF9; }
+    .table-header .count { font-size: 12px; color: #A8A29E; }
+    .table { width: 100%; border-collapse: collapse; }
+    .table th {
+      text-align: left; padding: 12px 12px; font-size: 11px; font-weight: 600;
+      color: #A8A29E; text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 1px solid #44403C;
+    }
+    .table td {
+      padding: 12px; font-size: 13px; border-bottom: 1px solid #44403C;
+    }
+    .table tr:last-child td { border-bottom: none; }
+    .table tr:hover td { background: #1C1917; }
+    .table .domain { font-family: 'JetBrains Mono', monospace; font-size: 12px; color: #FAFAF9; }
+    .table .verdict { font-weight: 500; }
+    .table .verdict.safe { color: #16A34A; }
+    .table .verdict.suspicious { color: #D97706; }
+    .table .verdict.fraud { color: #DC2626; }
+    .table .time { color: #57534E; font-size: 12px; }
+
+    /* Brand list */
+    .brand-list { display: flex; flex-direction: column; gap: 12px; }
+    .brand-item { }
+    .brand-header { display: flex; justify-content: space-between; margin-bottom: 6px; }
+    .brand-name { font-size: 13px; color: #FAFAF9; }
+    .brand-count { font-size: 13px; font-weight: 600; color: #6366F1; }
+    .brand-track { height: 6px; background: #44403C; border-radius: 100px; overflow: hidden; }
+    .brand-fill { height: 100%; border-radius: 100px; background: linear-gradient(90deg, #6366F1, #818CF8); }
+
+    /* Feed */
+    .feed-card {
+      background: #292524; border: 1px solid #44403C; border-radius: 12px; padding: 24px;
+    }
+    .feed-item {
+      display: grid; grid-template-columns: 1fr 90px 80px 70px 60px;
+      gap: 8px; align-items: center; padding: 10px 12px;
+      border-radius: 8px; border: 1px solid transparent; transition: all 0.2s;
+    }
+    .feed-item:hover { background: #1C1917; border-color: #44403C; }
+    .feed-item .domain { font-size: 12px; font-family: 'JetBrains Mono', monospace; color: #FAFAF9; }
+    .feed-item .verdict { font-size: 12px; font-weight: 500; }
+    .feed-item .channel { font-size: 12px; color: #A8A29E; }
+    .feed-item .time { font-size: 12px; color: #57534E; text-align: right; }
+
+    @media (max-width: 1024px) {
+      .charts-row { grid-template-columns: 1fr; }
+      .kpi-row { grid-template-columns: repeat(2, 1fr); }
+    }
+    @media (max-width: 768px) {
+      .sidebar { display: none; }
+      .main { padding: 16px; }
+      .kpi-row { grid-template-columns: 1fr 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-mark">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+            <path d="M9 12l2 2 4-4" stroke-width="2.5"/>
+          </svg>
+        </div>
+        Guardián
+      </div>
+      <nav>
+        <a href="#" class="active">Dashboard</a>
+        <a href="#">Feed en vivo</a>
+        <a href="#">Amenazas</a>
+        <a href="#">Suscriptores</a>
+        <a href="#">Configuración</a>
+      </nav>
+      <div class="user-section">
+        <div class="avatar">AD</div>
+        <div>
+          <div style="font-size:13px;font-weight:500;color:#FAFAF9;">Admin</div>
+          <div style="font-size:11px;color:#57534E;">admin@guardian.mx</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- Main -->
+    <main class="main">
+      <div class="header">
+        <div>
+          <h1>Dashboard <span>Guardián</span></h1>
+          <div class="subtitle">Monitoreo de amenazas digitales en México</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:12px;">
+          <div class="status">
+            <span class="status-dot online"></span>
+            Tiempo real
+          </div>
+          <span class="time">10:47 AM</span>
+        </div>
+      </div>
+
+      <!-- KPI Cards -->
+      <div class="kpi-row">
+        <div class="kpi-card">
+          <div class="kpi-label">Total Análisis</div>
+          <div class="kpi-value indigo">1,247</div>
+          <div class="kpi-bottom indigo"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Hoy</div>
+          <div class="kpi-value green">38</div>
+          <div class="kpi-bottom green"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Fraudes</div>
+          <div class="kpi-value red">12%</div>
+          <div class="kpi-bottom red"></div>
+        </div>
+        <div class="kpi-card">
+          <div class="kpi-label">Protegidos</div>
+          <div class="kpi-value amber">847</div>
+          <div class="kpi-bottom amber"></div>
+        </div>
+      </div>
+
+      <!-- Charts -->
+      <div class="charts-row">
+        <!-- Activity Chart -->
+        <div class="chart-card">
+          <h3>Actividad 24h</h3>
+          <div class="bar-chart">
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:20%"></div></div><div class="bar-label">00</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:15%"></div></div><div class="bar-label">02</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:10%"></div></div><div class="bar-label">04</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:8%"></div></div><div class="bar-label">06</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:25%"></div></div><div class="bar-label">08</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:45%"></div><div class="bar fraud" style="height:12%"></div></div><div class="bar-label">10</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:60%"></div><div class="bar fraud" style="height:18%"></div></div><div class="bar-label">12</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:55%"></div><div class="bar fraud" style="height:15%"></div></div><div class="bar-label">14</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:70%"></div><div class="bar fraud" style="height:22%"></div></div><div class="bar-label">16</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:80%"></div><div class="bar fraud" style="height:30%"></div></div><div class="bar-label">18</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:65%"></div><div class="bar fraud" style="height:20%"></div></div><div class="bar-label">20</div></div>
+            <div class="bar-group"><div class="bar-container"><div class="bar total" style="height:40%"></div><div class="bar fraud" style="height:8%"></div></div><div class="bar-label">22</div></div>
+          </div>
+        </div>
+
+        <!-- Donut -->
+        <div class="chart-card">
+          <h3>Veredictos</h3>
+          <div class="donut-container">
+            <div class="donut">
+              <svg viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#44403C" stroke-width="12"/>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#16A34A" stroke-width="12"
+                  stroke-dasharray="314" stroke-dashoffset="94" stroke-linecap="round"/>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#D97706" stroke-width="12"
+                  stroke-dasharray="314" stroke-dashoffset="251" stroke-linecap="round"
+                  transform="rotate(72, 60, 60)"/>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#DC2626" stroke-width="12"
+                  stroke-dasharray="314" stroke-dashoffset="298" stroke-linecap="round"
+                  transform="rotate(155, 60, 60)"/>
+              </svg>
+              <div class="center">
+                <div class="pct">12%</div>
+                <div class="sub">fraude</div>
+              </div>
+            </div>
+            <div class="donut-legend">
+              <div class="legend-item"><span class="legend-dot" style="background:#16A34A;"></span>Seguro 70%</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#D97706;"></span>Sospechoso 18%</div>
+              <div class="legend-item"><span class="legend-dot" style="background:#DC2626;"></span>Fraude 12%</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Channels + Services -->
+        <div class="chart-card">
+          <h3>Canales</h3>
+          <div class="channel-list">
+            <div class="channel-item">
+              <div class="channel-header">
+                <span class="channel-name">WhatsApp</span>
+                <span class="channel-count">847</span>
+              </div>
+              <div class="channel-bar-track">
+                <div class="channel-bar-fill whatsapp" style="width:68%"></div>
+              </div>
+            </div>
+            <div class="channel-item">
+              <div class="channel-header">
+                <span class="channel-name">Email</span>
+                <span class="channel-count">286</span>
+              </div>
+              <div class="channel-bar-track">
+                <div class="channel-bar-fill email" style="width:23%"></div>
+              </div>
+            </div>
+            <div class="channel-item">
+              <div class="channel-header">
+                <span class="channel-name">Web</span>
+                <span class="channel-count">114</span>
+              </div>
+              <div class="channel-bar-track">
+                <div class="channel-bar-fill web" style="width:9%"></div>
+              </div>
+            </div>
+          </div>
+
+          <div style="margin-top:24px;padding-top:16px;border-top:1px solid #44403C;">
+            <div style="display:flex;gap:12px;flex-wrap:wrap;">
+              <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:#44403C;font-size:12px;color:#A8A29E;">
+                <span class="status-dot online"></span> API Análisis
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:#44403C;font-size:12px;color:#A8A29E;">
+                <span class="status-dot offline"></span> WhatsApp Bot
+              </div>
+              <div style="display:flex;align-items:center;gap:6px;padding:6px 12px;border-radius:100px;background:#44403C;font-size:12px;color:#A8A29E;">
+                <span class="status-dot online"></span> Supabase
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Threats + Brands Row -->
+      <div style="display:grid;grid-template-columns:7fr 5fr;gap:16px;margin-bottom:24px;">
+        <!-- Recent Threats -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Amenazas recientes (24h)</h3>
+            <span class="count">12 eventos</span>
+          </div>
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Dominio</th>
+                <th>Tipo</th>
+                <th>Canal</th>
+                <th style="text-align:right;">Hace</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="domain">sats-gob-mx.com</td>
+                <td><span class="verdict fraud">Phishing</span></td>
+                <td style="color:#A8A29E;">WhatsApp</td>
+                <td class="time" style="text-align:right;">2 min</td>
+              </tr>
+              <tr>
+                <td class="domain">bbva-seguridad.mx</td>
+                <td><span class="verdict fraud">Phishing</span></td>
+                <td style="color:#A8A29E;">Email</td>
+                <td class="time" style="text-align:right;">15 min</td>
+              </tr>
+              <tr>
+                <td class="domain">bit.ly/3xK9mN2</td>
+                <td><span class="verdict suspicious">Sospechoso</span></td>
+                <td style="color:#A8A29E;">WhatsApp</td>
+                <td class="time" style="text-align:right;">32 min</td>
+              </tr>
+              <tr>
+                <td class="domain">banamex-prize.com</td>
+                <td><span class="verdict fraud">Phishing</span></td>
+                <td style="color:#A8A29E;">SMS</td>
+                <td class="time" style="text-align:right;">1h</td>
+              </tr>
+              <tr>
+                <td class="domain">walmar-t.com</td>
+                <td><span class="verdict suspicious">Sospechoso</span></td>
+                <td style="color:#A8A29E;">WhatsApp</td>
+                <td class="time" style="text-align:right;">2h</td>
+              </tr>
+              <tr>
+                <td class="domain">cfe-pago-linea.mx</td>
+                <td><span class="verdict fraud">Phishing</span></td>
+                <td style="color:#A8A29E;">Email</td>
+                <td class="time" style="text-align:right;">3h</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Top Brands -->
+        <div class="table-card">
+          <div class="table-header">
+            <h3>Marcas más suplantadas</h3>
+            <span class="count">7 días</span>
+          </div>
+          <div class="brand-list">
+            <div class="brand-item">
+              <div class="brand-header">
+                <span class="brand-name">SAT</span>
+                <span class="brand-count">45</span>
+              </div>
+              <div class="brand-track">
+                <div class="brand-fill" style="width:100%"></div>
+              </div>
+            </div>
+            <div class="brand-item">
+              <div class="brand-header">
+                <span class="brand-name">BBVA</span>
+                <span class="brand-count">32</span>
+              </div>
+              <div class="brand-track">
+                <div class="brand-fill" style="width:71%"></div>
+              </div>
+            </div>
+            <div class="brand-item">
+              <div class="brand-header">
+                <span class="brand-name">Banamex</span>
+                <span class="brand-count">18</span>
+              </div>
+              <div class="brand-track">
+                <div class="brand-fill" style="width:40%"></div>
+              </div>
+            </div>
+            <div class="brand-item">
+              <div class="brand-header">
+                <span class="brand-name">CFE</span>
+                <span class="brand-count">12</span>
+              </div>
+              <div class="brand-track">
+                <div class="brand-fill" style="width:27%"></div>
+              </div>
+            </div>
+            <div class="brand-item">
+              <div class="brand-header">
+                <span class="brand-name">Liverpool</span>
+                <span class="brand-count">8</span>
+              </div>
+              <div class="brand-track">
+                <div class="brand-fill" style="width:18%"></div>
+              </div>
+            </div>
+            <div class="brand-item">
+              <div class="brand-header">
+                <span class="brand-name">Amazon MX</span>
+                <span class="brand-count">6</span>
+              </div>
+              <div class="brand-track">
+                <div class="brand-fill" style="width:13%"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Feed en Vivo -->
+      <div class="feed-card">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <span class="status-dot online" style="width:10px;height:10px;"></span>
+            <h3 style="font-size:14px;font-weight:600;color:#FAFAF9;">Feed en vivo</h3>
+          </div>
+          <span style="font-size:12px;color:#A8A29E;">30 eventos</span>
+        </div>
+        <div style="max-height:320px;overflow-y:auto;display:flex;flex-direction:column;gap:4px;">
+          <div style="display:grid;grid-template-columns:1fr 90px 80px 70px 60px;gap:8px;padding:8px 12px;font-size:11px;color:#57534E;text-transform:uppercase;letter-spacing:0.05em;font-weight:600;border-bottom:1px solid #44403C;">
+            <span>Dominio</span><span>Veredicto</span><span>Marca</span><span>Canal</span><span style="text-align:right;">Tiempo</span>
+          </div>
+          <div class="feed-item">
+            <span class="domain">sats-gob-mx.com</span>
+            <span class="verdict fraud">Fraude</span>
+            <span class="channel">SAT</span>
+            <span class="channel">WhatsApp</span>
+            <span class="time">2m</span>
+          </div>
+          <div class="feed-item">
+            <span class="domain">bbva-seguridad.mx</span>
+            <span class="verdict fraud">Fraude</span>
+            <span class="channel">BBVA</span>
+            <span class="channel">Email</span>
+            <span class="time">15m</span>
+          </div>
+          <div class="feed-item">
+            <span class="domain">bit.ly/3xK9mN2</span>
+            <span class="verdict suspicious">Sosp.</span>
+            <span class="channel">—</span>
+            <span class="channel">WhatsApp</span>
+            <span class="time">32m</span>
+          </div>
+          <div class="feed-item">
+            <span class="domain">banamex-prize.com</span>
+            <span class="verdict fraud">Fraude</span>
+            <span class="channel">Banamex</span>
+            <span class="channel">SMS</span>
+            <span class="time">1h</span>
+          </div>
+          <div class="feed-item">
+            <span class="domain">cfe-pago-linea.mx</span>
+            <span class="verdict fraud">Fraude</span>
+            <span class="channel">CFE</span>
+            <span class="channel">Email</span>
+            <span class="time">3h</span>
+          </div>
+          <div class="feed-item">
+            <span class="domain">liverpool-ofertas.com</span>
+            <span class="verdict suspicious">Sosp.</span>
+            <span class="channel">—</span>
+            <span class="channel">WhatsApp</span>
+            <span class="time">4h</span>
+          </div>
+          <div class="feed-item">
+            <span class="domain">google.com</span>
+            <span class="verdict safe">Seguro</span>
+            <span class="channel">—</span>
+            <span class="channel">Web</span>
+            <span class="time">5h</span>
+          </div>
+          <div class="feed-item">
+            <span class="domain">amazon.com.mx-oferta.com</span>
+            <span class="verdict fraud">Fraude</span>
+            <span class="channel">Amazon</span>
+            <span class="channel">WhatsApp</span>
+            <span class="time">6h</span>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

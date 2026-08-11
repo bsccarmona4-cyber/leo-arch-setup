@@ -1,0 +1,24 @@
+@startuml
+title Appointment scheduling and control
+actor Student
+participant "System" as S
+participant "Tutor" as T
+
+Student -> S : requestAppointment(reason, date, time)
+activate S
+S -> S : checkAvailability(tutor)
+alt tutor available
+  S -> S : create(Appointment, state = pending)
+  S --> T : notifyRequest(appointment)
+  T -> S : confirmAppointment()
+  S -> S : state = confirmed
+  S --> Student : notifyConfirmation(appointment)
+  T -> S : registerCommitment(Commitment)
+  S --> Student : notifyCommitment(commitment)
+  S -> S : scheduleFollowUp(deadline)
+else no availability
+  S --> Student : notifyNoAvailability(reason)
+  Student -> S : requestAnotherDate()
+end
+deactivate S
+@enduml

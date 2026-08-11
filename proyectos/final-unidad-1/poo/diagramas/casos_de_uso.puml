@@ -1,0 +1,59 @@
+@startuml
+left to right direction
+skinparam actorStyle awesome
+skinparam packageStyle rectangle
+title Sistema de Gestión Académica y Tutorías
+
+actor "Estudiante" as E
+actor "Tutor" as T
+actor "Administrador" as A
+actor "Sistema" as S
+
+rectangle "Sistema de Gestión Académica y Tutorías" {
+  usecase "Iniciar sesión" as UC1
+  usecase "Consultar historial académico" as UC2
+  usecase "Inscribirse a materias" as UC3
+  usecase "Consultar alertas propias" as UC4
+  usecase "Solicitar cita de tutoría" as UC5
+  usecase "Confirmar cita de tutoría" as UC6
+  usecase "Gestionar citas de tutoría" as UC7
+  usecase "Registrar acuerdos y compromisos" as UC8
+  usecase "Registrar seguimiento del alumno" as UC9
+  usecase "Gestionar usuarios" as UC10
+  usecase "Gestionar catálogo de materias" as UC11
+  usecase "Asignar tutor a estudiante" as UC12
+  usecase "Configurar criterios de riesgo" as UC13
+  usecase "Generar reportes de gestión" as UC14
+  usecase "Detectar riesgo académico" as UC15
+  usecase "Validar disponibilidad de citas" as UC16
+  usecase "Enviar notificaciones" as UC17
+}
+
+E --> UC1
+E --> UC2
+E --> UC3
+E --> UC4
+E --> UC5
+E --> UC6
+
+T --> UC1
+T --> UC7
+T --> UC8
+T --> UC9
+
+A --> UC1
+A --> UC10
+A --> UC11
+A --> UC12
+A --> UC13
+A --> UC14
+
+S --> UC15
+S --> UC16
+S --> UC17
+
+UC5 ..> UC16 : incluye
+UC7 ..> UC16 : incluye
+UC5 ..> UC17 : incluye
+UC15 ..> UC17 : incluye
+@enduml

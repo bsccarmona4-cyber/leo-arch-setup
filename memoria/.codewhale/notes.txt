@@ -1,0 +1,22 @@
+
+---
+## Leo's Preferences (Memo persistente)
+
+**Usuario**: Leo
+**Lenguaje**: español
+**Modo trabajo**: Opus (siempre activo)
+**Modelo default**: deepseek-v4-pro
+
+**Proyectos activos**: guardian, caveman, hallmark, pixelle-video, kreid, mcp-servers, obsidian-escuela
+
+**Skills preferidas**: krei-arbol-pensante, krei-opus, delegate, krei-power, v4-best-practices, cavecrew, project-code-graph, debugging, memory-persistente, vision-ocr
+
+**Skills que NO usar**: goose-skills-arsenal, goose-superpoderes (Goose-specific)
+
+**MCPs funcionales** (8): browsermcp, n8n-mcp, fetch, sequential-thinking, filesystem, memory, puppeteer, bash
+**MCPs documentados no instalados**: time, git, blackmount-nlp, a2asearch
+
+**Pendiente**: activar shell con `/config allow_shell true`
+
+---
+Read ~/.codewhale/journal.md at session start. Format: g:goal|c:constraints|✓:done|→:next. Overwritten on /compact. Smallest possible context handoff.

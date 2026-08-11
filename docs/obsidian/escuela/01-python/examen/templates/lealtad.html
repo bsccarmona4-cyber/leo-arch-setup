@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+{% block titulo %}Lealtad{% endblock %}
+{% block contenido %}
+<h1>⭐ Programa de Lealtad</h1>
+
+<div class="card">
+    <h3>Canjear Puntos</h3>
+    <form method="POST" action="/lealtad/canjear" style="display:flex; gap:10px; align-items:end;">
+        <div>
+            <label>ID Cliente</label>
+            <input type="number" name="id_cliente" placeholder="ID" required>
+        </div>
+        <div>
+            <label>Promoción</label>
+            <select name="id_promo" required>
+                <option value="">Selecciona...</option>
+                {% for p in promociones %}
+                <option value="{{ p.id }}">{{ p.nombre }} ({{ p.puntos_requeridos }} pts)</option>
+                {% endfor %}
+            </select>
+        </div>
+        <button type="submit" class="btn btn-success">Canjear</button>
+    </form>
+</div>
+
+<div class="card">
+    <h3>🎁 Promociones Disponibles</h3>
+    <table>
+        <thead><tr><th>Promoción</th><th>Puntos</th><th>Tipo</th><th>Valor</th><th>Descripción</th></tr></thead>
+        <tbody>
+        {% for p in promociones %}
+        <tr>
+            <td><b>{{ p.nombre }}</b></td>
+            <td><span style="color:var(--accent);">{{ p.puntos_requeridos }}</span></td>
+            <td><span class="chip">{{ p.tipo_recompensa }}</span></td>
+            <td>{{ p.valor_recompensa }}{% if p.tipo_recompensa == 'descuento' %}%{% endif %}</td>
+            <td>{{ p.descripcion }}</td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+<div style="margin-top:20px;">
+    <small style="color:var(--text-dim);">
+        💡 Regla: 1 punto por cada $10 de compra. Los puntos se canjean por las promociones de arriba.
+    </small>
+</div>
+{% endblock %}

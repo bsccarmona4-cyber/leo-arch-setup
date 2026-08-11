@@ -1,0 +1,16 @@
+@startuml
+title Detección automática de riesgo académico
+start
+:Obtener inscripciones del periodo actual;
+:Calcular promedio por materia;
+:Calcular promedio general del estudiante;
+if (promedio < 70 o 2+ materias reprobadas?) then (sí)
+  :Clasificar nivel de riesgo (bajo, medio, alto);
+  :Crear AlertaRiesgo;
+  :Registrar alerta en historial;
+  :Notificar a tutor y administrador;
+else (no)
+  :Sin alerta, continuar monitoreo;
+endif
+stop
+@enduml

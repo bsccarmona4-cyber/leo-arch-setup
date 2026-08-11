@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Goose Profiles - Power Reference</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:system-ui,-apple-system,sans-serif;background:#0d1117;color:#e6edf3;padding:2rem;max-width:1200px;margin:auto}
+h1{font-size:2rem;margin-bottom:.5rem;background:linear-gradient(135deg,#58a6ff,#bc8cff);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+h2{font-size:1.3rem;margin:2rem 0 1rem;color:#f0883e}
+h3{color:#7ee787;margin:1rem 0 .5rem;font-size:1rem}
+.sub{color:#8b949e;margin-bottom:2rem}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:1rem;margin:1rem 0 2rem}
+.card{border:1px solid #30363d;border-radius:12px;padding:1.5rem;background:#161b22}
+.card h3{margin-top:0;color:#f0883e}
+.card .tag{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;font-weight:600;margin:4px 2px}
+.lite{background:#0d4429;color:#7ee787}
+.power{background:#1c3a5c;color:#58a6ff}
+.krei{background:#5a1c5a;color:#d2a8ff}
+.use{background:#21262d;border-radius:8px;padding:10px 14px;margin-top:10px;font-family:monospace;font-size:.85rem;color:#8b949e;border:1px solid #30363d}
+.code{background:#21262d;border-radius:8px;padding:10px 14px;font-family:monospace;font-size:.85rem;overflow-x:auto;border:1px solid #30363d}
+table{width:100%;border-collapse:collapse;margin:1rem 0}
+th,td{border:1px solid #30363d;padding:8px 12px;text-align:left}
+th{background:#21262d;color:#8b949e;font-weight:600}
+td{font-size:.9rem}
+.tag-list{display:flex;flex-wrap:wrap;gap:4px;margin:6px 0}
+.mcp{background:#1c3a5c;color:#58a6ff;padding:2px 8px;border-radius:4px;font-size:.75rem}
+.mcp-free{background:#0d4429;color:#7ee787;padding:2px 8px;border-radius:4px;font-size:.75rem}
+.mcp-npx{background:#3d1c24;color:#ff7b72;padding:2px 8px;border-radius:4px;font-size:.75rem}
+hr{border:none;border-top:1px solid #30363d;margin:2rem 0}
+.footer{color:#484f58;font-size:.8rem;text-align:center;margin-top:3rem}
+</style>
+</head>
+<body>
+
+<h1>⚡ Goose Profiles</h1>
+<p class="sub">3 perfiles → 3 contextos distintos. Elige sabiamente.</p>
+
+<div class="grid">
+  <div class="card">
+    <h3>🪶 Lite</h3>
+    <span class="tag lite">minimum</span>
+    <p style="margin:10px 0;font-size:.9rem;color:#8b949e">Dev + Extension Manager. Nada más. 0 overhead.</p>
+    <div class="use">alias goose-lite</div>
+    <div class="tag-list" style="margin-top:8px">
+      <span class="mcp">developer</span>
+      <span class="mcp">extensionmanager</span>
+    </div>
+    <p style="margin-top:10px;font-size:.85rem;color:#484f58">Sin tom, sin skills, sin summon. Tareas rápidas, edición ligera.</p>
+  </div>
+
+  <div class="card">
+    <h3>⚡ Power</h3>
+    <span class="tag power">full arsenal</span>
+    <p style="margin:10px 0;font-size:.9rem;color:#8b949e">Built-ins + MCPs. Sin KREI. Máxima potencia dev.</p>
+    <div class="use">alias goose-power</div>
+    <div class="tag-list" style="margin-top:8px">
+      <span class="mcp">developer</span>
+      <span class="mcp">extensionmanager</span>
+      <span class="mcp">summon</span>
+      <span class="mcp">skills</span>
+      <span class="mcp">todo</span>
+      <span class="mcp">apps</span>
+      <span class="mcp">analyze</span>
+      <span class="mcp">tom</span>
+      <span class="mcp">fetch</span>
+      <span class="mcp">filesystem</span>
+      <span class="mcp-free">memory</span>
+      <span class="mcp-free">sequential-thinking</span>
+      <span class="mcp-free">time</span>
+      <span class="mcp-free">git</span>
+      <span class="mcp-free">puppeteer</span>
+      <span class="mcp-free">bash</span>
+      <span class="mcp-npx">blackmount-nlp</span>
+      <span class="mcp-npx">a2asearch</span>
+      <span class="mcp-npx">clirank</span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>🚀 KREI</h3>
+    <span class="tag krei">dropshipping</span>
+    <p style="margin:10px 0;font-size:.9rem;color:#8b949e">POWER + dropshipping MCPs + agentes KREI.</p>
+    <div class="use">alias goose-krei</div>
+    <div class="tag-list" style="margin-top:8px">
+      <span class="mcp">TODOS los de POWER</span>
+      <span class="mcp-free">NanoBanana</span>
+      <span class="mcp-free">Google Stitch</span>
+      <span class="mcp-free">BrowserMCP</span>
+      <span class="mcp-free">n8n</span>
+      <span class="mcp-free">puppeteer</span>
+    </div>
+  </div>
+</div>
+
+<h2>📦 MCPs en Power - Detalle</h2>
+
+<table>
+<tr><th>MCP</th><th>Qué hace</th><th>API Key?</th><th>Tipo</th></tr>
+<tr><td><strong>Fetch</strong></td><td>Búsqueda web por URL, extrae contenido como markdown</td><td>❌ No</td><td>📦 bin</td></tr>
+<tr><td><strong>Filesystem</strong></td><td>Acceso estructurado a archivos, permisos, tree</td><td>❌ No</td><td>📜 local</td></tr>
+<tr><td><strong>Memory</strong></td><td>Persistencia de knowledge base, entidades, relaciones</td><td>❌ No</td><td>📜 local</td></tr>
+<tr><td><strong>Sequential Thinking</strong></td><td>Razonamiento paso a paso, desglose de problemas</td><td>❌ No</td><td>📜 local</td></tr>
+<tr><td><strong>Time</strong></td><td>Timezones, conversiones, timestamps, fechas</td><td>❌ No</td><td>🐍 python -m</td></tr>
+<tr><td><strong>Git</strong></td><td>Log, branches, diffs, blame, manipular repo</td><td>❌ No</td><td>🐍 python -m</td></tr>
+<tr><td><strong>Puppeteer</strong></td><td>Navegador headless, screenshots, click, form fill</td><td>❌ No</td><td>📜 local (Chrome)</td></tr>
+<tr><td><strong>Bash</strong></td><td>Shell scripting avanzado, pipes, scripts multi-paso</td><td>❌ No</td><td>🐍 python</td></tr>
+<tr><td><strong>BlackMountNLP</strong></td><td>🔹 Sentimiento, keywords, similitud, resumen, 18 idiomas. 100% local, 42KB wheel</td><td>❌ No</td><td>🐍 pip install</td></tr>
+<tr><td><strong>A2ASearch</strong></td><td>🔹 Busca entre 4,800+ MCPs. "Encuentra MCP para X"</td><td>❌ No</td><td>🔄 npx -y</td></tr>
+<tr><td><strong>CliRank</strong></td><td>🔹 387 APIs rankeadas por amigabilidad para agentes</td><td>❌ No</td><td>🔄 npx -y</td></tr>
+</table>
+
+<h2>🎯 Cuándo usar cada uno</h2>
+
+<table>
+<tr><th>Escenario</th><th>Perfil</th><th>Razón</th></tr>
+<tr><td>Editar un archivo, correr comando rápido</td><td><span class="tag lite">🪶 Lite</span></td><td>Cero sobrecarga. Máximo rendimiento.</td></tr>
+<tr><td>Programar feature complejo, refactor</td><td><span class="tag power">⚡ Power</span></td><td>Summon + skills + analyze + git + sequential thinking + NLP.</td></tr>
+<tr><td>Investigación, búsqueda web, documentación</td><td><span class="tag power">⚡ Power</span></td><td>Fetch + filesystem + analyze + search.</td></tr>
+<tr><td>Arquitectura, diseño, planning</td><td><span class="tag power">⚡ Power</span></td><td>Sequential thinking + apps (diagramas) + memory.</td></tr>
+<tr><td>Dropshipping, producto, tienda KREI</td><td><span class="tag krei">🚀 KREI</span></td><td>Necesitas NanoBanana, n8n, BrowserMCP, Google Stitch.</td></tr>
+<tr><td>Scraping, automatización ecommerce</td><td><span class="tag krei">🚀 KREI</span></td><td>BrowserMCP + puppeteer + n8n workflow.</td></tr>
+</table>
+
+<h2>🐚 Alias (en ~/.zshrc)</h2>
+
+<div class="code">alias goose-lite='goose --config ~/.config/goose/config-lite.yaml'
+alias goose-power='goose --config ~/.config/goose/config-power.yaml'
+alias goose-krei='goose --config ~/.config/goose/config-krei.yaml'</div>
+
+<h2>📁 Archivos de configuración</h2>
+
+<div class="code">~/.config/goose/
+├── config.yaml                 # Original (respaldado como .bak.original)
+├── config-lite.yaml            # 🪶 Solo developer + extensionmanager
+├── config-power.yaml           # ⚡ Built-ins + MCPs gratis
+└── config-krei.yaml            # 🚀 POWER + dropshipping</div>
+
+<h2>🧠 MCPs gratuitos que NUNCA se instalaron</h2>
+<p style="color:#8b949e;font-size:.9rem">Buscar-on-demand con A2ASearch (5,000+ MCPs). Estos están pendientes para future POWER:</p>
+<ul style="columns:2;margin:10px 0;color:#8b949e;font-size:.85rem;padding-left:1.5rem">
+  <li>📷 Photopea (edición imágenes, 34 tools)</li>
+  <li>💬 Discord bridge (46 tools)</li>
+  <li>📱 Telegram (20 tools)</li>
+  <li>✉️ AgenticMail (email/SMS local)</li>
+  <li>🌌 Astronomy Oracle (13K objetos)</li>
+  <li>🏛️ Open Museum (Met, Cleveland, etc)</li>
+  <li>🎨 Aesthetics Wiki (moodboards)</li>
+  <li>🌐 BrasiData (CNPJ, CEP, datos BR)</li>
+  <li>🧮 Calcnook (finanzas personales)</li>
+  <li>🗺️ MCP Reunion (96 tools, datos públicos)</li>
+  <li>📊 ChartLibrary (patrones stocks)</li>
+  <li>🔊 MyInstants (sonidos meme)</li>
+  <li>📱 Android Device Control (ADB, 21 tools)</li>
+  <li>🔄 Tentra (arquitectura → código)</li>
+  <li>📋 TNL (contratos feature para agents)</li>
+  <li>🧠 Rekindle (continuidad sesiones)</li>
+  <li>🔐 VATNode (validación VAT UE)</li>
+  <li>💱 AllRatesToday (160+ divisas)</li>
+  <li>🧪 Qdrant (vector DB, si local corre)</li>
+  <li>💎 Memory engines (Cachly, Alaya, Mnemostack, etc)</li>
+</ul>
+
+<hr>
+
+<h2>⚠️ Notas importantes</h2>
+<ul style="color:#8b949e;font-size:.9rem;margin-left:1.5rem;line-height:1.7">
+  <li>Los MCPs via <code>npx -y</code> se ejecutan sin instalar (npx cache). Primera vez puede tardar 2-3 segundos.</li>
+  <li>BlackMountNLP necesita <code>pip install blackmount-nlp-mcp</code> una vez.</li>
+  <li>Time y Git necesitan <code>pip install mcp-server-time mcp-server-git</code> (o python -m funciona si están instalados).</li>
+  <li>Si un MCP no arranca, verifica que el comando/path existe con <code>which</code> o <code>test -f</code>.</li>
+  <li>POWER no incluye Brave Search ni Pinecone ni Kubernetes (necesitan API key o no aplican para uso general).</li>
+  <li>Para agregar más MCPs: usa A2ASearch "find MCP server for X" y agrégalo al config.</li>
+</ul>
+
+<div class="footer">💡 Recarga shell con <code>source ~/.zshrc</code> después de editar los configs • Creado: 2026-06-10</div>
+
+</body>
+</html>

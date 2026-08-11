@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Usuarios de la Biblioteca</title>
+</head>
+<body>
+    <h1>📋 Lista de Usuarios</h1>
+    <a href="/">Volver a libros</a>
+    <table border="1">
+        <tr>
+            <th>Email</th>
+            <th>Teléfono</th>
+            <th>Dirección</th>
+            <th>Fecha de registro</th>
+            <th>Estado</th>
+        </tr>
+        {% for usuario in usuarios %}
+        <tr>
+            <td>{{ usuario.email }}</td>
+            <td>{{ usuario.telefono|default:"-" }}</td>
+            <td>{{ usuario.direccion|default:"-" }}</td>
+            <td>{{ usuario.fecha_registro|date:"d/m/Y H:i" }}</td>
+            <td>{% if usuario.activo %}✅ Activo{% else %}❌ Inactivo{% endif %}</td>
+        </tr>
+        {% empty %}
+        <tr>
+            <td colspan="5">No hay usuarios registrados.</td>
+        </tr>
+        {% endfor %}
+    </table>
+</body>
+</html>

@@ -1,0 +1,80 @@
+/* ═══════════════════════════════════════════
+   HowItWorks — 3-step timeline
+   ═══════════════════════════════════════════ */
+
+.how-section {
+  background: var(--rose-light);
+  padding: 64px 0;
+}
+
+.how-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 32px;
+}
+
+.how-card {
+  background: var(--white);
+  border-radius: var(--radius-lg);
+  padding: 40px 24px;
+  border: 1px solid var(--gray-200);
+  text-align: center;
+  position: relative;
+}
+
+.how-number {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--white);
+}
+
+.how-icon-badge {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: var(--cream);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: -36px auto 16px;
+  position: relative;
+  z-index: 1;
+}
+
+.how-title {
+  font-size: 1.1rem;
+  font-weight: 600;
+  margin-bottom: 8px;
+  color: var(--dark);
+  line-height: calc(1 + 0.3 / 1.15);
+}
+
+.how-text {
+  font-size: 0.85rem;
+  color: var(--gray-500);
+  line-height: 1.6;
+}
+
+.how-cta {
+  text-align: center;
+  margin-top: 40px;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .how-grid {
+    grid-template-columns: 1fr;
+    gap: 24px;
+  }
+
+  .how-section {
+    padding: 48px 0;
+  }
+}

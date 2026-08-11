@@ -1,0 +1,51 @@
+{
+  "project": "KREID — Comercio Beauty & Health (México)",
+  "created": "2026-07-24",
+  "updated": "2026-08-07",
+  "model": "Comercio formal — compra a importadores CDMX (NO dropshipping)",
+  "focus": "Beauty & Health devices → LED Light Therapy Mask",
+  "producto_heroe": "LED Light Therapy Mask (Hello Face 44-111 rev, ~22/mes, ticket ~$2,000 MXN, ratio importación directa ~3.2×)",
+  "total_sessions": 8,
+  "sessions": [
+    {
+      "date": "2026-08-07-integracion-tools",
+      "summary": "INTEGRACIÓN MASIVA: 11 repos. 17 skills nuevas (no-ai-slop, i-have-adhd, genjutsu cast/paint/_jutsu, threejs 9 skills), strix pipx v1.4.1, open-seo, Open-Generative-AI. 32 skills total en arsenal. MEJORAS APLICADAS (commit 67b2ebe): code-splitting -67KB, MouseSpotlight, hero parallax CSS. Auditoría strix en progreso.",
+      "next_step": "Esperar reporte strix. Si vulns → corregir. Si limpio → tienda lista. Luego validar LED mask con importadores CDMX."
+    },
+    {
+      "date": "2026-08-07-bloom",
+      "summary": "BLOOM INTEGRADO (trybloom.ai): key BLOOM_API_KEY guardada en store/.env (gitignoreado) + ~/.goose-skills/.env-keys + backup. VERIFICADA vía MCP: HTTP 200, 23 tools (generate/edit/resize/remove_bg/vectorize/onboard_brand/find_reference_ads), cuenta leo carmona, 10 créditos (1/img 2K, 2/img 4K). Scripts: scripts/test_bloom_mcp.py, scripts/bloom_account.py. Referencia añadida a .goosehints. Pendiente: probar onboarding de marca KREID + generar imágenes de prueba.",
+      "next_step": "Probar Bloom: onboardear marca KREID (URL sitio/IG) y generar 1-2 imágenes de prueba del hero (gasta 1-2 créditos). Decidir si se recarga y si entra al stack de calidad."
+    },
+    {
+      "date": "2026-08-07",
+      "summary": "CONTINUACIÓN: commit 3f5ebec aseguró 10 días de trabajo sin commitear. Rediseño landing completo (Hero, Quiz, ScrubCanvas, HorizontalScroll, FAQ, efectos con lenis/gsap), shopify.js headless sin conectar, Stripe checkout MXN listo, Dashboard mock. Build Vite verificado OK (warning bundle 873KB). Working tree limpio.",
+      "next_step": "Elegir dirección: (A) validar precios LED mask en importadores CDMX para ratio ≥3×, (B) conectar tienda a Shopify real, (C) terminar detalles landing + limpiar bundle con code-splitting."
+    },
+    {
+      "date": "2026-07-25-final",
+      "summary": "SESIÓN COMPLETA 4 FASES: (1) Pivot dropshipping→comercio formal, foco Beauty & Health. (2) Auditoría 8 categorías 1688 con curl+Puppeteer, ~60 productos, ML MX bloqueado. (3) Corrección 3 huecos: Lonchera 🟢→🟡, marcadores [1]/[2] agregados, 2das búsquedas para Reposamuñecas, Termómetro IR, Teclado, Kit ciencia. (4) Análisis logístico: envíos nacionales $80-180 MXN, importación directa ~27-32% impuestos, COFEPRIS no requiere registro si sin claims médicos. PRODUCTO HÉROE: LED Light Therapy Mask 🥇[2].",
+      "next_step": "Buscar precios reales de LED mask en importadores CDMX (FB grupos, Izazaga 89, productoschinos.com.mx). Si ratio ≥ 3× → store Shopify + Meta Ads $15-20/día. Si no → pivot a Rodillo Fascia 🟢[2]."
+    },
+    {
+      "date": "2026-07-25-auditoria-completa-v2",
+      "summary": "AUDITORÍA COMPLETA 8 CATEGORÍAS v2 CORREGIDA: 3 huecos cerrados. Lonchera eléctrica 🟢→🟡 (NOVAKA 488-556 rev). Reposamuñecas y Termómetro IR confirmados [2]. Teclado ergonómico confirmado AUSENTE. Kit ciencia [2]→[1]. Marcadores [1]/[2] en cada fila. Conteo: 12🟢 (8 [2]), 4🟡, 9🔴.",
+      "next_step": "Elegir 1-2 productos héroe SOLO entre 🟢[2]."
+    },
+    {
+      "date": "2026-07-25-auditoria-led",
+      "summary": "AUDITORÍA LED MASKS: Hello Face 44/74/111 reviews (~22/mes). Microcurrent descartado (Skindion 1,967 rev). Skincare consumibles descartado. ML MX bloqueado.",
+      "next_step": "Auditar resto de categorías con mismo protocolo."
+    },
+    {
+      "date": "2026-07-25",
+      "summary": "PIVOT ESTRATÉGICO: dropshipping→comercio formal. Foco Beauty & Health devices. 8 categorías 1688 mapeadas. Canales: Shopify+TikTok+ML+FB Lives.",
+      "next_step": "Definir producto héroe."
+    },
+    {
+      "date": "2026-07-24",
+      "summary": "Setup sistema sesiones + investigación mercado dropshipping. 4 sub-agentes. ~8 fuentes (AMVO, Charm.io, SaleHoo, VelocitySpy, etc.).",
+      "next_step": "Definir producto héroe inicial (candidatos: Red Light Therapy Cap, Hair Wax Stick, Under Eye Patches)."
+    }
+  ]
+}

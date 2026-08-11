@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Estrategia de Investigación</title>
+  <link rel="stylesheet" href="../assets/estilo.css">
+</head>
+<body>
+<div class="pantalla">
+  <div class="doc">
+
+    <!-- ================= PORTADA ================= -->
+    <div class="portada">
+      <div class="materia">Plataforma de Gestión de Citas Médicas y Expediente Electrónico</div>
+      <h1>Estrategia de Investigación</h1>
+      <p class="subtitulo">Plan de investigación UX para la Plataforma de Citas Médicas y Expediente Electrónico</p>
+      <div class="meta">
+        <span class="chip">Entrevistas · Encuestas · Observación</span>
+      </div>
+    </div>
+
+    <!-- ================= SECCIÓN 1 ================= -->
+    <div class="seccion">
+      <h2><span class="num">1</span>Metodología</h2>
+      <p>El plan de investigación adopta un enfoque de <b>metodología mixta</b> (cualitativa y cuantitativa) para triangular hallazgos y cubrir tanto el <i>qué</i> (mediciones objetivas de tiempos y frecuencias) como el <i>por qué</i> (motivaciones, hábitos y barreras de cada perfil de usuario). La estrategia combina cuatro técnicas complementarias —entrevistas, encuestas, observación directa y análisis de tareas— ejecutadas en el contexto real del hospital, con especial atención a los adultos mayores, que constituyen el grupo de usuarios más frecuente y el más expuesto a las barreras de la atención presencial.</p>
+
+      <div class="grid-3">
+        <div class="tarjeta">
+          <div class="icono">🎙</div>
+          <h4>Entrevistas cualitativas semiestructuradas</h4>
+          <p>12 pacientes (6 adultos mayores, 4 jóvenes, 2 cuidadores), 4 médicos y 3 administrativos de recepción. Sesiones de 25-35 minutos guiadas por un cuestionario de 10 preguntas abiertas, grabadas con consentimiento para su posterior análisis temático.</p>
+        </div>
+        <div class="tarjeta">
+          <div class="icono">📋</div>
+          <h4>Encuestas cuantitativas</h4>
+          <p>120 respuestas como objetivo, aplicadas de forma presencial en la sala de espera y mediante versión digital distribuida por WhatsApp. El cuestionario de 15 preguntas indaga frecuencia de visitas, canal preferido para agendar, tiempo de espera percibido y uso de tecnología.</p>
+        </div>
+        <div class="tarjeta">
+          <div class="icono">👀</div>
+          <h4>Observación directa</h4>
+          <p>Dos semanas de registro en recepción y sala de espera: tiempos de espera (llegada → ficha → consulta), interacciones en ventanilla, uso de kioscos si existieran y comportamientos característicos de los adultos mayores durante la espera.</p>
+        </div>
+      </div>
+
+      <hr class="sep">
+
+      <div class="tarjeta">
+        <div class="icono">🧩</div>
+        <h4>Análisis de tareas</h4>
+        <p>Seguimiento a 5 pacientes durante el flujo completo de agendar una cita, documentando pasos, errores y tiempos de cada etapa. Se aplica el método <i>think-aloud</i> (pensar en voz alta) con 3 pacientes mayores para capturar su razonamiento, dudas y puntos de abandono ante la tarea.</p>
+      </div>
+    </div>
+
+    <!-- ================= SECCIÓN 2 ================= -->
+    <div class="seccion">
+      <h2><span class="num">2</span>Objetivos de la Investigación</h2>
+      <p class="desc">Los objetivos guían el alcance del estudio: comprender el estado actual del servicio, dimensionar el problema de la espera y detectar requisitos para el diseño de la plataforma digital.</p>
+      <ul class="lista">
+        <li>Identificar el proceso actual de agendado de citas y sus puntos de fricción (tiempos, pasos, barreras).</li>
+        <li>Comprender los hábitos, canales y preferencias de los pacientes para agendar (teléfono, ventanilla, WhatsApp, app).</li>
+        <li>Medir el tiempo real de espera en recepción y la proporción de citas perdidas o reprogramadas.</li>
+        <li>Detectar barreras de accesibilidad y usabilidad específicas de adultos mayores (lectura, motricidad, comprensión).</li>
+        <li>Validar la aceptación de la plataforma digital y los requisitos funcionales prioritarios (agendar, cancelar, expediente).</li>
+      </ul>
+    </div>
+
+    <!-- ================= SECCIÓN 3 ================= -->
+    <div class="seccion">
+      <h2><span class="num">3</span>Preguntas Clave de Investigación</h2>
+      <p class="desc">Cada dimensión de estudio se traduce en una pregunta clave cuya respuesta orienta una decisión concreta de diseño.</p>
+      <table class="table">
+        <caption>Matriz de preguntas clave por dimensión de investigación</caption>
+        <thead>
+          <tr>
+            <th>Dimensión</th>
+            <th>Pregunta clave</th>
+            <th>Por qué importa</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Hábitos</td>
+            <td>¿Cómo agenda hoy su cita: teléfono, ventanilla, familiar?</td>
+            <td>Define los flujos y canales del diseño</td>
+          </tr>
+          <tr>
+            <td>Espera</td>
+            <td>¿Cuánto tiempo espera en recepción y cuándo se vuelve insoportable?</td>
+            <td>Fija la meta de reducción de tiempos</td>
+          </tr>
+          <tr>
+            <td>Canal preferido</td>
+            <td>¿Preferiría agendar por WhatsApp, app, web o llamada?</td>
+            <td>Determina la arquitectura de canales</td>
+          </tr>
+          <tr>
+            <td>Tecnología</td>
+            <td>¿Qué tan cómodo se siente usando apps en su teléfono?</td>
+            <td>Nivela la curva de aprendizaje del diseño</td>
+          </tr>
+          <tr>
+            <td>Accesibilidad</td>
+            <td>¿Qué tamaño de letra y qué lenguaje prefiere?</td>
+            <td>Guía tipografía y contenido</td>
+          </tr>
+          <tr>
+            <td>Recordatorios</td>
+            <td>¿Le avisaron alguna vez de su cita? ¿Le hubiera gustado?</td>
+            <td>Justifica el módulo de recordatorios</td>
+          </tr>
+          <tr>
+            <td>Expediente</td>
+            <td>¿Sabe qué contiene su expediente? ¿Le gustaría consultarlo?</td>
+            <td>Define el alcance del expediente electrónico</td>
+          </tr>
+          <tr>
+            <td>Confianza</td>
+            <td>¿Qué le daría confianza para ingresar sus datos?</td>
+            <td>Orienta privacidad y mensajes de seguridad</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- ================= SECCIÓN 4 ================= -->
+    <div class="seccion">
+      <h2><span class="num">4</span>Instrumentos y Reclutamiento</h2>
+      <p class="desc">Los instrumentos estandarizan la recolección de datos y el protocolo de reclutamiento garantiza una muestra representativa, ética y voluntaria.</p>
+
+      <div class="grid-2">
+        <div class="tarjeta">
+          <h4>Instrumentos</h4>
+          <ul class="lista">
+            <li><b>Guía de entrevista</b>: 10 preguntas abiertas sobre hábitos de agendado, experiencias de espera y expectativas digitales.</li>
+            <li><b>Cuestionario de encuesta</b>: 15 ítems con escala Likert de 1 a 5 para medir percepciones y preferencias.</li>
+            <li><b>Hoja de observación</b>: plantilla estructurada para registrar tiempos y conductas en recepción y sala de espera.</li>
+            <li><b>Diario de campo</b>: registro narrativo del investigador con incidentes, contextos y observaciones emergentes.</li>
+          </ul>
+        </div>
+        <div class="tarjeta">
+          <h4>Reclutamiento y ética</h4>
+          <h5>Criterios de inclusión</h5>
+          <ul class="lista">
+            <li>Pacientes mayores de 60 años con al menos una cita en el último año.</li>
+            <li>Personal médico con 6 meses o más de antigüedad en el hospital.</li>
+          </ul>
+          <h5>Consideraciones éticas</h5>
+          <ul class="lista">
+            <li>Consentimiento informado verbal y escrito antes de cada participación.</li>
+            <li>Datos anonimizados en toda la recolección y el análisis.</li>
+            <li>Participación voluntaria sin compensación económica; se ofrece un vale de café como gesto de agradecimiento.</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= FOOTER ================= -->
+    <div class="footer">Hospital Regional — Sistema de Citas Médicas y Expediente Electrónico</div>
+
+  </div>
+</div>
+</body>
+</html>

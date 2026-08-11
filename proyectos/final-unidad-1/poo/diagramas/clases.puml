@@ -1,0 +1,110 @@
+@startuml
+skinparam classAttributeIconSize 0
+title Class Diagram - System domain
+
+abstract class User {
+  - id: int
+  - name: string
+  - email: string
+  - password: string
+  + authenticate(): bool
+  + getHistory(): History
+}
+
+class Student {
+  - studentId: string
+  - overallAverage: float
+  + calculateOverallAverage(): float
+  + getRiskAlerts(): List<RiskAlert>
+  + requestAppointment(reason: string, date: Date): Appointment
+}
+
+class Tutor {
+  - employeeId: string
+  - specialty: string
+  - availability: string
+  + confirmAppointment(appointment: Appointment): void
+  + rescheduleAppointment(appointment: Appointment): void
+  + registerCommitment(appointment: Appointment, commitment: Commitment): void
+}
+
+class Administrator {
+  + manageUsers(): void
+  + assignTutor(student: Student, tutor: Tutor): void
+  + setRiskCriteria(criteria: string): void
+  + generateReports(): void
+}
+
+class Subject {
+  - code: string
+  - name: string
+  - credits: int
+  - period: string
+}
+
+class Enrollment {
+  - period: string
+  - status: string
+  + save(): void
+  + calculateAverage(): float
+}
+
+class Grade {
+  - midterm1: float
+  - midterm2: float
+  - finalExam: float
+  + calculateAverage(): float
+}
+
+class RiskAlert {
+  - level: string
+  - generationDate: Date
+  - criteria: string
+  + create(): void
+  + notify(): void
+}
+
+class Appointment {
+  - date: Date
+  - time: string
+  - reason: string
+  - state: string
+  + schedule(): void
+  + confirm(): void
+  + reschedule(): void
+  + cancel(): void
+}
+
+class Commitment {
+  - description: string
+  - agreementDate: Date
+  - deadline: Date
+  - state: string
+  + save(): void
+  + markAsDone(): void
+}
+
+class Notification {
+  - type: string
+  - message: string
+  - sentDate: Date
+  - read: bool
+  + send(): void
+  + markAsRead(): void
+}
+
+User <|-- Student
+User <|-- Tutor
+User <|-- Administrator
+
+Student "1" *-- "1..*" Enrollment
+Subject "1" -- "1..*" Enrollment
+Enrollment "1" *-- "1..*" Grade
+Student "1" o-- "0..*" RiskAlert
+Student "1" -- "0..*" Appointment : requests
+Tutor "1" -- "1..*" Appointment : attends
+Appointment "1" *-- "1..*" Commitment
+Notification "0..*" --> "1" User : sent to
+Tutor "1" --> "1..*" Student : assists
+Administrator ..> Tutor : assigns
+@enduml

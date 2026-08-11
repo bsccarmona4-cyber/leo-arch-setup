@@ -1,0 +1,60 @@
+/* ═══════════════════════════════════════════
+   SocialProof — Trust stats bar
+   No product-specific mentions
+   ═══════════════════════════════════════════ */
+
+.social-proof-section {
+  background: var(--dark);
+  padding: 32px 0;
+}
+
+.social-proof-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.social-proof-item {
+  text-align: center;
+  padding: 12px 8px;
+}
+
+.social-proof-value {
+  display: block;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: var(--rose);
+  line-height: calc(1 + 0.3 / 1.4);
+  margin-bottom: 6px;
+}
+
+.social-proof-label {
+  font-size: 0.78rem;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+  font-weight: 500;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .social-proof-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .social-proof-section {
+    padding: 24px 0;
+  }
+
+  .social-proof-value {
+    font-size: 1.2rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .social-proof-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+}

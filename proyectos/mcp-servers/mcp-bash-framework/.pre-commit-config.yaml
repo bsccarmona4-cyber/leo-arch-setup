@@ -1,0 +1,15 @@
+repos:
+  - repo: local
+    hooks:
+      - id: lint
+        name: Run lint.sh (shellcheck + shfmt)
+        entry: test/lint.sh
+        language: system
+        types: [shell]
+        pass_filenames: false
+      - id: render-readme
+        name: Render README.md from template
+        entry: scripts/render-readme.sh
+        language: system
+        files: ^(README\.md\.in|VERSION)$
+        pass_filenames: false

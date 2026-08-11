@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="es-MX">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Protopersonas — Guardián</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #FAFAF9; color: #292524; line-height: 1.5;
+      padding: 48px 24px;
+    }
+    .container { max-width: 1100px; margin: 0 auto; }
+    h1 { font-size: 32px; font-weight: 700; color: #292524; margin-bottom: 8px; letter-spacing: -0.02em; }
+    .subtitle { font-size: 16px; color: #78716C; margin-bottom: 48px; }
+
+    .persona-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-bottom: 48px; }
+
+    .persona-card {
+      background: #FFFFFF; border: 1px solid #E7E5E4; border-radius: 12px; overflow: hidden;
+    }
+    .persona-header {
+      padding: 24px; border-bottom: 1px solid #E7E5E4;
+      display: flex; align-items: center; gap: 16px;
+    }
+    .persona-avatar {
+      width: 48px; height: 48px; border-radius: 50%; flex-shrink: 0;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 20px; font-weight: 700; color: #FFFFFF;
+    }
+    .persona-avatar.maria { background: #6366F1; }
+    .persona-avatar.roberto { background: #D97706; }
+    .persona-avatar.ana { background: #16A34A; }
+    .persona-avatar.juan { background: #DC2626; }
+    .persona-name { font-size: 18px; font-weight: 600; color: #292524; }
+    .persona-role { font-size: 13px; color: #78716C; margin-top: 2px; }
+
+    .persona-body { padding: 24px; }
+
+    .persona-section { margin-bottom: 20px; }
+    .persona-section:last-child { margin-bottom: 0; }
+    .persona-section h4 {
+      font-size: 11px; font-weight: 600; color: #A8A29E;
+      text-transform: uppercase; letter-spacing: 0.05em; margin-bottom: 8px;
+    }
+
+    .attr-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .attr-item { }
+    .attr-label { font-size: 12px; color: #A8A29E; }
+    .attr-value { font-size: 14px; color: #292524; font-weight: 500; }
+
+    .quote {
+      background: #FAFAF9; border-left: 3px solid #6366F1;
+      padding: 16px; border-radius: 0 8px 8px 0; margin-bottom: 16px;
+      font-size: 14px; color: #44403C; font-style: italic; line-height: 1.6;
+    }
+    .tag-list { display: flex; flex-wrap: wrap; gap: 6px; }
+    .tag {
+      padding: 4px 10px; border-radius: 100px; font-size: 12px;
+      background: #F5F5F4; color: #78716C; border: 1px solid #E7E5E4;
+    }
+    .tag.pain { background: #FEF2F2; color: #991B1B; border-color: #FECACA; }
+    .tag.need { background: #EEF2FF; color: #4338CA; border-color: #C7D2FE; }
+    .tag.behavior { background: #F0FDF4; color: #166534; border-color: #BBF7D0; }
+
+    /* Comparativa */
+    .section-title {
+      font-size: 20px; font-weight: 700; color: #292524; margin-bottom: 24px;
+      padding-bottom: 12px; border-bottom: 1px solid #E7E5E4;
+    }
+    .comp-table { width: 100%; border-collapse: collapse; margin-bottom: 48px; }
+    .comp-table th {
+      text-align: left; padding: 12px 16px; font-size: 11px; font-weight: 600;
+      color: #A8A29E; text-transform: uppercase; letter-spacing: 0.05em;
+      border-bottom: 2px solid #E7E5E4; background: #FAFAF9;
+    }
+    .comp-table td {
+      padding: 12px 16px; font-size: 14px; border-bottom: 1px solid #E7E5E4;
+    }
+    .comp-table tr:last-child td { border-bottom: none; }
+    .comp-table .check { color: #16A34A; font-weight: 600; }
+    .comp-table .dash { color: #D6D3D1; }
+    .comp-table .persona-label { font-weight: 500; color: #292524; }
+
+    @media (max-width: 768px) {
+      .persona-grid { grid-template-columns: 1fr; }
+      .attr-grid { grid-template-columns: 1fr; }
+      body { padding: 24px 16px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Protopersonas</h1>
+    <div class="subtitle">Tres arquetipos de usuario que definen el diseño de Guardián</div>
+
+    <div class="persona-grid">
+      <!-- Doña María -->
+      <div class="persona-card">
+        <div class="persona-header">
+          <div class="persona-avatar maria">M</div>
+          <div>
+            <div class="persona-name">María García</div>
+            <div class="persona-role">Usuaria principal — Bajo conocimiento digital</div>
+          </div>
+        </div>
+        <div class="persona-body">
+          <div class="quote">
+            "Mi hijo me dice 'no le hagas caso mamá', pero el mensaje se ve oficial. Tiene el logo del SAT y mi nombre. ¿Y si sí es verdad y pierdo mi devolución?"
+          </div>
+
+          <div class="persona-section">
+            <h4>Perfil</h4>
+            <div class="attr-grid">
+              <div class="attr-item"><div class="attr-label">Edad</div><div class="attr-value">72 años</div></div>
+              <div class="attr-item"><div class="attr-label">Residencia</div><div class="attr-value">CDMX</div></div>
+              <div class="attr-item"><div class="attr-label">Ocupación</div><div class="attr-value">Jubilada</div></div>
+              <div class="attr-item"><div class="attr-label">Educación</div><div class="attr-value">Secundaria</div></div>
+              <div class="attr-item"><div class="attr-label">Tecnología</div><div class="attr-value">Solo WhatsApp</div></div>
+              <div class="attr-item"><div class="attr-label">Ingreso</div><div class="attr-value">6,000 MXN/mes</div></div>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Comportamiento digital</h4>
+            <div class="tag-list">
+              <span class="tag behavior">WhatsApp 3+ horas/día</span>
+              <span class="tag behavior">Lee cadenas y promociones</span>
+              <span class="tag behavior">Entra a links sin verificar</span>
+              <span class="tag behavior">Guarda contraseñas en cuaderno</span>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Dolores</h4>
+            <div class="tag-list">
+              <span class="tag pain">Miedo a problemas con el SAT</span>
+              <span class="tag pain">Recibe links falsos diario</span>
+              <span class="tag pain">No sabe identificar URLs</span>
+              <span class="tag pain">Vergüenza de preguntar</span>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Necesidades</h4>
+            <div class="tag-list">
+              <span class="tag need">Alguien que le diga "esto es seguro"</span>
+              <span class="tag need">Proceso simple: reenviar y recibir</span>
+              <span class="tag need">Sin instalar apps</span>
+              <span class="tag need">Confía en sus hijos</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Don Roberto -->
+      <div class="persona-card">
+        <div class="persona-header">
+          <div class="persona-avatar roberto">R</div>
+          <div>
+            <div class="persona-name">Roberto Hernández</div>
+            <div class="persona-role">Usuario secundario — Conocimiento digital medio</div>
+          </div>
+        </div>
+        <div class="persona-body">
+          <div class="quote">
+            "Sé que existen estafas, he visto en las noticias. Pero cuando el mensaje tiene el logo del banco y mi nombre exacto, dudo. Necesito algo que me confirme rápido."
+          </div>
+
+          <div class="persona-section">
+            <h4>Perfil</h4>
+            <div class="attr-grid">
+              <div class="attr-item"><div class="attr-label">Edad</div><div class="attr-value">68 años</div></div>
+              <div class="attr-item"><div class="attr-label">Residencia</div><div class="attr-value">Guadalajara</div></div>
+              <div class="attr-item"><div class="attr-label">Ocupación</div><div class="attr-value">Contador jubilado</div></div>
+              <div class="attr-item"><div class="attr-label">Educación</div><div class="attr-value">Universidad</div></div>
+              <div class="attr-item"><div class="attr-label">Tecnología</div><div class="attr-value">Smartphone + laptop</div></div>
+              <div class="attr-item"><div class="attr-label">Ingreso</div><div class="attr-value">15,000 MXN/mes</div></div>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Comportamiento digital</h4>
+            <div class="tag-list">
+              <span class="tag behavior">Usa apps bancarias</span>
+              <span class="tag behavior">WhatsApp + Facebook</span>
+              <span class="tag behavior">Transferencias en línea</span>
+              <span class="tag behavior">Revisa estado de cuenta</span>
+              <span class="tag behavior">Ha recibido phish bancario</span>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Dolores</h4>
+            <div class="tag-list">
+              <span class="tag pain">Mensajes de "tarjeta bloqueada"</span>
+              <span class="tag pain">Entró a link falso una vez</span>
+              <span class="tag pain">No tiene herramienta de verificación</span>
+              <span class="tag pain">Hijos viven en otro estado</span>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Necesidades</h4>
+            <div class="tag-list">
+              <span class="tag need">Verificación rápida</span>
+              <span class="tag need">Compartir con amigos</span>
+              <span class="tag need">Confirmación visual (verde/rojo)</span>
+              <span class="tag need">Explicación breve del riesgo</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Ana (Hija) -->
+      <div class="persona-card">
+        <div class="persona-header">
+          <div class="persona-avatar ana">A</div>
+          <div>
+            <div class="persona-name">Ana García</div>
+            <div class="persona-role">Familiar cuidador — Monitoreo remoto</div>
+          </div>
+        </div>
+        <div class="persona-body">
+          <div class="quote">
+            "Mi mamá me manda capturas de pantalla preguntando 'esto es verdad?'. Pero yo no siempre puedo contestar rápido. Necesito ayuda, no puedo estar 24/7."
+          </div>
+
+          <div class="persona-section">
+            <h4>Perfil</h4>
+            <div class="attr-grid">
+              <div class="attr-item"><div class="attr-label">Edad</div><div class="attr-value">45 años</div></div>
+              <div class="attr-item"><div class="attr-label">Residencia</div><div class="attr-value">CDMX (diferente colonia)</div></div>
+              <div class="attr-item"><div class="attr-label">Ocupación</div><div class="attr-value">Contadora</div></div>
+              <div class="attr-item"><div class="attr-label">Educación</div><div class="attr-value">Licenciatura</div></div>
+              <div class="attr-item"><div class="attr-label">Tecnología</div><div class="attr-value">Smartphone + laptop</div></div>
+              <div class="attr-item"><div class="attr-label">Relación</div><div class="attr-value">Hija de María</div></div>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Comportamiento digital</h4>
+            <div class="tag-list">
+              <span class="tag behavior">WhatsApp diario con mamá</span>
+              <span class="tag behavior">Trabaja tiempo completo</span>
+              <span class="tag behavior">Ha explicado estafas varias veces</span>
+              <span class="tag behavior">Redes sociales</span>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Dolores</h4>
+            <div class="tag-list">
+              <span class="tag pain">No puede proteger en tiempo real</span>
+              <span class="tag pain">Mamá no cuenta casi-caídas</span>
+              <span class="tag pain">Frustración constante</span>
+              <span class="tag pain">Preocupación por el dinero</span>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Necesidades</h4>
+            <div class="tag-list">
+              <span class="tag need">Alertas en tiempo real</span>
+              <span class="tag need">Historial de análisis de mamá</span>
+              <span class="tag need">Configurar protección remota</span>
+              <span class="tag need">Tranquilidad</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Juan (Operador) -->
+      <div class="persona-card">
+        <div class="persona-header">
+          <div class="persona-avatar juan">J</div>
+          <div>
+            <div class="persona-name">Juan Ortiz</div>
+            <div class="persona-role">Administrador — Monitoreo técnico</div>
+          </div>
+        </div>
+        <div class="persona-body">
+          <div class="quote">
+            "Necesito ver en tiempo real qué fraudes están llegando, desde qué canales, y si el sistema está funcionando correctamente."
+          </div>
+
+          <div class="persona-section">
+            <h4>Perfil</h4>
+            <div class="attr-grid">
+              <div class="attr-item"><div class="attr-label">Edad</div><div class="attr-value">32 años</div></div>
+              <div class="attr-item"><div class="attr-label">Rol</div><div class="attr-value">Admin del sistema</div></div>
+              <div class="attr-item"><div class="attr-label">Tecnología</div><div class="attr-value">Alta</div></div>
+              <div class="attr-item"><div class="attr-label">Uso principal</div><div class="attr-value">Dashboard</div></div>
+            </div>
+          </div>
+
+          <div class="persona-section">
+            <h4>Funcionalidades que necesita</h4>
+            <div class="tag-list">
+              <span class="tag need">Dashboard en tiempo real</span>
+              <span class="tag need">KPIs de análisis</span>
+              <span class="tag need">Feed de amenazas vivas</span>
+              <span class="tag need">Estadísticas semanales</span>
+              <span class="tag need">Estado de servicios</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <h2 class="section-title">Matriz de Funcionalidades por Protopersona</h2>
+    <table class="comp-table">
+      <thead>
+        <tr>
+          <th>Funcionalidad</th>
+          <th>María</th>
+          <th>Roberto</th>
+          <th>Ana</th>
+          <th>Juan</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td class="persona-label">Enviar link para análisis</td>
+          <td class="check">WhatsApp</td>
+          <td class="check">WhatsApp / Web</td>
+          <td class="dash">—</td>
+          <td class="dash">—</td>
+        </tr>
+        <tr>
+          <td class="persona-label">Recibir veredicto claro</td>
+          <td class="check">Si</td>
+          <td class="check">Si</td>
+          <td class="dash">—</td>
+          <td class="dash">—</td>
+        </tr>
+        <tr>
+          <td class="persona-label">Ver explicación detallada</td>
+          <td class="dash">No necesita</td>
+          <td class="check">Opcional</td>
+          <td class="dash">—</td>
+          <td class="check">Si</td>
+        </tr>
+        <tr>
+          <td class="persona-label">Dashboard de monitoreo</td>
+          <td class="dash">—</td>
+          <td class="dash">—</td>
+          <td class="check">Si</td>
+          <td class="check">Si</td>
+        </tr>
+        <tr>
+          <td class="persona-label">Alertas en tiempo real</td>
+          <td class="dash">—</td>
+          <td class="dash">—</td>
+          <td class="check">Si</td>
+          <td class="check">Si</td>
+        </tr>
+        <tr>
+          <td class="persona-label">Historial de análisis</td>
+          <td class="dash">No</td>
+          <td class="check">Opcional</td>
+          <td class="check">Si</td>
+          <td class="check">Si</td>
+        </tr>
+        <tr>
+          <td class="persona-label">Configurar protección</td>
+          <td class="dash">No</td>
+          <td class="check">Si</td>
+          <td class="check">Si</td>
+          <td class="check">Si</td>
+        </tr>
+        <tr>
+          <td class="persona-label">Recomendar a otros</td>
+          <td class="dash">No</td>
+          <td class="check">Si</td>
+          <td class="check">Si</td>
+          <td class="dash">—</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</body>
+</html>

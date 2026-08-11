@@ -1,0 +1,9 @@
+{
+  "name": "system-info",
+  "description": "Get current system information including CPU, memory, and disk usage",
+  "inputSchema": {
+    "type": "object",
+    "properties": {},
+    "required": []
+  }
+}

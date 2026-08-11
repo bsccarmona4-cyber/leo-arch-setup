@@ -1,0 +1,35 @@
+{
+  "name": "example-roots-read",
+  "description": "Read a file only if it is within configured MCP roots",
+  "inputSchema": {
+    "type": "object",
+    "properties": {
+      "path": {
+        "type": "string",
+        "description": "File path to read (absolute or relative)"
+      }
+    },
+    "required": ["path"]
+  },
+  "outputSchema": {
+    "type": "object",
+    "required": ["success", "result"],
+    "properties": {
+      "success": {
+        "type": "boolean",
+        "description": "Whether the operation succeeded"
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "path": { "type": "string" },
+          "bytes": { "type": "integer" },
+          "content": { "type": "string" },
+          "error": { "type": "string" },
+          "hint": { "type": "string" }
+        }
+      }
+    }
+  },
+  "timeoutSecs": 5
+}

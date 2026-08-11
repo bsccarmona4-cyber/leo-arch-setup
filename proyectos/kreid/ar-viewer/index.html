@@ -1,0 +1,643 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="KREID Design Studio — Servicios profesionales de diseño gráfico, branding, identidad visual, diseño web y más. Explora nuestra experiencia en realidad aumentada.">
+  <title>KREID — Design Studio</title>
+  <link rel="stylesheet" href="style.css">
+  <style>
+    /* ═══════════════════════════════════
+       NAV
+       ═══════════════════════════════════ */
+    .navbar {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      padding: 18px 0;
+      transition: all var(--transition-normal);
+    }
+    .navbar.scrolled {
+      background: rgba(10, 0, 20, 0.85);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 12px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+    .nav-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .nav-logo { display: flex; align-items: center; gap: 10px; }
+    .nav-logo svg { width: 38px; height: 38px; }
+    .nav-logo span {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1.2rem;
+      letter-spacing: 3px;
+    }
+    .nav-links { display: flex; gap: 32px; align-items: center; }
+    .nav-links a {
+      color: var(--color-gray-300);
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: color var(--transition-fast);
+      position: relative;
+    }
+    .nav-links a::after {
+      content: '';
+      position: absolute;
+      bottom: -4px; left: 0;
+      width: 0; height: 2px;
+      background: var(--gradient-brand);
+      border-radius: 1px;
+      transition: width var(--transition-normal);
+    }
+    .nav-links a:hover { color: var(--color-white); }
+    .nav-links a:hover::after { width: 100%; }
+    .nav-toggle {
+      display: none;
+      background: none; border: none;
+      color: white; font-size: 1.5rem;
+      cursor: pointer;
+    }
+
+    /* ═══════════════════════════════════
+       HERO
+       ═══════════════════════════════════ */
+    .hero {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      overflow: hidden;
+      padding-top: 80px;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: var(--gradient-hero);
+      z-index: 0;
+    }
+    .hero-bg-orb {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.3;
+      animation: float 8s ease-in-out infinite;
+    }
+    .hero-bg-orb.orb-1 {
+      width: 400px; height: 400px;
+      background: var(--color-violet);
+      top: -100px; left: -100px;
+    }
+    .hero-bg-orb.orb-2 {
+      width: 350px; height: 350px;
+      background: var(--color-accent);
+      bottom: -80px; right: -80px;
+      animation-delay: 2s;
+    }
+    .hero-bg-orb.orb-3 {
+      width: 200px; height: 200px;
+      background: #a855f7;
+      top: 50%; left: 60%;
+      animation-delay: 4s;
+    }
+    .hero-content { position: relative; z-index: 1; max-width: 750px; }
+    .hero-logo {
+      width: 280px;
+      margin: 0 auto var(--space-xl);
+    }
+    .hero h1 {
+      margin-bottom: var(--space-md);
+    }
+    .hero-subtitle {
+      font-size: 1.15rem;
+      color: var(--color-gray-300);
+      margin-bottom: var(--space-2xl);
+      max-width: 550px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .hero-actions {
+      display: flex;
+      gap: 16px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .hero-scroll-hint {
+      position: absolute;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1;
+    }
+    .hero-scroll-hint span {
+      display: block;
+      width: 24px; height: 24px;
+      border-right: 2px solid rgba(0,212,255,0.4);
+      border-bottom: 2px solid rgba(0,212,255,0.4);
+      transform: rotate(45deg);
+      animation: float 2s ease-in-out infinite;
+    }
+
+    /* ═══════════════════════════════════
+       SERVICES
+       ═══════════════════════════════════ */
+    .services { background: var(--color-bg-surface); }
+    .section-header {
+      text-align: center;
+      margin-bottom: var(--space-3xl);
+    }
+    .section-header h2 { margin-bottom: var(--space-sm); }
+    .services-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .service-card {
+      text-align: center;
+      padding: var(--space-2xl) var(--space-xl);
+    }
+    .service-icon {
+      width: 60px; height: 60px;
+      margin: 0 auto var(--space-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-lg);
+      background: rgba(0,212,255,0.08);
+      border: 1px solid rgba(0,212,255,0.12);
+      transition: all var(--transition-normal);
+    }
+    .service-card:hover .service-icon {
+      background: rgba(0,212,255,0.15);
+      border-color: var(--color-accent);
+      box-shadow: var(--shadow-glow-accent);
+      transform: scale(1.1);
+    }
+    .service-icon svg {
+      width: 28px; height: 28px;
+      stroke: var(--color-accent);
+      fill: none;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+    .service-card h3 {
+      font-size: 1.1rem;
+      margin-bottom: var(--space-sm);
+      color: var(--color-white);
+    }
+    .service-card p {
+      font-size: 0.88rem;
+      line-height: 1.6;
+    }
+
+    /* ═══════════════════════════════════
+       AR PREVIEW
+       ═══════════════════════════════════ */
+    .ar-section {
+      background: var(--gradient-bg);
+      overflow: hidden;
+    }
+    .ar-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: center;
+    }
+    .ar-visual {
+      position: relative;
+      aspect-ratio: 4/3;
+      border-radius: var(--radius-xl);
+      overflow: hidden;
+      background: var(--gradient-card);
+      border: 1px solid rgba(255,255,255,0.08);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .ar-visual-inner {
+      text-align: center;
+    }
+    .ar-visual svg.phone-icon {
+      width: 80px; height: 80px;
+      stroke: var(--color-accent);
+      fill: none;
+      stroke-width: 1.2;
+      margin: 0 auto var(--space-md);
+      opacity: 0.7;
+    }
+    .ar-visual .ar-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background: rgba(0,212,255,0.12);
+      border: 1px solid rgba(0,212,255,0.25);
+      border-radius: var(--radius-pill);
+      color: var(--color-accent);
+      font-size: 0.8rem;
+      font-weight: 600;
+      animation: pulse-glow 3s ease-in-out infinite;
+    }
+    .ar-info h2 { margin-bottom: var(--space-md); }
+    .ar-info p { margin-bottom: var(--space-xl); font-size: 1.05rem; }
+    .ar-features {
+      list-style: none;
+      margin-bottom: var(--space-xl);
+    }
+    .ar-features li {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 0;
+      color: var(--color-gray-300);
+      font-size: 0.95rem;
+    }
+    .ar-features li .check {
+      width: 22px; height: 22px;
+      border-radius: 50%;
+      background: rgba(0,212,255,0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+      color: var(--color-accent);
+      font-size: 0.7rem;
+    }
+
+    /* ═══════════════════════════════════
+       QR SECTION
+       ═══════════════════════════════════ */
+    .qr-section {
+      background: var(--color-bg-surface);
+      text-align: center;
+    }
+    .qr-wrapper {
+      display: inline-block;
+      background: white;
+      padding: 20px;
+      border-radius: var(--radius-lg);
+      margin: var(--space-xl) 0;
+      box-shadow: var(--shadow-glow-accent);
+    }
+    .qr-section .qr-caption {
+      font-size: 0.9rem;
+      color: var(--color-gray-300);
+      margin-bottom: var(--space-lg);
+    }
+
+    /* ═══════════════════════════════════
+       FOOTER
+       ═══════════════════════════════════ */
+    .footer {
+      padding: var(--space-3xl) 0 var(--space-xl);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    .footer-inner {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    .footer-brand { display: flex; align-items: center; gap: 10px; }
+    .footer-brand svg { width: 32px; height: 32px; }
+    .footer-brand span {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      font-size: 1rem;
+      letter-spacing: 3px;
+    }
+    .footer-copy {
+      font-size: 0.8rem;
+      color: var(--color-gray-500);
+    }
+    .footer-links { display: flex; gap: 20px; }
+    .footer-links a {
+      color: var(--color-gray-500);
+      font-size: 0.85rem;
+      transition: color var(--transition-fast);
+    }
+    .footer-links a:hover { color: var(--color-accent); }
+
+    /* ═══════════════════════════════════
+       RESPONSIVE
+       ═══════════════════════════════════ */
+    @media (max-width: 768px) {
+      .nav-links { display: none; }
+      .nav-links.active {
+        display: flex;
+        flex-direction: column;
+        position: absolute;
+        top: 100%; left: 0; right: 0;
+        background: rgba(10,0,20,0.95);
+        backdrop-filter: blur(20px);
+        padding: 20px;
+        gap: 16px;
+        border-bottom: 1px solid rgba(255,255,255,0.06);
+      }
+      .nav-toggle { display: block; }
+      .services-grid { grid-template-columns: repeat(2, 1fr); }
+      .ar-grid { grid-template-columns: 1fr; }
+      .hero-logo { width: 220px; }
+      .footer-inner { flex-direction: column; text-align: center; }
+    }
+    @media (max-width: 480px) {
+      .services-grid { grid-template-columns: 1fr; }
+      .hero-actions { flex-direction: column; align-items: center; }
+    }
+
+    /* ═══════════════════════════════════
+       SCROLL REVEAL
+       ═══════════════════════════════════ */
+    .reveal {
+      opacity: 0;
+      transform: translateY(30px);
+      transition: opacity 0.7s var(--ease-out), transform 0.7s var(--ease-out);
+    }
+    .reveal.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ═══════ NAVBAR ═══════ -->
+  <nav class="navbar" id="navbar">
+    <div class="container nav-inner">
+      <a href="#" class="nav-logo">
+        <svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="ng" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>
+          <rect x="0" y="0" width="22" height="150" rx="3" fill="url(#ng)"/>
+          <polygon points="28,75 28,53 112,3 112,25" fill="url(#ng)"/>
+          <polygon points="28,75 112,125 112,147 28,97" fill="url(#ng)"/>
+          <circle cx="117" cy="8" r="6.5" fill="#00d4ff"/>
+        </svg>
+        <span>KREID</span>
+      </a>
+      <div class="nav-links" id="navLinks">
+        <a href="#servicios">Servicios</a>
+        <a href="#ar">AR Experience</a>
+        <a href="#qr">Escanear</a>
+        <a href="viewer.html" class="btn btn-secondary" style="padding:8px 18px;font-size:0.85rem;">Ver en 3D</a>
+      </div>
+      <button class="nav-toggle" id="navToggle" aria-label="Toggle menu">☰</button>
+    </div>
+  </nav>
+
+  <!-- ═══════ HERO ═══════ -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-orb orb-1"></div>
+    <div class="hero-bg-orb orb-2"></div>
+    <div class="hero-bg-orb orb-3"></div>
+    <div class="hero-content">
+      <div class="hero-logo anim-scale-in">
+        <svg viewBox="0 0 520 180" xmlns="http://www.w3.org/2000/svg">
+          <defs>
+            <linearGradient id="hg1" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="50%" stop-color="#6d28d9"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient>
+            <linearGradient id="hg2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient>
+          </defs>
+          <g transform="translate(15,15)">
+            <rect x="0" y="0" width="22" height="150" rx="3" fill="url(#hg1)"/>
+            <polygon points="28,75 28,53 112,3 112,25" fill="url(#hg1)"/>
+            <polygon points="28,75 112,125 112,147 28,97" fill="url(#hg1)"/>
+            <circle cx="117" cy="8" r="6.5" fill="#00d4ff"/>
+            <line x1="28" y1="75" x2="65" y2="75" stroke="#00d4ff" stroke-width="1.5" opacity="0.5"/>
+          </g>
+          <text x="160" y="105" font-family="'Outfit','Helvetica Neue',Arial,sans-serif" font-size="72" font-weight="800" fill="#ffffff" letter-spacing="10">KREID</text>
+          <rect x="162" y="118" width="115" height="2.5" rx="1.25" fill="url(#hg2)"/>
+          <text x="164" y="146" font-family="'Inter','Helvetica Neue',Arial,sans-serif" font-size="14" font-weight="400" fill="#00d4ff" letter-spacing="9">DESIGN STUDIO</text>
+        </svg>
+      </div>
+      <h1 class="anim-fade-up delay-2">Diseño que <span class="text-gradient">transforma</span></h1>
+      <p class="hero-subtitle anim-fade-up delay-3">Soluciones creativas que impulsan tu marca al siguiente nivel. Identidad visual, branding y experiencias digitales innovadoras.</p>
+      <div class="hero-actions anim-fade-up delay-4">
+        <a href="viewer.html" class="btn btn-primary btn-lg">✦ Ver Logo en 3D</a>
+        <a href="ar.html" class="btn btn-secondary btn-lg">📱 Experiencia AR</a>
+      </div>
+    </div>
+    <div class="hero-scroll-hint anim-fade-in delay-8">
+      <span></span>
+    </div>
+  </section>
+
+  <!-- ═══════ SERVICIOS ═══════ -->
+  <section class="services section" id="servicios">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="badge">Lo que hacemos</span>
+        <h2>Nuestros <span class="text-gradient">Servicios</span></h2>
+        <div class="glow-line"></div>
+      </div>
+      <div class="services-grid">
+        <!-- Card 1 -->
+        <div class="glass-card service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 19l7-7 3 3-7 7-3-3z"/><path d="M18 13l-1.5-7.5L2 2l3.5 14.5L13 18l5-5z"/><path d="M2 2l7.586 7.586"/><circle cx="11" cy="11" r="2"/></svg>
+          </div>
+          <h3>Diseño Gráfico</h3>
+          <p>Piezas visuales impactantes que comunican tu mensaje con claridad y estilo profesional.</p>
+        </div>
+        <!-- Card 2 -->
+        <div class="glass-card service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
+          </div>
+          <h3>Branding & Identidad</h3>
+          <p>Construimos marcas memorables con identidad visual coherente y estratégica.</p>
+        </div>
+        <!-- Card 3 -->
+        <div class="glass-card service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/><line x1="8" y1="7" x2="16" y2="7"/><line x1="8" y1="11" x2="13" y2="11"/></svg>
+          </div>
+          <h3>Diseño Editorial</h3>
+          <p>Revistas, catálogos y publicaciones con maquetación profesional y atractiva.</p>
+        </div>
+        <!-- Card 4 -->
+        <div class="glass-card service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/><circle cx="8" cy="10" r="1.5"/><path d="M14 9h3"/><path d="M14 12h3"/></svg>
+          </div>
+          <h3>Diseño Web & UI/UX</h3>
+          <p>Interfaces digitales intuitivas con experiencia de usuario excepcional y diseño moderno.</p>
+        </div>
+        <!-- Card 5 -->
+        <div class="glass-card service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
+          </div>
+          <h3>Packaging</h3>
+          <p>Empaques creativos que destacan en anaquel y refuerzan la identidad de tu producto.</p>
+        </div>
+        <!-- Card 6 -->
+        <div class="glass-card service-card reveal">
+          <div class="service-icon">
+            <svg viewBox="0 0 24 24"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </div>
+          <h3>Producción Audiovisual</h3>
+          <p>Video, motion graphics y contenido multimedia que captura la atención de tu audiencia.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ AR PREVIEW ═══════ -->
+  <section class="ar-section section" id="ar">
+    <div class="container">
+      <div class="ar-grid">
+        <div class="ar-visual reveal">
+          <div class="ar-visual-inner">
+            <svg class="phone-icon" viewBox="0 0 24 24">
+              <rect x="5" y="2" width="14" height="20" rx="2" ry="2"/>
+              <line x1="12" y1="18" x2="12.01" y2="18"/>
+            </svg>
+            <div class="ar-badge anim-pulse">
+              <span>●</span> AR Disponible
+            </div>
+            <p style="margin-top:16px;font-size:0.85rem;color:var(--color-gray-500);">Apunta tu cámara y explora</p>
+          </div>
+        </div>
+        <div class="ar-info reveal">
+          <span class="badge">Innovación</span>
+          <h2 style="margin-top:12px;">Experiencia en <span class="text-gradient">Realidad Aumentada</span></h2>
+          <p>Explora el logo KREID en un entorno de realidad aumentada geolocalizada. Ingresa coordenadas GPS y observa el logo 3D flotando en el mundo real.</p>
+          <ul class="ar-features">
+            <li><span class="check">✓</span> Logo 3D interactivo con controles de zoom y rotación</li>
+            <li><span class="check">✓</span> Geolocalización GPS con indicador de distancia</li>
+            <li><span class="check">✓</span> Texto de servicios animado en AR</li>
+            <li><span class="check">✓</span> Compatible con Android y iOS (Chrome/Safari)</li>
+          </ul>
+          <a href="ar.html" class="btn btn-primary btn-lg">🚀 Probar AR ahora</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ═══════ QR SECTION ═══════ -->
+  <section class="qr-section section" id="qr">
+    <div class="container">
+      <div class="section-header reveal">
+        <span class="badge">Acceso rápido</span>
+        <h2>Escanea y <span class="text-gradient">Explora</span></h2>
+        <div class="glow-line"></div>
+        <p class="qr-caption">Escanea el código QR para ver el logo KREID en 3D desde tu dispositivo.</p>
+      </div>
+      <div class="reveal">
+        <div class="qr-wrapper" id="qrcode"></div>
+      </div>
+      <br>
+      <button class="btn btn-accent reveal" onclick="downloadQR()" id="downloadQrBtn">⬇ Descargar QR como imagen</button>
+    </div>
+  </section>
+
+  <!-- ═══════ FOOTER ═══════ -->
+  <footer class="footer">
+    <div class="container footer-inner">
+      <div class="footer-brand">
+        <svg viewBox="0 0 150 150" xmlns="http://www.w3.org/2000/svg">
+          <defs><linearGradient id="fg" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#7c3aed"/><stop offset="100%" stop-color="#00d4ff"/></linearGradient></defs>
+          <rect x="0" y="0" width="22" height="150" rx="3" fill="url(#fg)"/>
+          <polygon points="28,75 28,53 112,3 112,25" fill="url(#fg)"/>
+          <polygon points="28,75 112,125 112,147 28,97" fill="url(#fg)"/>
+          <circle cx="117" cy="8" r="6.5" fill="#00d4ff"/>
+        </svg>
+        <span>KREID</span>
+      </div>
+      <p class="footer-copy">© 2025 KREID Design Studio. Todos los derechos reservados.</p>
+      <div class="footer-links">
+        <a href="viewer.html">3D Viewer</a>
+        <a href="ar.html">AR Experience</a>
+      </div>
+    </div>
+  </footer>
+
+  <!-- QR Library -->
+  <script src="./libs/qrcode.min.js"></script>
+  <script>
+    /* ── Nav scroll effect ── */
+    const navbar = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+      navbar.classList.toggle('scrolled', window.scrollY > 40);
+    });
+
+    /* ── Mobile nav toggle ── */
+    document.getElementById('navToggle').addEventListener('click', () => {
+      document.getElementById('navLinks').classList.toggle('active');
+    });
+
+    /* ── Scroll reveal (IntersectionObserver) ── */
+    const revealElements = document.querySelectorAll('.reveal');
+    const revealObserver = new IntersectionObserver((entries) => {
+      entries.forEach((entry, i) => {
+        if (entry.isIntersecting) {
+          entry.target.style.transitionDelay = `${i * 0.08}s`;
+          entry.target.classList.add('visible');
+          revealObserver.unobserve(entry.target);
+        }
+      });
+    }, { threshold: 0.12 });
+    revealElements.forEach(el => revealObserver.observe(el));
+
+    /* ── QR Code generation ── */
+    // Auto-detect the correct URL: tunnel, local IP, or localhost
+    (function generateDynamicQR() {
+      const currentOrigin = location.origin;        // e.g. https://byotk-xxx.run.pinggy-free.link
+      const currentHost = location.hostname;         // e.g. byotk-xxx.run.pinggy-free.link
+      const currentPort = location.port;             // e.g. 34541 or empty for tunnel
+
+      let qrUrl;
+
+      // 1) If we are already on the Pinggy tunnel (or any non-local domain), use that origin
+      if (currentHost !== 'localhost' && currentHost !== '127.0.0.1' && !currentHost.match(/^192\.168\./)) {
+        qrUrl = currentOrigin + '/qr-ar.html';
+      }
+      // 2) If we are on a specific local IP + port (HTTPS local server), keep it
+      else if (currentPort && currentPort !== '80' && currentPort !== '443') {
+        qrUrl = currentOrigin + '/qr-ar.html';
+      }
+      // 3) Fallback: detect current page URL and replace index.html with qr-ar.html
+      else {
+        qrUrl = location.href.replace(/index\.html$/, 'qr-ar.html');
+        // If no index.html in URL, just append qr-ar.html to origin
+        if (qrUrl === location.href) {
+          qrUrl = currentOrigin + '/qr-ar.html';
+        }
+      }
+
+      console.log('🔗 QR apunta a:', qrUrl);
+
+      const qrContainer = document.getElementById('qrcode');
+      if (qrContainer && typeof QRCode !== 'undefined') {
+        new QRCode(qrContainer, {
+          text: qrUrl,
+          width: 200,
+          height: 200,
+          colorDark: '#1a0a3e',
+          colorLight: '#ffffff',
+          correctLevel: QRCode.CorrectLevel.H
+        });
+      }
+
+      /* ── QR Download ── */
+      window.downloadQR = function() {
+        const canvas = qrContainer.querySelector('canvas');
+        if (canvas) {
+          const link = document.createElement('a');
+          link.download = 'KREID_QR.png';
+          link.href = canvas.toDataURL('image/png');
+          link.click();
+        }
+      };
+    })();
+  </script>
+</body>
+</html>

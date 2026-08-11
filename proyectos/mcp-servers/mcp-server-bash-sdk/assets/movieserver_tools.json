@@ -1,0 +1,53 @@
+{
+  "tools": [
+    {
+      "name": "get_movies",
+      "description": "Get a list of movies currently playing in theaters",
+      "inputSchema": {
+        "type": "object",
+        "properties": {},
+        "required": []
+      }
+    },
+    {
+      "name": "book_ticket",
+      "description": "Book movie tickets for a specific showing",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "movieId": {
+            "type": "number",
+            "description": "ID of the movie to book"
+          },
+          "showTime": {
+            "type": "string",
+            "description": "Show time (e.g., '14:30')"
+          },
+          "numTickets": {
+            "type": "number",
+            "description": "Number of tickets to book"
+          }
+        },
+        "required": ["movieId", "showTime", "numTickets"]
+      }
+    },
+    {
+      "name": "validate_age",
+      "description": "Validate user age for movie rating",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "age": {
+            "type": "number",
+            "description": "User's age"
+          },
+          "movieRating": {
+            "type": "string",
+            "description": "Movie rating (A, PG-13, U)"
+          }
+        },
+        "required": ["age", "movieRating"]
+      }
+    }
+  ]
+}

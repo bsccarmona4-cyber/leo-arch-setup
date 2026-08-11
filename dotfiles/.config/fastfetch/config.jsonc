@@ -1,0 +1,23 @@
+{
+  "logo": {
+    "source": "arch_small",
+    "padding": {
+      "top": 1,
+      "right": 3
+    }
+  },
+  "display": {
+    "separator": " ❯ "
+  },
+  "modules": [
+    "title",
+    "separator",
+    "os",
+    "uptime",
+    "cpu",
+    "memory",
+    "disk",
+    "battery",
+    "break"
+  ]
+}
